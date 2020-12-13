@@ -59,8 +59,9 @@ Format.prototype.lookupFormatter = function(column, type){
 };
 
 Format.prototype.cellRendered = function(cell){
-	if(cell.modules.format && cell.modules.format.renderedCallback){
+	if(cell.modules.format && cell.modules.format.renderedCallback && !cell.modules.format.rendered){
 		cell.modules.format.renderedCallback();
+		cell.modules.format.rendered = true;
 	}
 };
 
@@ -75,6 +76,7 @@ Format.prototype.formatValue = function(cell){
 		}
 
 		cell.modules.format.renderedCallback = callback;
+		cell.modules.format.rendered = false;
 	}
 
 	return cell.column.modules.format.formatter.call(this, component, params, onRendered);
@@ -94,6 +96,7 @@ Format.prototype.formatExportValue = function(cell, type){
 			}
 
 			cell.modules.format.renderedCallback = callback;
+			cell.modules.format.rendered = false;
 		}
 
 		return formatter.formatter.call(this, cell.getComponent(), params, onRendered);
@@ -274,8 +277,18 @@ Format.prototype.formatters = {
 
 	//image element
 	image:function(cell, formatterParams, onRendered){
-		var el = document.createElement("img");
-		el.setAttribute("src", cell.getValue());
+		var el = document.createElement("img"),
+		    src = cell.getValue();
+
+		if(formatterParams.urlPrefix){
+			src = formatterParams.urlPrefix + cell.getValue();
+		}
+
+		if(formatterParams.urlSuffix){
+			src = src + formatterParams.urlSuffix;
+		}
+
+		el.setAttribute("src", src);
 
 		switch(typeof formatterParams.height){
 			case "number":
@@ -673,7 +686,7 @@ Format.prototype.formatters = {
 		return el;
 	},
 
-	rowSelection:function(cell){
+	rowSelection:function(cell, formatterParams, onRendered){
 		var checkbox = document.createElement("input");
 
 		checkbox.type = 'checkbox';
@@ -687,18 +700,23 @@ Format.prototype.formatters = {
 			if(typeof cell.getRow == 'function'){
 				var row = cell.getRow();
 
-				checkbox.addEventListener("change", (e) => {
-					row.toggleSelect();
-				});
+				if(row instanceof RowComponent){
 
-				checkbox.checked = row.isSelected();
-				this.table.modules.selectRow.registerRowSelectCheckbox(row, checkbox);
+					checkbox.addEventListener("change", (e) => {
+						row.toggleSelect();
+					});
+
+					checkbox.checked = row.isSelected && row.isSelected();
+					this.table.modules.selectRow.registerRowSelectCheckbox(row, checkbox);
+				}else{
+					checkbox = "";
+				}
 			}else {
 				checkbox.addEventListener("change", (e) => {
 					if(this.table.modules.selectRow.selectedRows.length){
 						this.table.deselectRow();
 					}else {
-						this.table.selectRow();
+						this.table.selectRow(formatterParams.rowRange);
 					}
 				});
 

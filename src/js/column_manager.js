@@ -97,6 +97,7 @@ ColumnManager.prototype.scrollHorizontal = function(left){
 
 ColumnManager.prototype.generateColumnsFromRowData = function(data){
 	var cols = [],
+	definitions = this.table.options.autoColumnsDefinitions,
 	row, sorter;
 
 	if(data && data.length){
@@ -146,7 +147,40 @@ ColumnManager.prototype.generateColumnsFromRowData = function(data){
 			cols.push(col);
 		}
 
-		this.table.options.columns = cols;
+		if(definitions){
+
+			switch(typeof definitions){
+				case "function":
+					this.table.options.columns = definitions.call(this.table, cols);
+				break;
+
+				case "object":
+					if(Array.isArray(definitions)){
+						cols.forEach((col) => {
+							var match = definitions.find((def) => {
+								return def.field === col.field;
+							});
+
+							if(match){
+								Object.assign(col, match);
+							}
+						});
+
+					}else{
+						cols.forEach((col) => {
+							if(definitions[col.field]){
+								Object.assign(col, definitions[col.field]);
+							}
+						});
+					}
+
+					this.table.options.columns = cols;
+				break;
+			}
+		}else{
+			this.table.options.columns = cols;
+		}
+
 		this.setColumns(this.table.options.columns);
 	}
 };
@@ -174,6 +208,10 @@ ColumnManager.prototype.setColumns = function(cols, row){
 
 	if(self.table.options.responsiveLayout && self.table.modExists("responsiveLayout", true)){
 		self.table.modules.responsiveLayout.initialize();
+	}
+
+	if(this.table.options.virtualDomHoz){
+		this.table.vdomHoz.reinitialize(false, true);
 	}
 
 	self.redraw(true);
@@ -427,6 +465,10 @@ ColumnManager.prototype.moveColumnActual = function(from, to, after){
 		this.table.modules.responsiveLayout.initialize();
 	}
 
+	if(this.table.options.virtualDomHoz){
+		this.table.vdomHoz.reinitialize(true);
+	}
+
 	if(this.table.options.columnMoved){
 		this.table.options.columnMoved.call(this.table, from.getComponent(), this.table.columnManager.getComponents());
 	}
@@ -438,7 +480,7 @@ ColumnManager.prototype.moveColumnActual = function(from, to, after){
 
 ColumnManager.prototype._moveColumnInArray = function(columns, from, to, after, updateRows){
 	var	fromIndex = columns.indexOf(from),
-	toIndex;
+	toIndex, rows = [];
 
 	if (fromIndex > -1) {
 
@@ -460,12 +502,21 @@ ColumnManager.prototype._moveColumnInArray = function(columns, from, to, after, 
 
 		if(updateRows){
 
-			this.table.rowManager.rows.forEach(function(row){
+			if(this.table.options.dataTree && this.table.modExists("dataTree", true)){
+				this.table.rowManager.rows.forEach((row) => {
+					rows = rows.concat(this.table.modules.dataTree.getTreeChildren(row, false, true));
+				});
+			}
+
+			rows = rows.concat(this.table.rowManager.rows);
+
+			rows.forEach(function(row){
 				if(row.cells.length){
 					var cell = row.cells.splice(fromIndex, 1)[0];
 					row.cells.splice(toIndex, 0, cell);
 				}
 			});
+
 		}
 	}
 };
@@ -511,7 +562,7 @@ ColumnManager.prototype.scrollToColumn = function(column, position, ifVisible){
 			}
 
 			//calculate scroll position
-			left = colEl.offsetLeft + this.element.scrollLeft + adjust;
+			left = colEl.offsetLeft + adjust;
 
 			left = Math.max(Math.min(left, this.table.rowManager.element.scrollWidth - this.table.rowManager.element.clientWidth),0);
 
@@ -595,7 +646,7 @@ ColumnManager.prototype.addColumn = function(definition, before, nextToColumn){
 			this.table.modules.columnCalcs.recalc(this.table.rowManager.activeRows);
 		}
 
-		this.redraw();
+		this.redraw(true);
 
 		if(this.table.modules.layout.getMode() != "fitColumns"){
 			column.reinitializeWidth();
@@ -604,6 +655,10 @@ ColumnManager.prototype.addColumn = function(definition, before, nextToColumn){
 		this._verticalAlignHeaders();
 
 		this.table.rowManager.reinitialize();
+
+		if(this.table.options.virtualDomHoz){
+			this.table.vdomHoz.reinitialize();
+		}
 
 		resolve(column);
 	});
@@ -636,6 +691,8 @@ ColumnManager.prototype.deregisterColumn = function(column){
 	if(this.table.options.responsiveLayout && this.table.modExists("responsiveLayout", true)){
 		this.table.modules.responsiveLayout.initialize();
 	}
+
+	this._verticalAlignHeaders();
 
 	this.redraw();
 };

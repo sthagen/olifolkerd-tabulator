@@ -1,4 +1,4 @@
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var History = function History(table) {
 	this.table = table; //hold Tabulator object
@@ -31,6 +31,21 @@ History.prototype.getHistoryUndoSize = function () {
 
 History.prototype.getHistoryRedoSize = function () {
 	return this.history.length - (this.index + 1);
+};
+
+History.prototype.clearComponentHistory = function (component) {
+	var index = this.history.findIndex(function (item) {
+		return item.component === component;
+	});
+
+	if (index > -1) {
+		this.history.splice(index, 1);
+		if (index <= this.index) {
+			this.index--;
+		}
+
+		this.clearComponentHistory(component);
+	}
 };
 
 History.prototype.undo = function () {

@@ -1,4 +1,4 @@
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var Page = function Page(table) {
 
@@ -164,11 +164,11 @@ Page.prototype.initialize = function (hidden) {
 
 	//click bindings
 	self.firstBut.addEventListener("click", function () {
-		self.setPage(1);
+		self.setPage(1).then(function () {}).catch(function () {});
 	});
 
 	self.prevBut.addEventListener("click", function () {
-		self.previousPage();
+		self.previousPage().then(function () {}).catch(function () {});
 	});
 
 	self.nextBut.addEventListener("click", function () {
@@ -176,7 +176,7 @@ Page.prototype.initialize = function (hidden) {
 	});
 
 	self.lastBut.addEventListener("click", function () {
-		self.setPage(self.max);
+		self.setPage(self.max).then(function () {}).catch(function () {});
 	});
 
 	if (self.table.options.paginationElement) {
@@ -439,7 +439,7 @@ Page.prototype._generatePageButton = function (page) {
 	button.textContent = page;
 
 	button.addEventListener("click", function (e) {
-		self.setPage(page);
+		self.setPage(page).then(function () {}).catch(function () {});
 	});
 
 	return button;
@@ -520,7 +520,7 @@ Page.prototype.getRows = function (data) {
 
 		if (this.size === true) {
 			start = 0;
-			end = data.length - 1;
+			end = data.length;
 		} else {
 			start = this.size * (this.page - 1);
 			end = start + parseInt(this.size);

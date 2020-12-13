@@ -133,15 +133,25 @@ DataTree.prototype.layoutRow = function(row){
 
 	this.generateControlElement(row, el);
 
-	row.element.classList.add("tabulator-tree-level-" + config.index);
+	row.getElement().classList.add("tabulator-tree-level-" + config.index);
 
 	if(config.index){
 		if(this.branchEl){
 			config.branchEl = this.branchEl.cloneNode(true);
 			el.insertBefore(config.branchEl, el.firstChild);
-			config.branchEl.style.marginLeft = (((config.branchEl.offsetWidth + config.branchEl.style.marginRight) * (config.index - 1)) + (config.index * this.indent)) + "px";
+
+			if(this.table.rtl){
+				config.branchEl.style.marginRight = (((config.branchEl.offsetWidth + config.branchEl.style.marginLeft) * (config.index - 1)) + (config.index * this.indent)) + "px";
+			}else{
+				config.branchEl.style.marginLeft = (((config.branchEl.offsetWidth + config.branchEl.style.marginRight) * (config.index - 1)) + (config.index * this.indent)) + "px";
+			}
 		}else{
-			el.style.paddingLeft = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-left')) + (config.index * this.indent) + "px";
+
+			if(this.table.rtl){
+				el.style.paddingRight = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-right')) + (config.index * this.indent) + "px";
+			}else{
+				el.style.paddingLeft = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-left')) + (config.index * this.indent) + "px";
+			}
 		}
 	}
 };
@@ -197,12 +207,15 @@ DataTree.prototype.getRows = function(rows){
 
 		if(row instanceof Row){
 
+			row.create();
+
 			config = row.modules.dataTree.children;
 
 			if(!config.index && config.children !== false){
 				children = this.getChildren(row);
 
 				children.forEach((child) => {
+					child.create();
 					output.push(child);
 				});
 			}
@@ -223,13 +236,13 @@ DataTree.prototype.getChildren = function(row){
 			config.children = this.generateChildren(row);
 		}
 
-		if(this.table.modExists("filter")){
+		if(this.table.modExists("filter") && this.table.options.dataTreeFilter){
 			children = this.table.modules.filter.filter(config.children);
 		}else{
 			children = config.children;
 		}
 
-		if(this.table.modExists("sort")){
+		if(this.table.modExists("sort") && this.table.options.dataTreeSort){
 			this.table.modules.sort.sort(children);
 		}
 
@@ -259,8 +272,12 @@ DataTree.prototype.generateChildren = function(row){
 
 	childArray.forEach((childData) => {
 		var childRow = new Row(childData || {}, this.table.rowManager);
+
+		childRow.create();
+
 		childRow.modules.dataTree.index = row.modules.dataTree.index + 1;
 		childRow.modules.dataTree.parent = row;
+
 		if(childRow.modules.dataTree.children){
 			childRow.modules.dataTree.open = this.startOpen(childRow.getComponent(), childRow.modules.dataTree.index);
 		}
@@ -327,7 +344,7 @@ DataTree.prototype.getFilteredTreeChildren = function(row){
 			config.children = this.generateChildren(row);
 		}
 
-		if(this.table.modExists("filter")){
+		if(this.table.modExists("filter") && this.table.options.dataTreeFilter){
 			children = this.table.modules.filter.filter(config.children);
 		}else{
 			children = config.children;
@@ -453,7 +470,7 @@ DataTree.prototype.findChildIndex = function(subject, parent){
 
 
 
-DataTree.prototype.getTreeChildren = function(row){
+DataTree.prototype.getTreeChildren = function(row, component, recurse){
 	var config = row.modules.dataTree,
 	output = [];
 
@@ -465,7 +482,11 @@ DataTree.prototype.getTreeChildren = function(row){
 
 		config.children.forEach((childRow) => {
 			if(childRow instanceof Row){
-				output.push(childRow.getComponent());
+				output.push(component ? childRow.getComponent() : childRow);
+
+				if(recurse){
+					output = output.concat(this.getTreeChildren(childRow, component, recurse));
+				}
 			}
 		});
 	}

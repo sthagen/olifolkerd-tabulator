@@ -1,4 +1,4 @@
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var ResizeColumns = function ResizeColumns(table) {
 	this.table = table; //hold Tabulator object
@@ -111,7 +111,15 @@ ResizeColumns.prototype._mouseDown = function (e, column, handle) {
 	function mouseMove(e) {
 		// self.table.columnManager.tempScrollBlock();
 
-		column.setWidth(self.startWidth + ((typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX) - self.startX));
+		if (self.table.rtl) {
+			column.setWidth(self.startWidth - ((typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX) - self.startX));
+		} else {
+			column.setWidth(self.startWidth + ((typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX) - self.startX));
+		}
+
+		if (self.table.options.virtualDomHoz) {
+			self.table.vdomHoz.reinitialize(true);
+		}
 
 		if (!self.table.browserSlow && column.modules.resize && column.modules.resize.variableHeight) {
 			column.checkCellHeights();

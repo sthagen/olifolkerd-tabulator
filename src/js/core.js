@@ -5,6 +5,7 @@
 /*=include column_manager.js */
 /*=include column.js */
 /*=include row_manager.js */
+/*=include vdom_hoz.js */
 /*=include row.js */
 /*=include cell.js */
 /*=include footer_manager.js */
@@ -16,15 +17,20 @@ var Tabulator = function(element, options){
 	this.columnManager = null; // hold Column Manager
 	this.rowManager = null; //hold Row Manager
 	this.footerManager = null; //holder Footer Manager
+	this.vdomHoz  = null; //holder horizontal virtual dom
+
+
 	this.browser = ""; //hold current browser type
 	this.browserSlow = false; //handle reduced functionality for slower browsers
 	this.browserMobile = false; //check if running on moble, prevent resize cancelling edit on keyboard appearence
+	this.rtl = false; //check if the table is in RTL mode
 
 	this.modules = {}; //hold all modules bound to this table
 
-	this.initializeElement(element);
-	this.initializeOptions(options || {});
-	this._create();
+	if(this.initializeElement(element)){
+		this.initializeOptions(options || {});
+		this._create();
+	}
 
 	Tabulator.prototype.comms.register(this); //register table for inderdevice communication
 };
@@ -40,6 +46,7 @@ Tabulator.prototype.defaultOptions = {
 	layoutColumnsOnNewData:false, //update column widths on setData
 
 	columnMinWidth:40, //minimum global width for a column
+	columnMaxWidth:false, //minimum global width for a column
 	columnHeaderVertAlign:"top", //vertical alignment of column headers
 	columnVertAlign:false, // DEPRECATED - Left to allow warning
 
@@ -50,12 +57,14 @@ Tabulator.prototype.defaultOptions = {
 	columns:[],//store for colum header info
 
 	cellHozAlign:"", //horizontal align columns
-	cellVertAlign:"", //certical align columns
+	cellVertAlign:"", //vertical align columns
+	headerHozAlign:"", //horizontal header alignment
 
 
 	data:[], //default starting data
 
 	autoColumns:false, //build columns from data row structure
+	autoColumnsDefinitions:false,
 
 	reactiveData:false, //enable data reactivity
 
@@ -75,10 +84,13 @@ Tabulator.prototype.defaultOptions = {
 
 	headerSort:true, //set default global header sort
 	headerSortTristate:false, //set default tristate header sorting
+	headerSortElement:"<div class='tabulator-arrow'></div>", //header sort element
 
 	footerElement:false, //hold footer element
 
 	index:"id", //filed for row index
+
+	textDirection:"auto",
 
 	keybindings:[], //array for keybindings
 
@@ -105,6 +117,8 @@ Tabulator.prototype.defaultOptions = {
 	downloadRowRange:"active", //restrict download to active rows only
 
 	dataTree:false, //enable data tree
+	dataTreeFilter:true, //filter child rows
+	dataTreeSort:true, //sort child rows
 	dataTreeElementColumn:false,
 	dataTreeBranchElement: true, //show data tree branch element
 	dataTreeChildIndent:9, //data tree child indent in px
@@ -147,6 +161,7 @@ Tabulator.prototype.defaultOptions = {
 
 	virtualDom:true, //enable DOM virtualization
     virtualDomBuffer:0, // set virtual DOM buffer size
+	virtualDomHoz:false, //enable horizontal DOM virtualization
 
     persistentLayout:false, //DEPRICATED - REMOVE in 5.0
     persistentSort:false, //DEPRICATED - REMOVE in 5.0
@@ -191,6 +206,7 @@ Tabulator.prototype.defaultOptions = {
 	groupBy:false, //enable table grouping and set field to group by
 	groupStartOpen:true, //starting state of group
 	groupValues:false,
+	groupUpdateOnCellEdit:false,
 
 	groupHeader:false, //header generation function
 	groupHeaderPrint:null,
@@ -251,6 +267,7 @@ Tabulator.prototype.defaultOptions = {
 	rowMouseOut:false,
 	rowMouseMove:false,
 	rowContextMenu:false,
+	rowClickMenu:false,
 	rowAdded:function(){},
 	rowDeleted:function(){},
 	rowMoved:function(){},
@@ -290,7 +307,8 @@ Tabulator.prototype.defaultOptions = {
 	//data callbacks
 	dataLoading:function(){},
 	dataLoaded:function(){},
-	dataEdited:function(){},
+	dataEdited:false, //DEPRECATED
+	dataChanged:false,
 
 	//ajax callbacks
 	ajaxRequesting:function(){},
@@ -315,6 +333,7 @@ Tabulator.prototype.defaultOptions = {
 	groupDblClick:false,
 	groupContext:false,
 	groupContextMenu:false,
+	groupClickMenu:false,
 	groupTap:false,
 	groupDblTap:false,
 	groupTapHold:false,
@@ -357,9 +376,9 @@ Tabulator.prototype.initializeOptions = function(options){
 			this.options[key] = options[key];
 		}else{
 			if(Array.isArray(this.defaultOptions[key])){
-				this.options[key] = [];
+				this.options[key] = Object.assign([], this.defaultOptions[key]);
 			}else if(typeof this.defaultOptions[key] === "object" && this.defaultOptions[key] !== null){
-				this.options[key] = {};
+				this.options[key] = Object.assign({}, this.defaultOptions[key]);
 			}else{
 				this.options[key] = this.defaultOptions[key];
 			}
@@ -388,6 +407,28 @@ Tabulator.prototype.initializeElement = function(element){
 
 };
 
+Tabulator.prototype.rtlCheck = function(){
+	var style = window.getComputedStyle(this.element);
+
+	switch(this.options.textDirection){
+		case"auto":
+		if(style.direction !== "rtl"){
+			break;
+		};
+
+		case "rtl":
+		this.element.classList.add("tabulator-rtl");
+		this.rtl = true;
+		break;
+
+		case "ltr":
+		this.element.classList.add("tabulator-ltr");
+
+		default:
+		this.rtl = false;
+	}
+};
+
 
 //convert depricated functionality to new functions
 Tabulator.prototype._mapDepricatedFunctionality = function(){
@@ -397,6 +438,11 @@ Tabulator.prototype._mapDepricatedFunctionality = function(){
 		if(!this.options.persistence){
 			this.options.persistence = {};
 		}
+	}
+
+	if(this.options.dataEdited){
+		console.warn("DEPRECATION WARNING - dataEdited option has been deprecated, please use the dataChanged option instead");
+		this.options.dataChanged = this.options.dataEdited;
 	}
 
 	if(this.options.downloadDataFormatter){
@@ -477,6 +523,8 @@ Tabulator.prototype._create = function(){
 
 	this.bindModules();
 
+	this.rtlCheck();
+
 	if(this.element.tagName === "TABLE"){
 		if(this.modExists("htmlTableImport", true)){
 			this.modules.htmlTableImport.parseTable();
@@ -489,6 +537,10 @@ Tabulator.prototype._create = function(){
 
 	this.columnManager.setRowManager(this.rowManager);
 	this.rowManager.setColumnManager(this.columnManager);
+
+	if(this.options.virtualDomHoz){
+		this.vdomHoz = new VDomHoz(this);
+	}
 
 	this._buildElement();
 
@@ -547,6 +599,9 @@ Tabulator.prototype._buildElement = function(){
 	}
 
 	//set localization
+
+	mod.localize.initialize();
+
 	if(options.headerFilterPlaceholder !== false){
 		mod.localize.setHeaderFilterPlaceholder(options.headerFilterPlaceholder);
 	}
@@ -582,10 +637,6 @@ Tabulator.prototype._buildElement = function(){
 
 	if(options.persistence && this.modExists("persistence", true)){
 		mod.persistence.initialize();
-	}
-
-	if(options.persistence && this.modExists("persistence", true) && mod.persistence.config.columns){
-		options.columns = mod.persistence.load("columns", options.columns) ;
 	}
 
 	if(options.movableRows && this.modExists("moveRow")){
@@ -1565,6 +1616,13 @@ Tabulator.prototype.setFilter = function(field, type, value, params){
 	}
 };
 
+//set standard filters
+Tabulator.prototype.refreshFilter = function(){
+	if(this.modExists("filter", true)){
+		this.rowManager.filterRefresh();
+	}
+};
+
 //add filter to array
 Tabulator.prototype.addFilter = function(field, type, value, params){
 	if(this.modExists("filter", true)){
@@ -1828,6 +1886,21 @@ Tabulator.prototype.setGroupBy = function(groups){
 	}
 };
 
+Tabulator.prototype.setGroupValues = function(groupValues){
+	if(this.modExists("groupRows", true)){
+		this.options.groupValues = groupValues;
+		this.modules.groupRows.initialize();
+		this.rowManager.refreshActiveData("display");
+
+		if(this.options.persistence && this.modExists("persistence", true) && this.modules.persistence.config.group){
+			this.modules.persistence.save("group");
+		}
+	}else{
+		return false;
+	}
+};
+
+
 Tabulator.prototype.setGroupStartOpen = function(values){
 	if(this.modExists("groupRows", true)){
 		this.options.groupStartOpen = values;
@@ -2044,6 +2117,15 @@ Tabulator.prototype.getHistoryRedoSize = function(){
 	}
 };
 
+Tabulator.prototype.clearHistory = function(){
+	if(this.options.history && this.modExists("history", true)){
+		return this.modules.history.clear();
+	}else{
+		return false;
+	}
+};
+
+
 /////////////// Download Management //////////////
 
 Tabulator.prototype.download = function(type, filename, options, active){
@@ -2137,7 +2219,7 @@ Tabulator.prototype.helpers = {
 	},
 
 	deepClone: function(obj){
-		var clone = Array.isArray(obj) ? [] : {};
+		var clone = Object.assign(Array.isArray(obj) ? [] : {}, obj);
 
 		for(var i in obj) {
 			if(obj[i] != null && typeof(obj[i])  === "object"){
@@ -2146,9 +2228,6 @@ Tabulator.prototype.helpers = {
 				} else {
 					clone[i] = this.deepClone(obj[i]);
 				}
-			}
-			else{
-				clone[i] = obj[i];
 			}
 		}
 		return clone;

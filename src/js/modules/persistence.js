@@ -110,6 +110,10 @@ Persistence.prototype.initialize = function(){
 			}
 		}
 	}
+
+	if(this.config.columns){
+		this.load("columns", this.table.options.columns);
+	}
 };
 
 
@@ -194,7 +198,7 @@ Persistence.prototype.mergeDefinition = function(oldCols, newCols){
 			}
 
 			keys.forEach((key)=>{
-				if(typeof column[key] !== "undefined"){
+				if(key !== "columns" && typeof column[key] !== "undefined"){
 					from[key] = column[key];
 				}
 			});
@@ -288,6 +292,8 @@ Persistence.prototype.validateSorters = function(data){
 };
 
 Persistence.prototype.getGroupConfig = function(){
+	var data = {};
+
 	if(this.config.group){
 		if(this.config.group === true || this.config.group.groupBy){
 			data.groupBy = this.table.options.groupBy;
@@ -325,7 +331,8 @@ Persistence.prototype.getPageConfig = function(){
 //parse columns for data to store
 Persistence.prototype.parseColumns = function(columns){
 	var self = this,
-	definitions = [];
+	definitions = [],
+	excludedKeys = ["headerContextMenu", "headerMenu", "contextMenu", "clickMenu"];
 
 	columns.forEach(function(column){
 		var defStore = {},
@@ -356,7 +363,9 @@ Persistence.prototype.parseColumns = function(columns){
 					break;
 
 					default:
-					defStore[key] = colDef[key];
+					if(typeof colDef[key] !== "function" && excludedKeys.indexOf(key) === -1){
+						defStore[key] = colDef[key];
+					}
 				}
 
 			});

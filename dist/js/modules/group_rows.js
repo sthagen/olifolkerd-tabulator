@@ -1,4 +1,4 @@
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 //public group object
 var GroupComponent = function GroupComponent(group) {
@@ -166,7 +166,7 @@ Group.prototype.addBindings = function () {
 		});
 	}
 
-	if (self.groupManager.table.options.groupContextMenu && self.groupManager.table.modExists("menu")) {
+	if ((self.groupManager.table.options.groupContextMenu || self.groupManager.table.options.groupClickMenu) && self.groupManager.table.modExists("menu")) {
 		self.groupManager.table.modules.menu.initializeGroup.call(self.groupManager.table.modules.menu, self);
 	}
 
@@ -645,6 +645,15 @@ Group.prototype.generateGroupHeaderContents = function () {
 	this.element.insertBefore(this.arrowElement, this.element.firstChild);
 };
 
+Group.prototype.getPath = function () {
+	var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+	path.unshift(this.key);
+	if (this.parent) {
+		this.parent.getPath(path);
+	}
+	return path;
+};
 ////////////// Standard Row Functions //////////////
 
 Group.prototype.getElement = function () {
@@ -1037,6 +1046,32 @@ GroupRows.prototype.assignRowToGroup = function (row, oldGroups) {
 	return !newGroupNeeded;
 };
 
+GroupRows.prototype.reassignRowToGroup = function (row) {
+	var oldRowGroup = row.getGroup(),
+	    oldGroupPath = oldRowGroup.getPath(),
+	    newGroupPath = this.getExpectedPath(row),
+	    samePath = true;
+	// figure out if new group path is the same as old group path
+	var samePath = oldGroupPath.length == newGroupPath.length && oldGroupPath.every(function (element, index) {
+		return element === newGroupPath[index];
+	});
+	// refresh if they new path and old path aren't the same (aka the row's groupings have changed)
+	if (!samePath) {
+		oldRowGroup.removeRow(row);
+		this.assignRowToGroup(row, self.groups);
+		this.table.rowManager.refreshActiveData("group", false, true);
+	}
+};
+
+GroupRows.prototype.getExpectedPath = function (row) {
+	var groupPath = [],
+	    rowData = row.getData();
+	this.groupIDLookups.forEach(function (groupId) {
+		groupPath.push(groupId.func(rowData));
+	});
+	return groupPath;
+};
+
 GroupRows.prototype.updateGroupRows = function (force) {
 	var self = this,
 	    output = [],
@@ -1062,6 +1097,10 @@ GroupRows.prototype.updateGroupRows = function (force) {
 };
 
 GroupRows.prototype.scrollHeaders = function (left) {
+	if (this.table.options.virtualDomHoz) {
+		left -= this.table.vdomHoz.vDomPadLeft;
+	}
+
 	left = left + "px";
 
 	this.groupList.forEach(function (group) {

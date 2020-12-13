@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var ExportRow = function ExportRow(type, columns, component, indent) {
 	this.type = type;
@@ -71,7 +71,11 @@ Export.prototype.rowLookup = function (range) {
 
 			case "active":
 			default:
-				rows = this.table.rowManager.getDisplayRows();
+				if (this.table.options.pagination) {
+					rows = this.table.rowManager.getDisplayRows(this.table.rowManager.displayRows.length - 2);
+				} else {
+					rows = this.table.rowManager.getDisplayRows();
+				}
 		}
 	}
 
@@ -437,7 +441,7 @@ Export.prototype.genereateGroupElement = function (row, setup, styles) {
 	rowEl.classList.add("tabulator-print-table-group");
 	rowEl.classList.add("tabulator-group-level-" + row.indent);
 
-	if (group.component.getVisibility()) {
+	if (group.component.isVisible()) {
 		rowEl.classList.add("tabulator-group-visible");
 	}
 
@@ -487,10 +491,10 @@ Export.prototype.genereateRowElement = function (row, setup, styles) {
 					return column.getComponent();
 				},
 				getData: function getData() {
-					return rowData;
+					return row.component.getData();
 				},
 				getRow: function getRow() {
-					return row.getComponent();
+					return row.component;
 				},
 				getComponent: function getComponent() {
 					return cellWrapper;
@@ -554,13 +558,7 @@ Export.prototype.genereateRowElement = function (row, setup, styles) {
 			}
 
 			if (setup.rowFormatter && _this7.config.formatCells !== false) {
-				var rowComponent = row.getComponent();
-
-				rowComponent.getElement = function () {
-					return rowEl;
-				};
-
-				setup.rowFormatter(rowComponent);
+				setup.rowFormatter(row.component);
 			}
 		}
 	});

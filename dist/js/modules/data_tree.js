@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var DataTree = function DataTree(table) {
 	this.table = table;
@@ -135,15 +135,25 @@ DataTree.prototype.layoutRow = function (row) {
 
 	this.generateControlElement(row, el);
 
-	row.element.classList.add("tabulator-tree-level-" + config.index);
+	row.getElement().classList.add("tabulator-tree-level-" + config.index);
 
 	if (config.index) {
 		if (this.branchEl) {
 			config.branchEl = this.branchEl.cloneNode(true);
 			el.insertBefore(config.branchEl, el.firstChild);
-			config.branchEl.style.marginLeft = (config.branchEl.offsetWidth + config.branchEl.style.marginRight) * (config.index - 1) + config.index * this.indent + "px";
+
+			if (this.table.rtl) {
+				config.branchEl.style.marginRight = (config.branchEl.offsetWidth + config.branchEl.style.marginLeft) * (config.index - 1) + config.index * this.indent + "px";
+			} else {
+				config.branchEl.style.marginLeft = (config.branchEl.offsetWidth + config.branchEl.style.marginRight) * (config.index - 1) + config.index * this.indent + "px";
+			}
 		} else {
-			el.style.paddingLeft = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-left')) + config.index * this.indent + "px";
+
+			if (this.table.rtl) {
+				el.style.paddingRight = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-right')) + config.index * this.indent + "px";
+			} else {
+				el.style.paddingLeft = parseInt(window.getComputedStyle(el, null).getPropertyValue('padding-left')) + config.index * this.indent + "px";
+			}
 		}
 	}
 };
@@ -203,12 +213,15 @@ DataTree.prototype.getRows = function (rows) {
 
 		if (row instanceof Row) {
 
+			row.create();
+
 			config = row.modules.dataTree.children;
 
 			if (!config.index && config.children !== false) {
 				children = _this2.getChildren(row);
 
 				children.forEach(function (child) {
+					child.create();
 					output.push(child);
 				});
 			}
@@ -230,13 +243,13 @@ DataTree.prototype.getChildren = function (row) {
 			config.children = this.generateChildren(row);
 		}
 
-		if (this.table.modExists("filter")) {
+		if (this.table.modExists("filter") && this.table.options.dataTreeFilter) {
 			children = this.table.modules.filter.filter(config.children);
 		} else {
 			children = config.children;
 		}
 
-		if (this.table.modExists("sort")) {
+		if (this.table.modExists("sort") && this.table.options.dataTreeSort) {
 			this.table.modules.sort.sort(children);
 		}
 
@@ -267,8 +280,12 @@ DataTree.prototype.generateChildren = function (row) {
 
 	childArray.forEach(function (childData) {
 		var childRow = new Row(childData || {}, _this4.table.rowManager);
+
+		childRow.create();
+
 		childRow.modules.dataTree.index = row.modules.dataTree.index + 1;
 		childRow.modules.dataTree.parent = row;
+
 		if (childRow.modules.dataTree.children) {
 			childRow.modules.dataTree.open = _this4.startOpen(childRow.getComponent(), childRow.modules.dataTree.index);
 		}
@@ -333,7 +350,7 @@ DataTree.prototype.getFilteredTreeChildren = function (row) {
 			config.children = this.generateChildren(row);
 		}
 
-		if (this.table.modExists("filter")) {
+		if (this.table.modExists("filter") && this.table.options.dataTreeFilter) {
 			children = this.table.modules.filter.filter(config.children);
 		} else {
 			children = config.children;
@@ -455,7 +472,9 @@ DataTree.prototype.findChildIndex = function (subject, parent) {
 	return match;
 };
 
-DataTree.prototype.getTreeChildren = function (row) {
+DataTree.prototype.getTreeChildren = function (row, component, recurse) {
+	var _this6 = this;
+
 	var config = row.modules.dataTree,
 	    output = [];
 
@@ -467,7 +486,11 @@ DataTree.prototype.getTreeChildren = function (row) {
 
 		config.children.forEach(function (childRow) {
 			if (childRow instanceof Row) {
-				output.push(childRow.getComponent());
+				output.push(component ? childRow.getComponent() : childRow);
+
+				if (recurse) {
+					output = output.concat(_this6.getTreeChildren(childRow, component, recurse));
+				}
 			}
 		});
 	}

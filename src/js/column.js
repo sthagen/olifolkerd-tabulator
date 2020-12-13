@@ -154,11 +154,19 @@ ColumnComponent.prototype.getWidth = function(){
 
 
 ColumnComponent.prototype.setWidth = function(width){
+	var result;
+
 	if(width === true){
-		return this._column.reinitializeWidth(true);
+		result =  this._column.reinitializeWidth(true);
 	}else{
-		return this._column.setWidth(width);
+		result =  this._column.setWidth(width);
 	}
+
+	if(this._column.table.options.virtualDomHoz){
+		this._column.table.vdomHoz.reinitialize(true);
+	}
+
+	return result;
 };
 
 ColumnComponent.prototype.validate = function(){
@@ -178,6 +186,7 @@ var Column = function(def, parent){
 	this.cells = []; //cells bound to this column
 	this.element = this.createElement(); //column header element
 	this.contentElement = false;
+	this.titleHolderElement = false;
 	this.titleElement = false;
 	this.groupElement = this.createGroupElement(); //column group holder element
 	this.isGroup = false;
@@ -217,6 +226,8 @@ var Column = function(def, parent){
 
 	this.width = null; //column width
 	this.widthStyled = ""; //column width prestyled to improve render efficiency
+	this.maxWidth = null; //column maximum width
+	this.maxWidthStyled = ""; //column maximum prestyled to improve render efficiency
 	this.minWidth = null; //column minimum width
 	this.minWidthStyled = ""; //column minimum prestyled to improve render efficiency
 	this.widthFixed = false; //user has specified a width for this column
@@ -568,66 +579,65 @@ Column.prototype._bindEvents = function(){
 
 //build header element for header
 Column.prototype._buildColumnHeader = function(){
-	var self = this,
-	def = self.definition,
-	table = self.table,
+	var def = this.definition,
+	table = this.table,
 	sortable;
 
 	//set column sorter
 	if(table.modExists("sort")){
-		table.modules.sort.initializeColumn(self, self.contentElement);
+		table.modules.sort.initializeColumn(this, this.titleHolderElement);
 	}
 
 	//set column header context menu
-	if((def.headerContextMenu || def.headerMenu) && table.modExists("menu")){
-		table.modules.menu.initializeColumnHeader(self);
+	if((def.headerContextMenu || def.headerClickMenu || def.headerMenu) && table.modExists("menu")){
+		table.modules.menu.initializeColumnHeader(this);
 	}
 
 	//set column formatter
 	if(table.modExists("format")){
-		table.modules.format.initializeColumn(self);
+		table.modules.format.initializeColumn(this);
 	}
 
 	//set column editor
 	if(typeof def.editor != "undefined" && table.modExists("edit")){
-		table.modules.edit.initializeColumn(self);
+		table.modules.edit.initializeColumn(this);
 	}
 
 	//set colum validator
 	if(typeof def.validator != "undefined" && table.modExists("validate")){
-		table.modules.validate.initializeColumn(self);
+		table.modules.validate.initializeColumn(this);
 	}
 
 
 	//set column mutator
 	if(table.modExists("mutator")){
-		table.modules.mutator.initializeColumn(self);
+		table.modules.mutator.initializeColumn(this);
 	}
 
 	//set column accessor
 	if(table.modExists("accessor")){
-		table.modules.accessor.initializeColumn(self);
+		table.modules.accessor.initializeColumn(this);
 	}
 
 	//set respoviveLayout
 	if(typeof table.options.responsiveLayout && table.modExists("responsiveLayout")){
-		table.modules.responsiveLayout.initializeColumn(self);
+		table.modules.responsiveLayout.initializeColumn(this);
 	}
 
 	//set column visibility
 	if(typeof def.visible != "undefined"){
 		if(def.visible){
-			self.show(true);
+			this.show(true);
 		}else{
-			self.hide(true);
+			this.hide(true);
 		}
 	}
 
 	//asign additional css classes to column header
 	if(def.cssClass){
 		var classeNames = def.cssClass.split(" ");
-		classeNames.forEach(function(className) {
-			self.element.classList.add(className)
+		classeNames.forEach((className) => {
+			this.element.classList.add(className);
 		});
 	}
 
@@ -636,16 +646,24 @@ Column.prototype._buildColumnHeader = function(){
 	}
 
 	//set min width if present
-	self.setMinWidth(typeof def.minWidth == "undefined" ? self.table.options.columnMinWidth : parseInt(def.minWidth));
+	this.setMinWidth(typeof def.minWidth == "undefined" ? this.table.options.columnMinWidth : parseInt(def.minWidth));
 
-	self.reinitializeWidth();
+	if(def.maxWidth || this.table.options.columnMaxWidth){
+		if(def.maxWidth !== false){
+			this.setMaxWidth(typeof def.maxWidth == "undefined" ? this.table.options.columnMaxWidth : parseInt(def.maxWidth));
+		}
+	}
+
+	this.reinitializeWidth();
 
 	//set tooltip if present
-	self.tooltip = self.definition.tooltip || self.definition.tooltip === false ? self.definition.tooltip : self.table.options.tooltips;
+	this.tooltip = this.definition.tooltip || this.definition.tooltip === false ? this.definition.tooltip : this.table.options.tooltips;
 
 	//set orizontal text alignment
-	self.hozAlign = typeof(self.definition.hozAlign) == "undefined" ? self.table.options.cellHozAlign : self.definition.hozAlign;
-	self.vertAlign = typeof(self.definition.vertAlign) == "undefined" ? self.table.options.cellVertAlign : self.definition.vertAlign;
+	this.hozAlign = typeof(this.definition.hozAlign) == "undefined" ? this.table.options.cellHozAlign : this.definition.hozAlign;
+	this.vertAlign = typeof(this.definition.vertAlign) == "undefined" ? this.table.options.cellVertAlign : this.definition.vertAlign;
+
+	this.titleElement.style.textAlign = this.definition.headerHozAlign || this.table.options.headerHozAlign;
 };
 
 Column.prototype._buildColumnHeaderContent = function(){
@@ -655,9 +673,14 @@ Column.prototype._buildColumnHeaderContent = function(){
 	var contentElement = document.createElement("div");
 	contentElement.classList.add("tabulator-col-content");
 
+	this.titleHolderElement = document.createElement("div");
+	this.titleHolderElement.classList.add("tabulator-col-title-holder");
+
+	contentElement.appendChild(this.titleHolderElement);
+
 	this.titleElement = this._buildColumnHeaderTitle();
 
-	contentElement.appendChild(this.titleElement);
+	this.titleHolderElement.appendChild(this.titleElement);
 
 	return contentElement;
 };
@@ -775,6 +798,8 @@ Column.prototype._buildGroupHeader = function(){
 	if ((this.definition.headerContextMenu || this.definition.headerMenu) && this.table.modExists("menu")) {
 		this.table.modules.menu.initializeColumnHeader(this);
 	}
+
+	this.titleElement.style.textAlign = this.definition.headerHozAlign || this.table.options.headerHozAlign;
 
 	this.element.appendChild(this.groupElement);
 };
@@ -984,8 +1009,6 @@ Column.prototype.checkColumnVisibility = function(){
 		}
 	});
 
-
-
 	if(visible){
 		this.show();
 		this.parent.table.options.columnVisibilityChanged.call(this.table, this.getComponent(), false);
@@ -1031,6 +1054,10 @@ Column.prototype.show = function(silent, responsiveToggle){
 		if(this.parent.isGroup){
 			this.parent.matchChildWidths();
 		}
+
+		if(!this.silent && this.table.options.virtualDomHoz){
+			this.table.vdomHoz.reinitialize();
+		}
 	}
 };
 
@@ -1066,6 +1093,10 @@ Column.prototype.hide = function(silent, responsiveToggle){
 		if(this.parent.isGroup){
 			this.parent.matchChildWidths();
 		}
+
+		if(!this.silent && this.table.options.virtualDomHoz){
+			this.table.vdomHoz.reinitialize();
+		}
 	}
 };
 
@@ -1087,6 +1118,19 @@ Column.prototype.matchChildWidths = function(){
 	}
 };
 
+Column.prototype.removeChild = function(child){
+	var index = this.columns.indexOf(child);
+
+	if(index > -1){
+		this.columns.splice(index, 1);
+	}
+
+	if(!this.columns.length){
+		this.delete();
+	}
+};
+
+
 Column.prototype.setWidth = function(width){
 	this.widthFixed = true;
 	this.setWidthActual(width);
@@ -1098,6 +1142,10 @@ Column.prototype.setWidthActual = function(width){
 	}
 
 	width = Math.max(this.minWidth, width);
+
+	if(this.maxWidth){
+		width = Math.min(this.maxWidth, width);
+	}
 
 	this.width = width;
 	this.widthStyled = width ? width + "px" : "";
@@ -1175,8 +1223,20 @@ Column.prototype.setMinWidth = function(minWidth){
 	});
 };
 
+Column.prototype.setMaxWidth = function(maxWidth){
+	this.maxWidth = maxWidth;
+	this.maxWidthStyled = maxWidth ? maxWidth + "px" : "";
+
+	this.element.style.maxWidth = this.maxWidthStyled;
+
+	this.cells.forEach(function(cell){
+		cell.setMaxWidth();
+	});
+};
+
 Column.prototype.delete = function(){
 	return new Promise((resolve, reject) => {
+		var index;
 
 		if(this.isGroup){
 			this.columns.forEach(function(column){
@@ -1197,9 +1257,24 @@ Column.prototype.delete = function(){
 			this.cells[0].delete();
 		}
 
-		this.element.parentNode.removeChild(this.element);
+		if(this.element.parentNode){
+			this.element.parentNode.removeChild(this.element);
+		}
+
+		this.element = false;
+		this.contentElement = false;
+		this.titleElement = false;
+		this.groupElement = false;
+
+		if(this.parent.isGroup){
+			this.parent.removeChild(this);
+		}
 
 		this.table.columnManager.deregisterColumn(this);
+
+		if(this.table.options.virtualDomHoz){
+			this.table.vdomHoz.reinitialize(true);
+		}
 
 		resolve();
 	});
@@ -1361,6 +1436,7 @@ Column.prototype.defaultOptionList = [
 "vertAlign",
 "width",
 "minWidth",
+"maxWidth",
 "widthGrow",
 "widthShrink",
 "resizable",
@@ -1437,6 +1513,7 @@ Column.prototype.defaultOptionList = [
 "headerTapHold",
 "headerTooltip",
 "headerVertical",
+"headerHozAlign",
 "editableTitle",
 "titleFormatter",
 "titleFormatterParams",
@@ -1451,6 +1528,8 @@ Column.prototype.defaultOptionList = [
 "headerContextMenu",
 "headerMenu",
 "contextMenu",
+// "headerClickMenu",
+"clickMenu",
 "formatterPrint",
 "formatterPrintParams",
 "formatterClipboard",

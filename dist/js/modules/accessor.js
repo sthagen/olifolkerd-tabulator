@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var Accessor = function Accessor(table) {
 	this.table = table; //hold Tabulator object
@@ -58,15 +58,15 @@ Accessor.prototype.lookupAccessor = function (value) {
 };
 
 //apply accessor to row
-Accessor.prototype.transformRow = function (dataIn, type) {
-	var self = this,
-	    key = "accessor" + (type.charAt(0).toUpperCase() + type.slice(1));
+Accessor.prototype.transformRow = function (row, type) {
+	var key = "accessor" + (type.charAt(0).toUpperCase() + type.slice(1)),
+	    rowComponent = row.getComponent();
 
 	//clone data object with deep copy to isolate internal data from returned result
-	var data = Tabulator.prototype.helpers.deepClone(dataIn || {});
+	var data = Tabulator.prototype.helpers.deepClone(row.data || {});
 
-	self.table.columnManager.traverse(function (column) {
-		var value, accessor, params, component;
+	this.table.columnManager.traverse(function (column) {
+		var value, accessor, params, colCompnent;
 
 		if (column.modules.accessor) {
 
@@ -76,9 +76,9 @@ Accessor.prototype.transformRow = function (dataIn, type) {
 				value = column.getFieldValue(data);
 
 				if (value != "undefined") {
-					component = column.getComponent();
-					params = typeof accessor.params === "function" ? accessor.params(value, data, type, component) : accessor.params;
-					column.setFieldValue(data, accessor.accessor(value, data, type, params, component));
+					colCompnent = column.getComponent();
+					params = typeof accessor.params === "function" ? accessor.params(value, data, type, colCompnent, rowComponent) : accessor.params;
+					column.setFieldValue(data, accessor.accessor(value, data, type, params, colCompnent, rowComponent));
 				}
 			}
 		}

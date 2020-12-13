@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var Format = function Format(table) {
 	this.table = table; //hold Tabulator object
@@ -62,8 +62,9 @@ Format.prototype.lookupFormatter = function (column, type) {
 };
 
 Format.prototype.cellRendered = function (cell) {
-	if (cell.modules.format && cell.modules.format.renderedCallback) {
+	if (cell.modules.format && cell.modules.format.renderedCallback && !cell.modules.format.rendered) {
 		cell.modules.format.renderedCallback();
+		cell.modules.format.rendered = true;
 	}
 };
 
@@ -78,6 +79,7 @@ Format.prototype.formatValue = function (cell) {
 		}
 
 		cell.modules.format.renderedCallback = callback;
+		cell.modules.format.rendered = false;
 	}
 
 	return cell.column.modules.format.formatter.call(this, component, params, onRendered);
@@ -94,6 +96,7 @@ Format.prototype.formatExportValue = function (cell, type) {
 			}
 
 			cell.modules.format.renderedCallback = callback;
+			cell.modules.format.rendered = false;
 		};
 
 		params = typeof formatter.params === "function" ? formatter.params(component) : formatter.params;
@@ -277,8 +280,18 @@ Format.prototype.formatters = {
 
 	//image element
 	image: function image(cell, formatterParams, onRendered) {
-		var el = document.createElement("img");
-		el.setAttribute("src", cell.getValue());
+		var el = document.createElement("img"),
+		    src = cell.getValue();
+
+		if (formatterParams.urlPrefix) {
+			src = formatterParams.urlPrefix + cell.getValue();
+		}
+
+		if (formatterParams.urlSuffix) {
+			src = src + formatterParams.urlSuffix;
+		}
+
+		el.setAttribute("src", src);
 
 		switch (_typeof(formatterParams.height)) {
 			case "number":
@@ -684,7 +697,7 @@ Format.prototype.formatters = {
 		return el;
 	},
 
-	rowSelection: function rowSelection(cell) {
+	rowSelection: function rowSelection(cell, formatterParams, onRendered) {
 		var _this = this;
 
 		var checkbox = document.createElement("input");
@@ -700,18 +713,23 @@ Format.prototype.formatters = {
 			if (typeof cell.getRow == 'function') {
 				var row = cell.getRow();
 
-				checkbox.addEventListener("change", function (e) {
-					row.toggleSelect();
-				});
+				if (row instanceof RowComponent) {
 
-				checkbox.checked = row.isSelected();
-				this.table.modules.selectRow.registerRowSelectCheckbox(row, checkbox);
+					checkbox.addEventListener("change", function (e) {
+						row.toggleSelect();
+					});
+
+					checkbox.checked = row.isSelected && row.isSelected();
+					this.table.modules.selectRow.registerRowSelectCheckbox(row, checkbox);
+				} else {
+					checkbox = "";
+				}
 			} else {
 				checkbox.addEventListener("change", function (e) {
 					if (_this.table.modules.selectRow.selectedRows.length) {
 						_this.table.deselectRow();
 					} else {
-						_this.table.selectRow();
+						_this.table.selectRow(formatterParams.rowRange);
 					}
 				});
 

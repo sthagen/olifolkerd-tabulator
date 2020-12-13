@@ -276,7 +276,7 @@ Ajax.prototype.sendRequest = function(silent){
 
 				self.loading = false;
 
-				reject();
+				reject(error);
 			});
 		}else{
 			reject();
@@ -341,7 +341,7 @@ Ajax.prototype.defaultURLGenerator = function(url, config, params){
 			if(!config.method || config.method.toLowerCase() == "get"){
 				config.method = "get";
 
-				url += (url.includes("?") ? "&" : "?") + this.serializeParams(params);
+				url += (url.includes("?") ? "&" : "?") + this.modules.ajax.serializeParams(params);
 			}
 		}
 	}
@@ -355,7 +355,7 @@ Ajax.prototype.defaultLoaderPromise = function(url, config, params){
 	return new Promise(function(resolve, reject){
 
 		//set url
-		url = self.urlGenerator(url, config, params);
+		url = self.urlGenerator.call(self.table, url, config, params);
 
 		//set body content if not GET request
 		if(config.method.toUpperCase() != "GET"){

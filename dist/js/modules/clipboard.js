@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.7.2 (c) Oliver Folkerd */
+/* Tabulator v4.9.1 (c) Oliver Folkerd */
 
 var Clipboard = function Clipboard(table) {
 	this.table = table;
@@ -35,7 +35,7 @@ Clipboard.prototype.initialize = function () {
 					}
 				} else {
 
-					var list = _this.table.modules.export.generateExportList(_this.rowRange, _this.table.options.clipboardCopyStyled, _this.table.options.clipboardCopyConfig, "clipboard");
+					var list = _this.table.modules.export.generateExportList(_this.table.options.clipboardCopyConfig, _this.table.options.clipboardCopyStyled, _this.rowRange, "clipboard");
 
 					html = _this.table.modules.export.genereateHTMLTable(list);
 					plain = html ? _this.generatePlainContent(list) : "";
@@ -78,8 +78,8 @@ Clipboard.prototype.initialize = function () {
 };
 
 Clipboard.prototype.reset = function () {
-	this.blocked = false;
-	this.originalSelectionText = "";
+	this.blocked = true;
+	this.customSelection = false;
 };
 
 Clipboard.prototype.generatePlainContent = function (list) {
@@ -97,18 +97,21 @@ Clipboard.prototype.generatePlainContent = function (list) {
 					col.value = col.component.getKey();
 				}
 
-				switch (_typeof(col.value)) {
-					case "object":
-						value = JSON.stringify(col.value);
-						break;
+				if (col.value === null) {
+					value = "";
+				} else {
+					switch (_typeof(col.value)) {
+						case "object":
+							value = JSON.stringify(col.value);
+							break;
 
-					case "undefined":
-					case "null":
-						value = "";
-						break;
+						case "undefined":
+							value = "";
+							break;
 
-					default:
-						value = col.value;
+						default:
+							value = col.value;
+					}
 				}
 			}
 
