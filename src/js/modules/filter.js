@@ -134,7 +134,7 @@ Filter.prototype.generateHeaderFilterElement = function(column, initialValue, re
 
 		//set empty value function
 		column.modules.filter.emptyFunc = column.definition.headerFilterEmptyCheck || function(value){
-			return !value && value !== "0";
+			return !value && value !== "0" && value !== 0;
 		};
 
 		filterElement = document.createElement("div");
@@ -593,7 +593,9 @@ Filter.prototype.clearHeaderFilter = function(){
 	self.prevHeaderFilterChangeCheck = "{}";
 
 	this.headerFilterColumns.forEach(function(column){
-		column.modules.filter.value = null;
+		if(typeof column.modules.filter.value !== "undefined"){
+			delete column.modules.filter.value;
+		}
 		column.modules.filter.prevSuccess = undefined;
 		self.reloadHeaderFilter(column);
 	});

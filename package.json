@@ -1,6 +1,6 @@
 {
   "name": "tabulator-tables",
-  "version": "4.9.1",
+  "version": "4.9.3",
   "description": "Interactive table generation JavaScript library",
   "main": "dist/js/tabulator.js",
   "module": "dist/js/tabulator.es2015.js",
@@ -56,6 +56,7 @@
     "gulp-sass": "^3.1.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-uglify": "^2.1.2",
+    "gulp-uglify-es": "^2.0.0",
     "gulp-util": "^3.0.8",
     "jshint": "^2.11.1"
   }

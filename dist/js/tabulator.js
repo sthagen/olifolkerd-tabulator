@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v4.9.1 (c) Oliver Folkerd */
+/* Tabulator v4.9.3 (c) Oliver Folkerd */
 
 ;(function (global, factory) {
 	if ((typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined') {
@@ -3190,31 +3190,39 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			if (!_this10.isGroup) {
 
-				definition = Object.assign({}, _this10.getDefinition());
+				if (!_this10.parent.isGroup) {
 
-				definition = Object.assign(definition, updates);
+					definition = Object.assign({}, _this10.getDefinition());
 
-				_this10.table.columnManager.addColumn(definition, false, _this10).then(function (column) {
+					definition = Object.assign(definition, updates);
 
-					if (definition.field == _this10.field) {
+					_this10.table.columnManager.addColumn(definition, false, _this10).then(function (column) {
 
-						_this10.field = false; //cleair field name to prevent deletion of duplicate column from arrays
-					}
+						if (definition.field == _this10.field) {
 
-					_this10.delete().then(function () {
+							_this10.field = false; //cleair field name to prevent deletion of duplicate column from arrays
+						}
 
-						resolve(column.getComponent());
+						_this10.delete().then(function () {
+
+							resolve(column.getComponent());
+						}).catch(function (err) {
+
+							reject(err);
+						});
 					}).catch(function (err) {
 
 						reject(err);
 					});
-				}).catch(function (err) {
+				} else {
 
-					reject(err);
-				});
+					console.warn("Column Update Error - The updateDefinition function is only available on ungrouped columns");
+
+					reject("Column Update Error - The updateDefinition function is only available on columns, not column groups");
+				}
 			} else {
 
-				console.warn("Column Update Error - The updateDefinition function is only available on columns, not column groups");
+				console.warn("Column Update Error - The updateDefinition function is only available on ungrouped columns");
 
 				reject("Column Update Error - The updateDefinition function is only available on columns, not column groups");
 			}
@@ -5541,7 +5549,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 		if (this.renderMode === "virtual") {
 
-			var otherHeight = Math.floor(this.columnManager.getElement().getBoundingClientRect().height + (this.table.footerManager && !this.table.footerManager.external ? this.table.footerManager.getElement().getBoundingClientRect().height : 0));
+			var otherHeight = Math.floor(this.columnManager.getElement().getBoundingClientRect().height + (this.table.footerManager && this.table.footerManager.active && !this.table.footerManager.external ? this.table.footerManager.getElement().getBoundingClientRect().height : 0));
 
 			if (this.fixedHeight) {
 
@@ -6239,7 +6247,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 				var column = this.columns[_i7];
 
-				if (column.visible) {
+				if (column && column.visible) {
 
 					var cell = row.getCell(column);
 
@@ -14283,14 +14291,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		return output;
 	};
 
-	DataTree.prototype.getChildren = function (row) {
+	DataTree.prototype.getChildren = function (row, allChildren) {
 		var _this49 = this;
 
 		var config = row.modules.dataTree,
 		    children = [],
 		    output = [];
 
-		if (config.children !== false && config.open) {
+		if (config.children !== false && (config.open || allChildren)) {
 			if (!Array.isArray(config.children)) {
 				config.children = this.generateChildren(row);
 			}
@@ -15179,7 +15187,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 				rightEdge -= parseInt(this.table.modules.frozenColumns.rightMargin);
 			}
 
+			if (this.table.options.virtualDomHoz) {
+				leftEdge -= parseInt(this.table.vdomHoz.vDomPadLeft);
+				rightEdge -= parseInt(this.table.vdomHoz.vDomPadLeft);
+			}
+
 			if (cellEl.offsetLeft < leftEdge) {
+
 				this.table.rowManager.element.scrollLeft -= leftEdge - cellEl.offsetLeft;
 			} else {
 				if (cellEl.offsetLeft + cellEl.offsetWidth > rightEdge) {
@@ -16168,7 +16182,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 					success(item.value);
 				}
 
-				initialDisplayValue = input.value;
+				initialDisplayValue = [item.value];
 			}
 
 			function chooseItems(silent) {
@@ -16182,7 +16196,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 					output.push(item.value);
 				});
 
-				initialDisplayValue = input.value;
+				initialDisplayValue = output;
 
 				success(output);
 			}
@@ -16712,6 +16726,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			function showList() {
 				if (!listEl.parentNode) {
+
+					console.log("show", initialDisplayValue);
 					while (listEl.firstChild) {
 						listEl.removeChild(listEl.firstChild);
 					}var offset = Tabulator.prototype.helpers.elOffset(cellEl);
@@ -18008,7 +18024,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			//set empty value function
 			column.modules.filter.emptyFunc = column.definition.headerFilterEmptyCheck || function (value) {
-				return !value && value !== "0";
+				return !value && value !== "0" && value !== 0;
 			};
 
 			filterElement = document.createElement("div");
@@ -18448,7 +18464,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		self.prevHeaderFilterChangeCheck = "{}";
 
 		this.headerFilterColumns.forEach(function (column) {
-			column.modules.filter.value = null;
+			if (typeof column.modules.filter.value !== "undefined") {
+				delete column.modules.filter.value;
+			}
 			column.modules.filter.prevSuccess = undefined;
 			self.reloadHeaderFilter(column);
 		});
@@ -22784,8 +22802,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		var receiver = false,
 		    success = false;
 
-		console.trace("drop");
-
 		e.stopImmediatePropagation();
 
 		switch (_typeof(this.table.options.movableRowsReceiver)) {
@@ -23304,7 +23320,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			page = parseInt(page);
 
-			if (page > 0 && page <= _this77.max) {
+			if (page > 0 && page <= _this77.max || _this77.mode !== "local") {
 				_this77.page = page;
 				_this77.trigger().then(function () {
 					resolve();
@@ -23825,7 +23841,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		}
 
 		if (this.config.columns) {
-			this.load("columns", this.table.options.columns);
+			this.table.options.columns = this.load("columns", this.table.options.columns);
 		}
 	};
 
@@ -25458,6 +25474,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 		if (row) {
 			if (this.selectedRows.indexOf(row) == -1) {
+				row.getElement().classList.add("tabulator-selected");
 				if (!row.modules.select) {
 					row.modules.select = {};
 				}
@@ -25466,7 +25483,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 				if (row.modules.select.checkboxEl) {
 					row.modules.select.checkboxEl.checked = true;
 				}
-				row.getElement().classList.add("tabulator-selected");
 
 				this.selectedRows.push(row);
 
@@ -25531,6 +25547,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			if (index > -1) {
 
+				row.getElement().classList.remove("tabulator-selected");
 				if (!row.modules.select) {
 					row.modules.select = {};
 				}
@@ -25539,7 +25556,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 				if (row.modules.select.checkboxEl) {
 					row.modules.select.checkboxEl.checked = false;
 				}
-				row.getElement().classList.remove("tabulator-selected");
 				self.selectedRows.splice(index, 1);
 
 				if (this.table.options.dataTreeSelectPropagate) {
@@ -25612,7 +25628,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 	};
 
 	SelectRow.prototype.childRowSelection = function (row, select) {
-		var children = this.table.modules.dataTree.getChildren(row);
+		var children = this.table.modules.dataTree.getChildren(row, true);
 
 		if (select) {
 			for (var _iterator2 = children, _isArray2 = Array.isArray(_iterator2), _i19 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
@@ -25981,8 +25997,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		a = typeof a !== "undefined" ? a : "";
 		b = typeof b !== "undefined" ? b : "";
 
-		// el1Comp = el1.getComponent();
-		// el2Comp = el2.getComponent();
+		el1Comp = el1.getComponent();
+		el2Comp = el2.getComponent();
 
 		return column.modules.sort.sorter.call(this, a, b, el1Comp, el2Comp, column.getComponent(), dir, params);
 	};
