@@ -1,4 +1,4 @@
-/* Tabulator v5.0.0 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.1 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -21294,12 +21294,11 @@ class ComponentFuctionBinder{
 		if(this.bindings[type] && this.bindings[type][name]){
 			return this.bindings[type][name].bind(null, component);
 		}else {
-			if(name !== "then"){
-				console.error("The " + type + " component does not have a " + name + " function, have you checked that you have the correct Tabulator module installed?");
+			if(name !== "then" && typeof name === "string" && !name.startsWith("_")){
+					console.error("The " + type + " component does not have a " + name + " function, have you checked that you have the correct Tabulator module installed?");
 			}
 		}
 	}
-
 }
 
 class DataLoader extends CoreFeature{
@@ -22495,6 +22494,8 @@ class Tabulator {
 
 		this.optionsList = new OptionsList(this, "table constructor");
 
+		this.initialized = false;
+
 		if(this.initializeElement(element)){
 
 			this.initialzeCoreSystems(options);
@@ -22605,6 +22606,8 @@ class Tabulator {
 		this._buildElement();
 
 		this._loadInitialData();
+
+		this.initialized = true;
 	}
 
 	//clear pointers to objects in default config object
@@ -22798,7 +22801,11 @@ class Tabulator {
 
 	//load data
 	setData(data, params, config){
-		return this.dataLoader.load(data, params, config, false);
+		if(this.initialized){
+			return this.dataLoader.load(data, params, config, false);
+		}else {
+			console.warn("setData failed - table not yet initialized. To set initial data please use the 'data' property in the table constructor.");
+		}
 	}
 
 	//clear data
@@ -23312,5 +23319,5 @@ class PseudoRow {
 	clearCellHeight(){}
 }
 
-export { CalcComponent, CellComponent, ColumnComponent, GroupComponent, Module, PseudoRow, Renderer, RowComponent$1 as RowComponent, Tabulator, TabulatorFull, modules };
+export { Accessor as AccessorModule, Ajax as AjaxModule, CalcComponent, CellComponent, Clipboard as ClipboardModule, ColumnCalcs as ColumnCalcsModule, ColumnComponent, DataTree as DataTreeModule, Download as DownloadModule, Edit as EditModule, Export as ExportModule, Filter as FilterModule, Format as FormatModule, FrozenColumns as FrozenColumnsModule, FrozenRows as FrozenRowsModule, GroupComponent, GroupRows as GroupRowsModule, History as HistoryModule, HtmlTableImport as HtmlTableImportModule, Interaction as InteractionModule, Keybindings as KeybindingsModule, Menu as MenuModule, Module, MoveColumns as MoveColumnsModule, MoveRows as MoveRowsModule, Mutator as MutatorModule, Page as PageModule, Persistence as PersistenceModule, Print as PrintModule, PseudoRow, ReactiveData as ReactiveDataModule, Renderer, ResizeColumns as ResizeColumnsModule, ResizeRows as ResizeRowsModule, ResizeTable as ResizeTableModule, ResponsiveLayout as ResponsiveLayoutModule, RowComponent$1 as RowComponent, SelectRow as SelectRowModule, Sort as SortModule, Tabulator, TabulatorFull, Validate as ValidateModule };
 //# sourceMappingURL=tabulator_esm.js.map
