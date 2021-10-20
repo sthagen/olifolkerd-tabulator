@@ -160,6 +160,8 @@ class Tabulator {
 		this._loadInitialData();
 
 		this.initialized = true;
+
+		this.externalEvents.dispatch("tableBuilt");
 	}
 
 	//clear pointers to objects in default config object
@@ -234,7 +236,8 @@ class Tabulator {
 			this.footerManager.activate();
 		}
 
-		if(options.autoColumns && this.options.data){
+		if(options.autoColumns && options.data){
+
 			this.columnManager.generateColumnsFromRowData(this.options.data);
 		}
 
@@ -248,7 +251,6 @@ class Tabulator {
 		this.columnManager.setColumns(options.columns);
 
 		this.eventBus.dispatch("table-built");
-		this.externalEvents.dispatch("tableBuilt");
 	}
 
 	_loadInitialData(){

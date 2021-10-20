@@ -1,4 +1,4 @@
-/* Tabulator v5.0.1 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.2 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -2836,6 +2836,10 @@ class Row$1 extends CoreFeature{
 		}
 	}
 
+	deinitializeHeight(){
+		this.heightInitialized = false;
+	}
+
 	reinitialize(children){
 		this.initialized = false;
 		this.heightInitialized = false;
@@ -2892,7 +2896,6 @@ class Row$1 extends CoreFeature{
 
 	//normalize the height of elements in the row
 	normalizeHeight(force){
-
 		if(force){
 			this.clearCellHeight();
 		}
@@ -13943,6 +13946,8 @@ class Page extends Module{
 
 			this.table.rowManager.getTableElement().removeChild(testElRow);
 		}
+
+		this.generatePageSizeSelectList();
 	}
 
 	initialLoadComplete(){
@@ -14064,6 +14069,8 @@ class Page extends Module{
 			if(Array.isArray(this.table.options.paginationSizeSelector)){
 				pageSizes = this.table.options.paginationSizeSelector;
 				this.pageSizes = pageSizes;
+
+				console.log("gen",this.size);
 
 				if(this.pageSizes.indexOf(this.size) == -1){
 					pageSizes.unshift(this.size);
@@ -14202,8 +14209,6 @@ class Page extends Module{
 
 			this.page = this.table.options.paginationInitialPage;
 			this.count = this.table.options.paginationButtonCount;
-
-			this.generatePageSizeSelectList();
 		}
 
 		//set default values
@@ -14321,6 +14326,8 @@ class Page extends Module{
 			// this.pageSizeSelect.value = size;
 			this.generatePageSizeSelectList();
 		}
+
+		console.log("set", size, this.size);
 
 		this.trackChanges();
 	}
@@ -19461,6 +19468,10 @@ class VirtualDomVertical extends Renderer{
 			}
 		}
 
+		rows.forEach((row) => {
+			row.deinitializeHeight();
+		});
+
 		if(callback){
 			callback();
 		}
@@ -20110,13 +20121,12 @@ class RowManager extends CoreFeature{
 					});
 				}
 			}else {
-				if(this.table.options.autoColumns && columnsChanged){
+				if(this.table.options.autoColumns && columnsChanged && this.table.initialized){
 					this.table.columnManager.generateColumnsFromRowData(data);
 				}
 				this.resetScroll();
 
 				this._setDataActual(data);
-
 			}
 
 			resolve();
@@ -20978,7 +20988,7 @@ class FooterManager extends CoreFeature{
 	}
 
 	initialize(){
-
+		this.initializeElement();
 	}
 
 	createElement (){
@@ -20989,7 +20999,7 @@ class FooterManager extends CoreFeature{
 		return el;
 	}
 
-	initializeElement(element){
+	initializeElement(){
 		if(this.table.options.footerElement){
 
 			switch(typeof this.table.options.footerElement){
@@ -22399,7 +22409,7 @@ class ModuleBinder {
 
 		tabulator.extendModule = function(name, property, values){
 			if(tabulator.moduleBindings[name]){
-				var source = tabulator.moduleBindings[name].prototype[property];
+				var source = tabulator.moduleBindings[name][property];
 
 				if(source){
 					if(typeof values == "object"){
@@ -22608,6 +22618,8 @@ class Tabulator {
 		this._loadInitialData();
 
 		this.initialized = true;
+
+		this.externalEvents.dispatch("tableBuilt");
 	}
 
 	//clear pointers to objects in default config object
@@ -22682,7 +22694,8 @@ class Tabulator {
 			this.footerManager.activate();
 		}
 
-		if(options.autoColumns && this.options.data){
+		if(options.autoColumns && options.data){
+
 			this.columnManager.generateColumnsFromRowData(this.options.data);
 		}
 
@@ -22696,7 +22709,6 @@ class Tabulator {
 		this.columnManager.setColumns(options.columns);
 
 		this.eventBus.dispatch("table-built");
-		this.externalEvents.dispatch("tableBuilt");
 	}
 
 	_loadInitialData(){
