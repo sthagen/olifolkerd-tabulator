@@ -1,4 +1,4 @@
-/* Tabulator v5.0.2 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.3 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -210,18 +210,29 @@ class Helpers$1{
 		};
 	}
 
-	static deepClone(obj){
-		var clone = Object.assign(Array.isArray(obj) ? [] : {}, obj);
+	static deepClone(obj, clone, list = {}){
+		if (!clone){
+			clone = Object.assign(Array.isArray(obj) ? [] : {}, obj);
+		}
 
 		for(var i in obj) {
-			if(obj[i] != null && typeof(obj[i])  === "object"){
-				if (obj[i] instanceof Date) {
-					clone[i] = new Date(obj[i]);
+			let subject = obj[i];
+
+			if(subject != null && typeof(subject)  === "object"){
+				if (subject instanceof Date) {
+					clone[i] = new Date(subject);
 				} else {
-					clone[i] = this.deepClone(obj[i]);
+					if(list[subject]){
+						clone[i] = list[subject];
+					}else {
+						list[subject] = Object.assign(Array.isArray(obj) ? [] : {}, obj);
+						clone[i] = this.deepClone(subject, list[subject], list);
+					}
+
 				}
 			}
 		}
+
 		return clone;
 	}
 }
@@ -259,7 +270,7 @@ class Accessor extends Module{
 		var match = false,
 		config = {};
 
-		this.allowedTypes.forEach(function(type){
+		this.allowedTypes.forEach((type) => {
 			var key = "accessor" + (type.charAt(0).toUpperCase() + type.slice(1)),
 			accessor;
 
@@ -10826,6 +10837,8 @@ class Group{
 
 	clearCellHeight(){}
 
+	deinitializeHeight(){}
+
 	//////////////// Object Generation /////////////////
 	getComponent(){
 		if(!this.component){
@@ -11162,14 +11175,12 @@ class GroupRows extends Module{
 	getRows(rows){
 		if(this.groupIDLookups.length){
 
-			if(!Object.keys(this.groups).length){
-				this.dispatchExternal("dataGrouping");
+			this.dispatchExternal("dataGrouping");
 
-				this.generateGroups(rows);
+			this.generateGroups(rows);
 
-				if(this.subscribedExternal("dataGrouped")){
-					this.dispatchExternal("dataGrouped", this.getGroups(true));
-				}
+			if(this.subscribedExternal("dataGrouped")){
+				this.dispatchExternal("dataGrouped", this.getGroups(true));
 			}
 
 			return this.updateGroupRows();
@@ -14070,8 +14081,6 @@ class Page extends Module{
 				pageSizes = this.table.options.paginationSizeSelector;
 				this.pageSizes = pageSizes;
 
-				console.log("gen",this.size);
-
 				if(this.pageSizes.indexOf(this.size) == -1){
 					pageSizes.unshift(this.size);
 				}
@@ -14326,8 +14335,6 @@ class Page extends Module{
 			// this.pageSizeSelect.value = size;
 			this.generatePageSizeSelectList();
 		}
-
-		console.log("set", size, this.size);
 
 		this.trackChanges();
 	}
@@ -15223,7 +15230,8 @@ class ReactiveData extends Module{
 	}
 
 	watchData(data){
-		var version;
+		var self = this,
+		version;
 
 		this.currentVersion ++;
 
@@ -15239,16 +15247,16 @@ class ReactiveData extends Module{
 		Object.defineProperty(this.data, "push", {
 			enumerable: false,
 			configurable: true,
-			value: () => {
+			value: function(){
 				var args = Array.from(arguments);
 
-				if(!this.blocked && version === this.currentVersion){
+				if(!self.blocked && version === self.currentVersion){
 					args.forEach((arg) => {
-						this.table.rowManager.addRowActual(arg, false);
+						self.table.rowManager.addRowActual(arg, false);
 					});
 				}
 
-				return this.origFuncs.push.apply(data, arguments);
+				return self.origFuncs.push.apply(data, arguments);
 			}
 		});
 
@@ -15258,16 +15266,16 @@ class ReactiveData extends Module{
 		Object.defineProperty(this.data, "unshift", {
 			enumerable: false,
 			configurable: true,
-			value: () => {
+			value: function(){
 				var args = Array.from(arguments);
 
-				if(!this.blocked && version === this.currentVersion){
+				if(!self.blocked && version === self.currentVersion){
 					args.forEach((arg) => {
-						this.table.rowManager.addRowActual(arg, true);
+						self.table.rowManager.addRowActual(arg, true);
 					});
 				}
 
-				return this.origFuncs.unshift.apply(data, arguments);
+				return self.origFuncs.unshift.apply(data, arguments);
 			}
 		});
 
@@ -15278,12 +15286,12 @@ class ReactiveData extends Module{
 		Object.defineProperty(this.data, "shift", {
 			enumerable: false,
 			configurable: true,
-			value: () => {
+			value: function(){
 				var row;
 
-				if(!this.blocked && version === this.currentVersion){
-					if(this.data.length){
-						row = this.table.rowManager.getRowFromDataObject(this.data[0]);
+				if(!self.blocked && version === self.currentVersion){
+					if(self.data.length){
+						row = self.table.rowManager.getRowFromDataObject(self.data[0]);
 
 						if(row){
 							row.deleteActual();
@@ -15291,7 +15299,7 @@ class ReactiveData extends Module{
 					}
 				}
 
-				return this.origFuncs.shift.call(data);
+				return self.origFuncs.shift.call(data);
 			}
 		});
 
@@ -15301,18 +15309,18 @@ class ReactiveData extends Module{
 		Object.defineProperty(this.data, "pop", {
 			enumerable: false,
 			configurable: true,
-			value: () => {
+			value: function(){
 				var row;
-				if(!this.blocked && version === this.currentVersion){
-					if(this.data.length){
-						row = this.table.rowManager.getRowFromDataObject(this.data[this.data.length - 1]);
+				if(!self.blocked && version === self.currentVersion){
+					if(self.data.length){
+						row = self.table.rowManager.getRowFromDataObject(self.data[self.data.length - 1]);
 
 						if(row){
 							row.deleteActual();
 						}
 					}
 				}
-				return this.origFuncs.pop.call(data);
+				return self.origFuncs.pop.call(data);
 			}
 		});
 
@@ -15323,28 +15331,28 @@ class ReactiveData extends Module{
 		Object.defineProperty(this.data, "splice", {
 			enumerable: false,
 			configurable: true,
-			value: () => {
+			value: function(){
 				var args = Array.from(arguments),
 				start = args[0] < 0 ? data.length + args[0] : args[0],
 				end = args[1],
 				newRows = args[2] ? args.slice(2) : false,
 				startRow;
 
-				if(!this.blocked && version === this.currentVersion){
+				if(!self.blocked && version === self.currentVersion){
 
 					//add new rows
 					if(newRows){
-						startRow = data[start] ? this.table.rowManager.getRowFromDataObject(data[start]) : false;
+						startRow = data[start] ? self.table.rowManager.getRowFromDataObject(data[start]) : false;
 
 						if(startRow){
 							newRows.forEach((rowData) => {
-								this.table.rowManager.addRowActual(rowData, true, startRow, true);
+								self.table.rowManager.addRowActual(rowData, true, startRow, true);
 							});
 						}else {
 							newRows = newRows.slice().reverse();
 
 							newRows.forEach((rowData) => {
-								this.table.rowManager.addRowActual(rowData, true, false, true);
+								self.table.rowManager.addRowActual(rowData, true, false, true);
 							});
 						}
 					}
@@ -15354,7 +15362,7 @@ class ReactiveData extends Module{
 						var oldRows = data.slice(start, typeof args[1] === "undefined" ? args[1] : start + end);
 
 						oldRows.forEach((rowData, i) => {
-							var row = this.table.rowManager.getRowFromDataObject(rowData);
+							var row = self.table.rowManager.getRowFromDataObject(rowData);
 
 							if(row){
 								row.deleteActual(i !== oldRows.length - 1);
@@ -15363,11 +15371,11 @@ class ReactiveData extends Module{
 					}
 
 					if(newRows || end !== 0){
-						this.table.rowManager.reRenderInPosition();
+						self.table.rowManager.reRenderInPosition();
 					}
 				}
 
-				return this.origFuncs.splice.apply(data, arguments);
+				return self.origFuncs.splice.apply(data, arguments);
 			}
 		});
 	}
@@ -21400,7 +21408,7 @@ class DataLoader extends CoreFeature{
 					this.hideLoader();
 
 					if(rowData !== false){
-						this.dispatchExternal("dataLoaded", data);
+						this.dispatchExternal("dataLoaded", rowData);
 						this.table.rowManager.setData(rowData,  replace, !replace);
 					}
 				}else {
@@ -21504,7 +21512,8 @@ class DataLoader extends CoreFeature{
 
 class ExternalEventBus {
 
-	constructor(optionsList, debug){
+	constructor(table, optionsList, debug){
+		this.table = table;
 		this.events = {};
 		this.optionsList = optionsList || {};
 		this.subscriptionNotifiers = {};
@@ -21582,7 +21591,7 @@ class ExternalEventBus {
 
 		if(this.events[key]){
 			this.events[key].forEach((callback, i) => {
-				let callResult = callback.apply(this, args);
+				let callResult = callback.apply(this.table, args);
 
 				if(!i){
 					result = callResult;
@@ -22552,7 +22561,7 @@ class Tabulator {
 
 		this._mapDepricatedFunctionality();
 
-		this.externalEvents = new ExternalEventBus(this.options, this.options.debugEventsExternal);
+		this.externalEvents = new ExternalEventBus(this, this.options, this.options.debugEventsExternal);
 		this.eventBus = new InternalEventBus(this.options.debugEventsInternal);
 
 		this.interactionMonitor = new InteractionManager(this);
@@ -23100,7 +23109,11 @@ class Tabulator {
 
 	/////////////// Column Functions  ///////////////
 	setColumns(definition){
-		this.columnManager.setColumns(definition);
+		if(this.initialized){
+			this.columnManager.setColumns(definition);
+		}else {
+			console.warn("setColumns failed - table not yet initialized. To set initial data please use the 'columns' property in the table constructor.");
+		}
 	}
 
 	getColumns(structured){
