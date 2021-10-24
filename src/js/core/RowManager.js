@@ -49,6 +49,7 @@ export default class RowManager extends CoreFeature{
 
 		el.classList.add("tabulator-tableholder");
 		el.setAttribute("tabindex", 0);
+		el.setAttribute("role", "rowgroup");
 
 		return el;
 	}
@@ -57,6 +58,7 @@ export default class RowManager extends CoreFeature{
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-table");
+		el.setAttribute("role", "rowgroup");
 
 		return el;
 	}
@@ -305,7 +307,7 @@ export default class RowManager extends CoreFeature{
 				this.dispatch("row-added", row, data, pos, index);
 			});
 
-			this.reRenderInPosition();
+			this.refreshActiveData(false, false, true);
 
 			this.regenerateRowNumbers();
 
@@ -853,13 +855,13 @@ export default class RowManager extends CoreFeature{
 	}
 
 	renderTable(){
-
 		this.dispatchExternal("renderStarted");
 
 		this.element.scrollTop = 0;
 
+		this._clearTable();
+
 		if(this.displayRowsCount){
-			this._clearTable();
 			this.renderer.renderRows();
 
 			if(this.firstRender){

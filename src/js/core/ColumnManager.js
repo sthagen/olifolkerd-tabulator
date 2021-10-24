@@ -64,6 +64,7 @@ export default class ColumnManager extends CoreFeature {
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-headers");
+		el.setAttribute("role", "row");
 
 		return el;
 	}
@@ -72,6 +73,7 @@ export default class ColumnManager extends CoreFeature {
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-header");
+		el.setAttribute("role", "rowgroup");
 
 		if(!this.table.options.headerVisible){
 			el.classList.add("tabulator-header-hidden");
@@ -230,7 +232,6 @@ export default class ColumnManager extends CoreFeature {
 		index = nextToColumn ? this.findColumnIndex(nextToColumn) : nextToColumn;
 
 		if(nextToColumn && index > -1){
-
 			var parentIndex = this.columns.indexOf(nextToColumn.getTopColumn());
 			var nextEl = nextToColumn.getElement();
 
@@ -241,7 +242,6 @@ export default class ColumnManager extends CoreFeature {
 				this.columns.splice(parentIndex + 1, 0, column);
 				nextEl.parentNode.insertBefore(colEl, nextEl.nextSibling);
 			}
-
 		}else{
 			if(before){
 				this.columns.unshift(column);
@@ -250,9 +250,9 @@ export default class ColumnManager extends CoreFeature {
 				this.columns.push(column);
 				this.headersElement.appendChild(column.getElement());
 			}
-
-			column.columnRendered();
 		}
+
+		column.columnRendered();
 
 		return column;
 	}
@@ -276,7 +276,7 @@ export default class ColumnManager extends CoreFeature {
 	}
 
 	//ensure column headers take up the correct amount of space in column groups
-	_verticalAlignHeaders(){
+	verticalAlignHeaders(){
 		var minHeight = 0;
 
 		this.columns.forEach((column) => {
@@ -433,7 +433,7 @@ export default class ColumnManager extends CoreFeature {
 			to.element.parentNode.insertBefore(to.element, from.element);
 		}
 
-		this._verticalAlignHeaders();
+		this.verticalAlignHeaders();
 
 		this.table.rowManager.reinitialize();
 	}
@@ -614,7 +614,7 @@ export default class ColumnManager extends CoreFeature {
 				column.reinitializeWidth();
 			}
 
-			this._verticalAlignHeaders();
+			this.verticalAlignHeaders();
 
 			this.table.rowManager.reinitialize();
 
@@ -648,18 +648,18 @@ export default class ColumnManager extends CoreFeature {
 			this.columns.splice(index, 1);
 		}
 
-		this._verticalAlignHeaders();
+		this.verticalAlignHeaders();
 
 		this.redraw();
 	}
 
 	//redraw columns
 	redraw(force){
-		if(force){
-			if(Helpers.elVisible(this.element)){
-				this._verticalAlignHeaders();
-			}
+		if(Helpers.elVisible(this.element)){
+			this.verticalAlignHeaders();
+		}
 
+		if(force){
 			this.table.rowManager.resetScroll();
 			this.table.rowManager.reinitialize();
 		}

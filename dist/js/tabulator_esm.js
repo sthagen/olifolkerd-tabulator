@@ -1,4 +1,4 @@
-/* Tabulator v5.0.4 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.5 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -195,7 +195,7 @@ class Module extends CoreFeature{
 	}
 }
 
-class Helpers$1{
+class Helpers{
 
 	static elVisible(el){
 		return !(el.offsetWidth <= 0 && el.offsetHeight <= 0);
@@ -326,7 +326,7 @@ class Accessor extends Module{
 		rowComponent = row.getComponent();
 
 		//clone data object with deep copy to isolate internal data from returned result
-		var data = Helpers$1.deepClone(row.data || {});
+		var data = Helpers.deepClone(row.data || {});
 
 		this.table.columnManager.traverse(function(column){
 			var value, accessor, params, colCompnent;
@@ -492,6 +492,26 @@ function defaultLoaderPromise(url, config, params){
 	});
 }
 
+function generateParamsList$1(data, prefix){
+	var output = [];
+
+	prefix = prefix || "";
+
+	if(Array.isArray(data)){
+		data.forEach((item, i) => {
+			output = output.concat(generateParamsList$1(item, prefix ? prefix + "[" + i + "]" : i));
+		});
+	}else if (typeof data === "object"){
+		for (var key in data){
+			output = output.concat(generateParamsList$1(data[key], prefix ? prefix + "[" + key + "]" : key));
+		}
+	}else {
+		output.push({key:prefix, value:data});
+	}
+
+	return output;
+}
+
 var defaultContentTypeFormatters = {
 	"json":{
 		headers:{
@@ -505,7 +525,8 @@ var defaultContentTypeFormatters = {
 		headers:{
 		},
 		body:function(url, config, params){
-			var output = this.generateParamsList(params),
+
+			var output = generateParamsList$1(params),
 			form = new FormData();
 
 			output.forEach(function(item){
@@ -2309,7 +2330,7 @@ class Column$1 extends CoreFeature{
 				this.reinitializeWidth();
 			}
 
-			this.table.columnManager._verticalAlignHeaders();
+			this.table.columnManager.verticalAlignHeaders();
 
 			this.dispatch("column-show", this, responsiveToggle);
 
@@ -2334,7 +2355,7 @@ class Column$1 extends CoreFeature{
 
 			this.element.style.display = "none";
 
-			this.table.columnManager._verticalAlignHeaders();
+			this.table.columnManager.verticalAlignHeaders();
 
 			if(this.parent.isGroup){
 				this.parent.checkColumnVisibility();
@@ -2966,7 +2987,7 @@ class Row$1 extends CoreFeature{
 
 	//update the rows data
 	updateData(updatedData){
-		var visible = this.element && Helpers$1.elVisible(this.element),
+		var visible = this.element && Helpers.elVisible(this.element),
 		tempData = {},
 		newRowData;
 
@@ -4301,7 +4322,7 @@ class DataTree extends Module{
 
 	checkForRestyle(cell){
 		if(!cell.row.cells.indexOf(cell)){
-			cell.row.reinitialize();
+			this.layoutRow(cell.row);
 		}
 	}
 
@@ -5609,7 +5630,7 @@ function select(cell, onRendered, success, cancel, editorParams){
 			}
 
 
-			var offset = Helpers$1.elOffset(cellEl);
+			var offset = Helpers.elOffset(cellEl);
 
 			listEl.style.minWidth = cellEl.offsetWidth + "px";
 
@@ -6086,7 +6107,7 @@ function autocomplete(cell, onRendered, success, cancel, editorParams){
 		if(!listEl.parentNode){
 			while(listEl.firstChild) listEl.removeChild(listEl.firstChild);
 
-			var offset = Helpers$1.elOffset(cellEl);
+			var offset = Helpers.elOffset(cellEl);
 
 			listEl.style.minWidth = cellEl.offsetWidth + "px";
 
@@ -6401,8 +6422,8 @@ function star(cell, onRendered, success, cancel, editorParams){
 //draggable progress bar
 function progress(cell, onRendered, success, cancel, editorParams){
 	var element = cell.getElement(),
-	max = typeof editorParams.max === "undefined" ? ( element.getElementsByTagName("div")[0].getAttribute("max") || 100) : editorParams.max,
-	min = typeof editorParams.min === "undefined" ? ( element.getElementsByTagName("div")[0].getAttribute("min") || 0) : editorParams.min,
+	max = typeof editorParams.max === "undefined" ? ( element.getElementsByTagName("div")[0]?.getAttribute("max") || 100) : editorParams.max,
+	min = typeof editorParams.min === "undefined" ? ( element.getElementsByTagName("div")[0]?.getAttribute("min") || 0) : editorParams.min,
 	percent = (max - min) / 100,
 	value = cell.getValue() || 0,
 	handle = document.createElement("div"),
@@ -6774,7 +6795,7 @@ class Edit extends Module{
 					nextCell = this.findNextEditableCell(prevRow, prevRow.cells.length);
 
 					if(nextCell){
-						nextCell.edit();
+						nextCell.getComponent().edit();
 						return true;
 					}
 				}
@@ -6805,7 +6826,7 @@ class Edit extends Module{
 					nextCell = this.findNextEditableCell(nextRow, -1);
 
 					if(nextCell){
-						nextCell.edit();
+						nextCell.getComponent().edit();
 						return true;
 					}
 				}
@@ -6829,7 +6850,7 @@ class Edit extends Module{
 			nextCell = this.findPrevEditableCell(cell.row, index);
 
 			if(nextCell){
-				nextCell.edit();
+				nextCell.getComponent().edit();
 				return true;
 			}
 		}
@@ -6851,7 +6872,7 @@ class Edit extends Module{
 			nextCell = this.findNextEditableCell(cell.row, index);
 
 			if(nextCell){
-				nextCell.edit();
+				nextCell.getComponent().edit();
 				return true;
 			}
 		}
@@ -6873,7 +6894,7 @@ class Edit extends Module{
 			nextRow = this.table.rowManager.prevDisplayRow(cell.row, true);
 
 			if(nextRow){
-				nextRow.cells[index].edit();
+				nextRow.cells[index].getComponent().edit();
 				return true;
 			}
 		}
@@ -6895,7 +6916,7 @@ class Edit extends Module{
 			nextRow = this.table.rowManager.nextDisplayRow(cell.row, true);
 
 			if(nextRow){
-				nextRow.cells[index].edit();
+				nextRow.cells[index].getComponent().edit();
 				return true;
 			}
 		}
@@ -9885,10 +9906,31 @@ class FrozenColumns extends Module{
 			if(this.table.modules.columnCalcs.topInitialized && this.table.modules.columnCalcs.topRow){
 				this.layoutRow(this.table.modules.columnCalcs.topRow);
 			}
+
 			if(this.table.modules.columnCalcs.botInitialized && this.table.modules.columnCalcs.botRow){
 				this.layoutRow(this.table.modules.columnCalcs.botRow);
 			}
+
+			if(this.table.modExists("groupRows")){
+				this.layoutGroupCalcs(this.table.modules.groupRows.getGroups());
+			}
 		}
+	}
+
+	layoutGroupCalcs(groups){
+		groups.forEach((group) => {
+			if(group.calcs.top){
+				this.layoutRow(group.calcs.top);
+			}
+
+			if(group.calcs.bottom){
+				this.layoutRow(group.calcs.bottom);
+			}
+
+			if(group.groupList && group.groupList.length){
+				this.layoutGroupCalcs(group.groupList && group.groupList);
+			}
+		});
 	}
 
 	//calculate column positions and layout headers
@@ -10814,7 +10856,7 @@ class Group{
 		this.initialized = false;
 		this.height = 0;
 
-		if(Helpers$1.elVisible(this.element)){
+		if(Helpers.elVisible(this.element)){
 			this.initialize(true);
 		}
 	}
@@ -11423,6 +11465,7 @@ GroupRows.moduleName = "groupRows";
 var defaultUndoers = {
 	cellEdit: function(action){
 		action.component.setValueProcessData(action.data.oldValue);
+		action.component.cellRendered();
 	},
 
 	rowAdd: function(action){
@@ -11448,6 +11491,7 @@ var defaultUndoers = {
 var defaultRedoers = {
 	cellEdit: function(action){
 		action.component.setValueProcessData(action.data.newValue);
+		action.component.cellRendered();
 	},
 
 	rowAdd: function(action){
@@ -11644,17 +11688,17 @@ class HtmlTableImport extends Module{
 	}
 
 	initialize(){
-		this.subscribe("table-building", this.tableElementCheck.bind(this));
+		this.tableElementCheck();
 	}
 
 	tableElementCheck(){
-		if(this.table.element.tagName === "TABLE"){
+		if(this.table.originalElement && this.table.originalElement.tagName === "TABLE"){
 			this.parseTable();
 		}
 	}
 
 	parseTable(){
-		var element = this.table.element,
+		var element = this.table.originalElement,
 		options = this.table.options,
 		columns = options.columns,
 		headers = element.getElementsByTagName("th"),
@@ -11698,28 +11742,9 @@ class HtmlTableImport extends Module{
 			data.push(item);
 		}
 
-		//create new element
-		var newElement = document.createElement("div");
-
-		//transfer attributes to new element
-		var attributes = element.attributes;
-
-		// loop through attributes and apply them on div
-
-		for(var i in attributes){
-			if(typeof attributes[i] == "object"){
-				newElement.setAttribute(attributes[i].name, attributes[i].value);
-			}
-		}
-
-		// replace table with div element
-		element.parentNode.replaceChild(newElement, element);
-
 		options.data = data;
 
 		this.dispatchExternal("htmlImported");
-
-		this.table.element = newElement;
 	}
 
 	//extract tabulator attribute options
@@ -12702,7 +12727,7 @@ class Menu extends Module{
 
 			this.positionReversedX = false;
 		}else {
-			parentOffset = Helpers$1.elOffset(parentEl);
+			parentOffset = Helpers.elOffset(parentEl);
 			x = parentOffset.left + parentEl.offsetWidth;
 			y = parentOffset.top - 1;
 		}
@@ -12820,7 +12845,7 @@ class MoveColumns extends Module{
 
 			config.mousemove = function(e){
 				if(column.parent === self.moving.parent){
-					if((((self.touchMove ? e.touches[0].pageX : e.pageX) - Helpers$1.elOffset(colEl).left) + self.table.columnManager.element.scrollLeft) > (column.getWidth() / 2)){
+					if((((self.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(colEl).left) + self.table.columnManager.element.scrollLeft) > (column.getWidth() / 2)){
 						if(self.toCol !== column || !self.toColAfter){
 							colEl.parentNode.insertBefore(self.placeholderElement, colEl.nextSibling);
 							self.moveColumn(column, true);
@@ -12936,7 +12961,7 @@ class MoveColumns extends Module{
 		var element = column.getElement();
 
 		this.moving = column;
-		this.startX = (this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers$1.elOffset(element).left;
+		this.startX = (this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(element).left;
 
 		this.table.element.classList.add("tabulator-block-select");
 
@@ -13035,7 +13060,7 @@ class MoveColumns extends Module{
 	moveHover(e){
 		var columnHolder = this.table.columnManager.getElement(),
 		scrollLeft = columnHolder.scrollLeft,
-		xPos = ((this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers$1.elOffset(columnHolder).left) + scrollLeft,
+		xPos = ((this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(columnHolder).left) + scrollLeft,
 		scrollPos;
 
 		this.hoverElement.style.left = (xPos - this.startX) + "px";
@@ -13137,7 +13162,7 @@ class MoveRows extends Module{
 
 		//same table drag drop
 		config.mousemove = function(e){
-			if(((e.pageY - Helpers$1.elOffset(group.element).top) + self.table.rowManager.element.scrollTop) > (group.getHeight() / 2)){
+			if(((e.pageY - Helpers.elOffset(group.element).top) + self.table.rowManager.element.scrollTop) > (group.getHeight() / 2)){
 				if(self.toRow !== group || !self.toRowAfter){
 					var rowEl = group.getElement();
 					rowEl.parentNode.insertBefore(self.placeholderElement, rowEl.nextSibling);
@@ -13171,7 +13196,7 @@ class MoveRows extends Module{
 		config.mousemove = function(e){
 			var rowEl = row.getElement();
 
-			if(((e.pageY - Helpers$1.elOffset(rowEl).top) + self.table.rowManager.element.scrollTop) > (row.getHeight() / 2)){
+			if(((e.pageY - Helpers.elOffset(rowEl).top) + self.table.rowManager.element.scrollTop) > (row.getHeight() / 2)){
 				if(self.toRow !== row || !self.toRowAfter){
 					rowEl.parentNode.insertBefore(self.placeholderElement, rowEl.nextSibling);
 					self.moveRow(row, true);
@@ -16263,10 +16288,14 @@ class ResponsiveLayout extends Module{
 						},
 					};
 
+					function onRendered(callback){
+						callback();
+					}
+
 					output.push({
 						field: column.field,
 						title: column.definition.title,
-						value: column.modules.format.formatter.call(self.table.modules.format, mockCellComponent, column.modules.format.params)
+						value: column.modules.format.formatter.call(self.table.modules.format, mockCellComponent, column.modules.format.params, onRendered)
 					});
 				}else {
 					output.push({
@@ -18103,8 +18132,8 @@ class Renderer extends CoreFeature{
 
 				//check row visibility
 				if(!ifVisible){
-					if(Helpers$1.elVisible(rowEl)){
-						offset = Helpers$1.elOffset(rowEl).top - Helpers$1.elOffset(this.elementVertical).top;
+					if(Helpers.elVisible(rowEl)){
+						offset = Helpers.elOffset(rowEl).top - Helpers.elOffset(this.elementVertical).top;
 
 						if(offset > 0 && offset < this.elementVertical.clientHeight - rowEl.offsetHeight){
 							return false;
@@ -18707,6 +18736,7 @@ class ColumnManager extends CoreFeature {
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-headers");
+		el.setAttribute("role", "row");
 
 		return el;
 	}
@@ -18715,6 +18745,7 @@ class ColumnManager extends CoreFeature {
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-header");
+		el.setAttribute("role", "rowgroup");
 
 		if(!this.table.options.headerVisible){
 			el.classList.add("tabulator-header-hidden");
@@ -18873,7 +18904,6 @@ class ColumnManager extends CoreFeature {
 		index = nextToColumn ? this.findColumnIndex(nextToColumn) : nextToColumn;
 
 		if(nextToColumn && index > -1){
-
 			var parentIndex = this.columns.indexOf(nextToColumn.getTopColumn());
 			var nextEl = nextToColumn.getElement();
 
@@ -18884,7 +18914,6 @@ class ColumnManager extends CoreFeature {
 				this.columns.splice(parentIndex + 1, 0, column);
 				nextEl.parentNode.insertBefore(colEl, nextEl.nextSibling);
 			}
-
 		}else {
 			if(before){
 				this.columns.unshift(column);
@@ -18893,9 +18922,9 @@ class ColumnManager extends CoreFeature {
 				this.columns.push(column);
 				this.headersElement.appendChild(column.getElement());
 			}
-
-			column.columnRendered();
 		}
+
+		column.columnRendered();
 
 		return column;
 	}
@@ -18919,7 +18948,7 @@ class ColumnManager extends CoreFeature {
 	}
 
 	//ensure column headers take up the correct amount of space in column groups
-	_verticalAlignHeaders(){
+	verticalAlignHeaders(){
 		var minHeight = 0;
 
 		this.columns.forEach((column) => {
@@ -19076,7 +19105,7 @@ class ColumnManager extends CoreFeature {
 			to.element.parentNode.insertBefore(to.element, from.element);
 		}
 
-		this._verticalAlignHeaders();
+		this.verticalAlignHeaders();
 
 		this.table.rowManager.reinitialize();
 	}
@@ -19257,7 +19286,7 @@ class ColumnManager extends CoreFeature {
 				column.reinitializeWidth();
 			}
 
-			this._verticalAlignHeaders();
+			this.verticalAlignHeaders();
 
 			this.table.rowManager.reinitialize();
 
@@ -19291,18 +19320,18 @@ class ColumnManager extends CoreFeature {
 			this.columns.splice(index, 1);
 		}
 
-		this._verticalAlignHeaders();
+		this.verticalAlignHeaders();
 
 		this.redraw();
 	}
 
 	//redraw columns
 	redraw(force){
-		if(force){
-			if(Helpers$1.elVisible(this.element)){
-				this._verticalAlignHeaders();
-			}
+		if(Helpers.elVisible(this.element)){
+			this.verticalAlignHeaders();
+		}
 
+		if(force){
 			this.table.rowManager.resetScroll();
 			this.table.rowManager.reinitialize();
 		}
@@ -19376,7 +19405,7 @@ class BaiscVertical extends Renderer{
 	}
 
 	scrollToRowNearestTop(row){
-		var rowTop = Helpers$1.elOffset(row.getElement()).top;
+		var rowTop = Helpers.elOffset(row.getElement()).top;
 
 		return !(Math.abs(this.elementVertical.scrollTop - rowTop) > Math.abs(this.elementVertical.scrollTop + this.elementVertical.clientHeight - rowTop));
 	}
@@ -19384,7 +19413,7 @@ class BaiscVertical extends Renderer{
 	scrollToRow(row){
 		var rowEl = row.getElement();
 
-		this.elementVertical.scrollTop = Helpers$1.elOffset(rowEl).top - Helpers$1.elOffset(this.elementVertical).top + this.elementVertical.scrollTop;
+		this.elementVertical.scrollTop = Helpers.elOffset(rowEl).top - Helpers.elOffset(this.elementVertical).top + this.elementVertical.scrollTop;
 	}
 
 	visibleRows(includingBuffer){
@@ -19646,7 +19675,7 @@ class VirtualDomVertical extends Renderer{
 			position -= topPad;
 		}
 
-		if(rowsCount && Helpers$1.elVisible(this.elementVertical)){
+		if(rowsCount && Helpers.elVisible(this.elementVertical)){
 			this.vDomTop = position;
 
 			this.vDomBottom = position -1;
@@ -20005,6 +20034,7 @@ class RowManager extends CoreFeature{
 
 		el.classList.add("tabulator-tableholder");
 		el.setAttribute("tabindex", 0);
+		el.setAttribute("role", "rowgroup");
 
 		return el;
 	}
@@ -20013,6 +20043,7 @@ class RowManager extends CoreFeature{
 		var el = document.createElement("div");
 
 		el.classList.add("tabulator-table");
+		el.setAttribute("role", "rowgroup");
 
 		return el;
 	}
@@ -20260,7 +20291,7 @@ class RowManager extends CoreFeature{
 				this.dispatch("row-added", row, data, pos, index);
 			});
 
-			this.reRenderInPosition();
+			this.refreshActiveData(false, false, true);
 
 			this.regenerateRowNumbers();
 
@@ -20642,7 +20673,7 @@ class RowManager extends CoreFeature{
 				//case to handle scenario when trying to skip past end stage
 			}
 
-			if(Helpers$1.elVisible(this.element)){
+			if(Helpers.elVisible(this.element)){
 				if(renderInPosition){
 					this.reRenderInPosition();
 				}else {
@@ -20805,13 +20836,13 @@ class RowManager extends CoreFeature{
 	}
 
 	renderTable(){
-
 		this.dispatchExternal("renderStarted");
 
 		this.element.scrollTop = 0;
 
+		this._clearTable();
+
 		if(this.displayRowsCount){
-			this._clearTable();
 			this.renderer.renderRows();
 
 			if(this.firstRender){
@@ -22180,7 +22211,7 @@ class Localize extends Module{
 	}
 
 	initialize(){
-		this.langList = Helpers$1.deepClone(Localize.langs);
+		this.langList = Helpers.deepClone(Localize.langs);
 
 		if(this.table.options.columnDefaults.headerFilterPlaceholder !== false){
 			this.setHeaderFilterPlaceholder(this.table.options.columnDefaults.headerFilterPlaceholder);
@@ -22272,7 +22303,7 @@ class Localize extends Module{
 		this.locale = desiredLocale;
 
 		//load default lang template
-		this.lang = Helpers$1.deepClone(this.langList.default || {});
+		this.lang = Helpers.deepClone(this.langList.default || {});
 
 		if(desiredLocale != "default"){
 			traverseLang(this.langList[desiredLocale], this.lang);
@@ -22509,6 +22540,7 @@ class Tabulator {
 		this.browserSlow = false; //handle reduced functionality for slower browsers
 		this.browserMobile = false; //check if running on moble, prevent resize cancelling edit on keyboard appearence
 		this.rtl = false; //check if the table is in RTL mode
+		this.originalElement = null; //hold original table element if it has been replaced
 
 		this.componentFunctionBinder = new ComponentFuctionBinder(this); //bind component functions
 		this.dataLoader = false; //bind component functions
@@ -22578,27 +22610,6 @@ class Tabulator {
 		this.footerManager.initialize();
 	}
 
-	rtlCheck(){
-		var style = window.getComputedStyle(this.element);
-
-		switch(this.options.textDirection){
-			case"auto":
-			if(style.direction !== "rtl"){
-				break;
-			}
-			case "rtl":
-			this.element.classList.add("tabulator-rtl");
-			this.rtl = true;
-			break;
-
-			case "ltr":
-			this.element.classList.add("tabulator-ltr");
-
-			default:
-			this.rtl = false;
-		}
-	}
-
 	//convert depricated functionality to new functions
 	_mapDepricatedFunctionality(){
 		//all previously deprecated functionality removed in the 5.0 release
@@ -22626,15 +22637,38 @@ class Tabulator {
 		this.externalEvents.dispatch("tableBuilding");
 		this.eventBus.dispatch("table-building");
 
-		this.rtlCheck();
+		this._rtlCheck();
 
 		this._buildElement();
+
+		this._initializeTable();
 
 		this._loadInitialData();
 
 		this.initialized = true;
 
 		this.externalEvents.dispatch("tableBuilt");
+	}
+
+	_rtlCheck(){
+		var style = window.getComputedStyle(this.element);
+
+		switch(this.options.textDirection){
+			case"auto":
+			if(style.direction !== "rtl"){
+				break;
+			}
+			case "rtl":
+			this.element.classList.add("tabulator-rtl");
+			this.rtl = true;
+			break;
+
+			case "ltr":
+			this.element.classList.add("tabulator-ltr");
+
+			default:
+			this.rtl = false;
+		}
 	}
 
 	//clear pointers to objects in default config object
@@ -22649,7 +22683,28 @@ class Tabulator {
 	//build tabulator element
 	_buildElement(){
 		var element = this.element,
-		options = this.options;
+		options = this.options,
+		newElement;
+
+		if(element.tagName === "TABLE"){
+			this.originalElement = this.element;
+			newElement = document.createElement("div");
+
+			//transfer attributes to new element
+			var attributes = element.attributes;
+
+			// loop through attributes and apply them on div
+			for(var i in attributes){
+				if(typeof attributes[i] == "object"){
+					newElement.setAttribute(attributes[i].name, attributes[i].value);
+				}
+			}
+
+			// replace table with div element
+			element.parentNode.replaceChild(newElement, element);
+
+			this.element = element = newElement;
+		}
 
 		element.classList.add("tabulator");
 		element.setAttribute("role", "grid");
@@ -22674,6 +22729,12 @@ class Tabulator {
 			options.maxHeight = isNaN(options.maxHeight) ? options.maxHeight : options.maxHeight + "px";
 			element.style.maxHeight = options.maxHeight;
 		}
+	}
+
+	//initialize core systems and modules
+	_initializeTable(){
+		var element = this.element,
+		options = this.options;
 
 		this.columnManager.initialize();
 		this.rowManager.initialize();
@@ -22689,7 +22750,6 @@ class Tabulator {
 
 		//configure placeholder element
 		if(typeof options.placeholder == "string"){
-
 			var el = document.createElement("div");
 			el.classList.add("tabulator-placeholder");
 
