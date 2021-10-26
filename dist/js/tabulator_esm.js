@@ -1,4 +1,4 @@
-/* Tabulator v5.0.5 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.6 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -8995,16 +8995,23 @@ function textarea$1(cell, formatterParams, onRendered){
 
 function money(cell, formatterParams, onRendered){
 	var floatVal = parseFloat(cell.getValue()),
+	sign = "",
 	number, integer, decimal, rgx;
 
 	var decimalSym = formatterParams.decimal || ".";
 	var thousandSym = formatterParams.thousand || ",";
+	var negativeSign = formatterParams.negativeSign || "-";
 	var symbol = formatterParams.symbol || "";
 	var after = !!formatterParams.symbolAfter;
 	var precision = typeof formatterParams.precision !== "undefined" ? formatterParams.precision : 2;
 
 	if(isNaN(floatVal)){
 		return this.emptyToSpace(this.sanitizeHTML(cell.getValue()));
+	}
+
+	if(floatVal < 0){
+		floatVal = Math.abs(floatVal);
+		sign = negativeSign;
 	}
 
 	number = precision !== false ? floatVal.toFixed(precision) : floatVal;
@@ -9019,7 +9026,7 @@ function money(cell, formatterParams, onRendered){
 		integer = integer.replace(rgx, "$1" + thousandSym + "$2");
 	}
 
-	return after ? integer + decimal + symbol : symbol + integer + decimal;
+	return after ? sign + integer + decimal + symbol : sign + symbol + integer + decimal;
 }
 
 function link(cell, formatterParams, onRendered){
@@ -11821,7 +11828,7 @@ class HtmlTableImport extends Module{
 			header.attributes;
 
 			// //check for tablator inline options
-			this._extractOptions(header, col, Column.prototype.defaultOptionList);
+			this._extractOptions(header, col, Column$1.prototype.defaultOptionList);
 
 			this.fieldIndex[index] = col.field;
 
@@ -21210,6 +21217,7 @@ class InteractionManager extends CoreFeature {
 				if(!listener.handler){
 					listener.handler = this.track.bind(this, key);
 					this.el.addEventListener(key, listener.handler);
+					console.log("add", key);
 					// this.el.addEventListener(key, listener.handler, {passive: true})
 				}
 			}else {
