@@ -1,4 +1,4 @@
-/* Tabulator v5.0.6 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.7 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -1180,7 +1180,7 @@ class CellComponent {
 	}
 }
 
-class Cell$1 extends CoreFeature{
+class Cell extends CoreFeature{
 	constructor(column, row){
 		super(column.table);
 
@@ -2557,7 +2557,7 @@ class Column$1 extends CoreFeature{
 	//////////////// Cell Management /////////////////
 	//generate cell for this column
 	generateCell(row){
-		var cell = new Cell$1(this, row);
+		var cell = new Cell(this, row);
 
 		this.cells.push(cell);
 
@@ -2772,7 +2772,7 @@ class RowComponent$1 {
 	}
 }
 
-class Row$1 extends CoreFeature{
+class Row extends CoreFeature{
 	constructor (data, parent, type = "row"){
 		super(parent.table);
 
@@ -3614,7 +3614,7 @@ class ColumnCalcs extends Module{
 			this.table.modules.mutator.disable();
 		}
 
-		row = new Row$1(rowData, this, "calc");
+		row = new Row(rowData, this, "calc");
 
 		if(this.table.modExists("mutator")){
 			this.table.modules.mutator.enable();
@@ -3658,7 +3658,7 @@ class ColumnCalcs extends Module{
 					this.genColumn.definition.cssClass = column.definition.cssClass;
 
 					//generate cell and assign to correct column
-					var cell = new Cell$1(this.genColumn, row);
+					var cell = new Cell(this.genColumn, row);
 					cell.getElement();
 					cell.column = column;
 					cell.setWidth();
@@ -4041,7 +4041,7 @@ class DataTree extends Module{
 
 			output.push(row);
 
-			if(row instanceof Row$1){
+			if(row instanceof Row){
 
 				row.create();
 
@@ -4105,7 +4105,7 @@ class DataTree extends Module{
 		}
 
 		childArray.forEach((childData) => {
-			var childRow = new Row$1(childData || {}, this.table.rowManager);
+			var childRow = new Row(childData || {}, this.table.rowManager);
 
 			childRow.create();
 
@@ -4182,7 +4182,7 @@ class DataTree extends Module{
 			}
 
 			children.forEach((childRow) => {
-				if(childRow instanceof Row$1){
+				if(childRow instanceof Row){
 					output.push(childRow);
 				}
 			});
@@ -4253,7 +4253,7 @@ class DataTree extends Module{
 
 		if(typeof subject == "object"){
 
-			if(subject instanceof Row$1){
+			if(subject instanceof Row){
 				//subject is row element
 				match = subject.data;
 			}else if(subject instanceof RowComponent){
@@ -4262,7 +4262,7 @@ class DataTree extends Module{
 			}else if(typeof HTMLElement !== "undefined" && subject instanceof HTMLElement){
 				if(parent.modules.dataTree){
 					match = parent.modules.dataTree.children.find((childRow) => {
-						return childRow instanceof Row$1 ? childRow.element === subject : false;
+						return childRow instanceof Row ? childRow.element === subject : false;
 					});
 
 					if(match){
@@ -4307,7 +4307,7 @@ class DataTree extends Module{
 			}
 
 			config.children.forEach((childRow) => {
-				if(childRow instanceof Row$1){
+				if(childRow instanceof Row){
 					output.push(component ? childRow.getComponent() : childRow);
 
 					if(recurse){
@@ -8118,6 +8118,7 @@ class Filter extends Module{
 		this.prevHeaderFilterChangeCheck = "{}";
 
 		this.changed = false; //has filtering changed since last render
+		this.tableInitialized = false;
 
 		this.registerTableOption("filterMode", "local"); //local or remote filtering
 
@@ -8185,6 +8186,8 @@ class Filter extends Module{
 				}
 			});
 		}
+
+		this.tableInitialized = true;
 	}
 
 	remoteFilterParams(data, config, silent, params){
@@ -8648,10 +8651,12 @@ class Filter extends Module{
 	}
 
 	refreshFilter(){
-		if(this.table.options.filterMode === "remote"){
-			this.reloadData();
-		}else {
-			this.refreshData();
+		if(this.tableInitialized){
+			if(this.table.options.filterMode === "remote"){
+				this.reloadData();
+			}else {
+				this.refreshData();
+			}
 		}
 
 		//TODO - Persist left position of row manager
@@ -10174,7 +10179,10 @@ class FrozenRows extends Module{
 
 		if(index > -1){
 			var rowEl = row.getElement();
-			rowEl.parentNode.removeChild(rowEl);
+
+			if(rowEl.parentNode){
+				rowEl.parentNode.removeChild(rowEl);
+			}
 
 			this.rows.splice(index, 1);
 		}
@@ -10947,6 +10955,34 @@ class GroupRows extends Module{
 	//initialize group configuration
 	initialize(){
 		if(this.table.options.groupBy){
+
+			this.configureGroupSetup();
+
+			if(this.table.options.groupUpdateOnCellEdit){
+				this.subscribe("cell-value-updated", this.cellUpdated.bind(this));
+				this.subscribe("row-data-changed", this.reassignRowToGroup.bind(this), 0);
+			}
+
+			this.subscribe("row-deleting", this.rowDeleting.bind(this));
+			this.subscribe("row-deleted", this.rowsUpdated.bind(this));
+			this.subscribe("scroll-horizontal", this.scrollHeaders.bind(this));
+			this.subscribe("rows-wipe", this.wipe.bind(this));
+			this.subscribe("rows-added", this.rowsUpdated.bind(this));
+			this.subscribe("row-moving", this.rowMoving.bind(this));
+			this.subscribe("row-adding-index", this.rowAddingIndex.bind(this));
+
+			this.subscribe("rows-sample", this.rowSample.bind(this));
+
+			this.subscribe("render-virtual-fill", this.virtualRenderFill.bind(this));
+
+			this.registerDisplayHandler(this.displayHandler, 20);
+
+			this.initialized = true;
+		}
+	}
+
+	configureGroupSetup(){
+		if(this.table.options.groupBy){
 			var groupBy = this.table.options.groupBy,
 			startOpen = this.table.options.groupStartOpen,
 			groupHeader = this.table.options.groupHeader;
@@ -11033,27 +11069,6 @@ class GroupRows extends Module{
 			if(groupHeader){
 				this.headerGenerator = Array.isArray(groupHeader) ? groupHeader : [groupHeader];
 			}
-
-			if(this.table.options.groupUpdateOnCellEdit){
-				this.subscribe("cell-value-updated", this.cellUpdated.bind(this));
-				this.subscribe("row-data-changed", this.reassignRowToGroup.bind(this), 0);
-			}
-
-			this.subscribe("row-deleting", this.rowDeleting.bind(this));
-			this.subscribe("row-deleted", this.rowsUpdated.bind(this));
-			this.subscribe("scroll-horizontal", this.scrollHeaders.bind(this));
-			this.subscribe("rows-wipe", this.wipe.bind(this));
-			this.subscribe("rows-added", this.rowsUpdated.bind(this));
-			this.subscribe("row-moving", this.rowMoving.bind(this));
-			this.subscribe("row-adding-index", this.rowAddingIndex.bind(this));
-
-			this.subscribe("rows-sample", this.rowSample.bind(this));
-
-			this.subscribe("render-virtual-fill", this.virtualRenderFill.bind(this));
-
-			this.registerDisplayHandler(this.displayHandler, 20);
-
-			this.initialized = true;
 		}
 	}
 
@@ -11118,23 +11133,23 @@ class GroupRows extends Module{
 
 	setGroupBy(groups){
 		this.table.options.groupBy = groups;
-		this.initialize();
-		this.refreshData(false, "display");
+		this.configureGroupSetup();
+		this.refreshData();
 
 		this.trackChanges();
 	}
 
 	setGroupValues(groupValues){
 		this.table.options.groupValues = groupValues;
-		this.initialize();
-		this.refreshData(false, "display");
+		this.configureGroupSetup();
+		this.refreshData();
 
 		this.trackChanges();
 	}
 
 	setGroupStartOpen(values){
 		this.table.options.groupStartOpen = values;
-		this.initialize();
+		this.configureGroupSetup();
 
 		if(this.table.options.groupBy){
 			this.refreshData();
@@ -11147,7 +11162,7 @@ class GroupRows extends Module{
 
 	setGroupHeader(values){
 		this.table.options.groupHeader = values;
-		this.initialize();
+		this.configureGroupSetup();
 
 		if(this.table.options.groupBy){
 			this.refreshData();
@@ -11228,7 +11243,7 @@ class GroupRows extends Module{
 
 	//return appropriate rows with group headers
 	getRows(rows){
-		if(this.groupIDLookups.length){
+		if(this.table.options.groupBy && this.groupIDLookups.length){
 
 			this.dispatchExternal("dataGrouping");
 
@@ -11343,7 +11358,7 @@ class GroupRows extends Module{
 		var oldGroups = this.groups;
 
 		this.groups = {};
-		this.groupList =[];
+		this.groupList = [];
 
 		if(this.allowedValues && this.allowedValues[0]){
 			this.allowedValues[0].forEach((value) => {
@@ -11576,7 +11591,7 @@ class History extends Module{
 			}
 		}
 
-		this.history.action("rowDelete", row, {data:row.getData(), pos:!index, index:index});
+		this.action("rowDelete", row, {data:row.getData(), pos:!index, index:index});
 	}
 
 	cellUpdated(cell){
@@ -12148,7 +12163,7 @@ class Interaction extends Module{
 
 		if(this.columnSubscribers[action]){
 
-			if(component instanceof Cell$1){
+			if(component instanceof Cell){
 				callback = component.column.definition[action];
 			}else if(component instanceof Column$1){
 				callback = component.definition[action];
@@ -12965,7 +12980,9 @@ class MoveColumns extends Module{
 	}
 
 	startMove(e, column){
-		var element = column.getElement();
+		var element = column.getElement(),
+		headerElement = this.table.columnManager.getElement(),
+		headersElement = this.table.columnManager.getHeadersElement();
 
 		this.moving = column;
 		this.startX = (this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(element).left;
@@ -12986,7 +13003,7 @@ class MoveColumns extends Module{
 		this.table.columnManager.getElement().appendChild(this.hoverElement);
 
 		this.hoverElement.style.left = "0";
-		this.hoverElement.style.bottom = "0";
+		this.hoverElement.style.bottom = (headerElement.clientHeight - headersElement.offsetHeight) + "px";
 
 		if(!this.touchMove){
 			this._bindMouseMove();
@@ -13024,7 +13041,7 @@ class MoveColumns extends Module{
 			column.getCells().forEach(function(cell, i){
 				var cellEl = cell.getElement(true);
 
-				if(cellEl.parentNode){
+				if(cellEl.parentNode && movingCells[i]){
 					cellEl.parentNode.insertBefore(movingCells[i].getElement(), cellEl.nextSibling);
 				}
 			});
@@ -13032,7 +13049,7 @@ class MoveColumns extends Module{
 			column.getCells().forEach(function(cell, i){
 				var cellEl = cell.getElement(true);
 
-				if(cellEl.parentNode){
+				if(cellEl.parentNode && movingCells[i]){
 					cellEl.parentNode.insertBefore(movingCells[i].getElement(), cellEl);
 				}
 			});
@@ -16386,7 +16403,7 @@ class SelectRow extends Module{
 			this.subscribe("row-init", this.initializeRow.bind(this));
 			this.subscribe("row-deleting", this.rowDeleted.bind(this));
 			this.subscribe("rows-wipe", this.clearSelectionData.bind(this));
-			this.subscribe("rows-retrieve", this.clearSelectionData.bind(this));
+			this.subscribe("rows-retrieve", this.rowRetrieve.bind(this));
 
 			if(this.table.options.selectable && this.table.options.selectablePersistence){
 				this.subscribe("data-refeshing", this.deselectRows.bind(this));
@@ -16401,7 +16418,6 @@ class SelectRow extends Module{
 	rowDeleted(row){
 		this._deselectRow(row, true);
 	}
-
 
 	clearSelectionData(silent){
 		this.selecting = false;
@@ -18911,8 +18927,9 @@ class ColumnManager extends CoreFeature {
 		index = nextToColumn ? this.findColumnIndex(nextToColumn) : nextToColumn;
 
 		if(nextToColumn && index > -1){
-			var parentIndex = this.columns.indexOf(nextToColumn.getTopColumn());
-			var nextEl = nextToColumn.getElement();
+			var topColumn = nextToColumn.getTopColumn();
+			var parentIndex = this.columns.indexOf(topColumn);
+			var nextEl = topColumn.getElement();
 
 			if(before){
 				this.columns.splice(parentIndex, 0, column);
@@ -19287,13 +19304,11 @@ class ColumnManager extends CoreFeature {
 
 			this.dispatch("column-add", definition, before, nextToColumn);
 
-			this.redraw(true);
-
 			if(this.layoutMode() != "fitColumns"){
 				column.reinitializeWidth();
 			}
 
-			this.verticalAlignHeaders();
+			this.redraw(true);
 
 			this.table.rowManager.reinitialize();
 
@@ -20112,7 +20127,7 @@ class RowManager extends CoreFeature{
 	////////////////// Row Manipulation //////////////////
 	findRow(subject){
 		if(typeof subject == "object"){
-			if(subject instanceof Row$1){
+			if(subject instanceof Row){
 				//subject is row element
 				return subject;
 			}else if(subject instanceof RowComponent$1){
@@ -20195,7 +20210,7 @@ class RowManager extends CoreFeature{
 
 			data.forEach((def, i) => {
 				if(def && typeof def === "object"){
-					var row = new Row$1(def, this);
+					var row = new Row(def, this);
 					this.rows.push(row);
 				}else {
 					console.warn("Data Loading Warning - Invalid row data detected and ignored, expecting object but received:", def);
@@ -20327,7 +20342,7 @@ class RowManager extends CoreFeature{
 	}
 
 	addRowActual(data, pos, index, blockRedraw){
-		var row = data instanceof Row$1 ? data : new Row$1(data || {}, this),
+		var row = data instanceof Row ? data : new Row(data || {}, this),
 		top = this.findAddRowPos(pos),
 		allIndex = -1,
 		activeIndex, chainResult;
@@ -20486,7 +20501,7 @@ class RowManager extends CoreFeature{
 			nextRow = this.getDisplayRows()[index+1];
 		}
 
-		if(nextRow && (!(nextRow instanceof Row$1) || nextRow.type != "row")){
+		if(nextRow && (!(nextRow instanceof Row) || nextRow.type != "row")){
 			return this.nextDisplayRow(nextRow, rowOnly);
 		}
 
@@ -20501,7 +20516,7 @@ class RowManager extends CoreFeature{
 			prevRow = this.getDisplayRows()[index-1];
 		}
 
-		if(rowOnly && prevRow && (!(prevRow instanceof Row$1) || prevRow.type != "row")){
+		if(rowOnly && prevRow && (!(prevRow instanceof Row) || prevRow.type != "row")){
 			return this.prevDisplayRow(prevRow, rowOnly);
 		}
 
@@ -21217,7 +21232,6 @@ class InteractionManager extends CoreFeature {
 				if(!listener.handler){
 					listener.handler = this.track.bind(this, key);
 					this.el.addEventListener(key, listener.handler);
-					console.log("add", key);
 					// this.el.addEventListener(key, listener.handler, {passive: true})
 				}
 			}else {
@@ -22921,68 +22935,80 @@ class Tabulator {
 
 	//replace data, keeping table in position with same sort
 	replaceData(data, params, config){
-		return this.dataLoader.load(data, params, config, true, true);
+		if(this.initialized){
+			return this.dataLoader.load(data, params, config, true, true);
+		}else {
+			console.warn("replaceData failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	//update table data
 	updateData(data){
 		var responses = 0;
 
-		return new Promise((resolve, reject) => {
-			this.dataLoader.blockActiveLoad();
+		if(this.initialized){
+			return new Promise((resolve, reject) => {
+				this.dataLoader.blockActiveLoad();
 
-			if(typeof data === "string"){
-				data = JSON.parse(data);
-			}
+				if(typeof data === "string"){
+					data = JSON.parse(data);
+				}
 
-			if(data){
-				data.forEach((item) => {
-					var row = this.rowManager.findRow(item[this.options.index]);
+				if(data){
+					data.forEach((item) => {
+						var row = this.rowManager.findRow(item[this.options.index]);
 
-					if(row){
-						responses++;
+						if(row){
+							responses++;
 
-						row.updateData(item)
-						.then(()=>{
-							responses--;
+							row.updateData(item)
+							.then(()=>{
+								responses--;
 
-							if(!responses){
-								resolve();
-							}
-						});
-					}
-				});
-			}else {
-				console.warn("Update Error - No data provided");
-				reject("Update Error - No data provided");
-			}
-		});
+								if(!responses){
+									resolve();
+								}
+							});
+						}
+					});
+				}else {
+					console.warn("Update Error - No data provided");
+					reject("Update Error - No data provided");
+				}
+			});
+		}else {
+			console.warn("updateData failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	addData(data, pos, index){
-		return new Promise((resolve, reject) => {
-			this.dataLoader.blockActiveLoad();
+		if(this.initialized){
+			return new Promise((resolve, reject) => {
+				this.dataLoader.blockActiveLoad();
 
-			if(typeof data === "string"){
-				data = JSON.parse(data);
-			}
+				if(typeof data === "string"){
+					data = JSON.parse(data);
+				}
 
-			if(data){
-				this.rowManager.addRows(data, pos, index)
-				.then((rows) => {
-					var output = [];
+				if(data){
+					this.rowManager.addRows(data, pos, index)
+					.then((rows) => {
+						var output = [];
 
-					rows.forEach(function(row){
-						output.push(row.getComponent());
+						rows.forEach(function(row){
+							output.push(row.getComponent());
+						});
+
+						resolve(output);
 					});
-
-					resolve(output);
-				});
-			}else {
-				console.warn("Update Error - No data provided");
-				reject("Update Error - No data provided");
-			}
-		});
+				}else {
+					console.warn("Update Error - No data provided");
+					reject("Update Error - No data provided");
+				}
+			});
+		}else {
+			console.warn("addData failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	//update table data
@@ -22990,46 +23016,50 @@ class Tabulator {
 		var rows = [],
 		responses = 0;
 
-		return new Promise((resolve, reject) => {
-			this.dataLoader.blockActiveLoad();
+		if(this.initialized){
+			return new Promise((resolve, reject) => {
+				this.dataLoader.blockActiveLoad();
 
-			if(typeof data === "string"){
-				data = JSON.parse(data);
-			}
+				if(typeof data === "string"){
+					data = JSON.parse(data);
+				}
 
-			if(data){
-				data.forEach((item) => {
-					var row = this.rowManager.findRow(item[this.options.index]);
+				if(data){
+					data.forEach((item) => {
+						var row = this.rowManager.findRow(item[this.options.index]);
 
-					responses++;
+						responses++;
 
-					if(row){
-						row.updateData(item)
-						.then(()=>{
-							responses--;
-							rows.push(row.getComponent());
+						if(row){
+							row.updateData(item)
+							.then(()=>{
+								responses--;
+								rows.push(row.getComponent());
 
-							if(!responses){
-								resolve(rows);
-							}
-						});
-					}else {
-						this.rowManager.addRows(item)
-						.then((newRows)=>{
-							responses--;
-							rows.push(newRows[0].getComponent());
+								if(!responses){
+									resolve(rows);
+								}
+							});
+						}else {
+							this.rowManager.addRows(item)
+							.then((newRows)=>{
+								responses--;
+								rows.push(newRows[0].getComponent());
 
-							if(!responses){
-								resolve(rows);
-							}
-						});
-					}
-				});
-			}else {
-				console.warn("Update Error - No data provided");
-				reject("Update Error - No data provided");
-			}
-		});
+								if(!responses){
+									resolve(rows);
+								}
+							});
+						}
+					});
+				}else {
+					console.warn("Update Error - No data provided");
+					reject("Update Error - No data provided");
+				}
+			});
+		}else {
+			console.warn("updateOrAddData failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	//get row object
@@ -23093,14 +23123,18 @@ class Tabulator {
 
 	//add row to table
 	addRow(data, pos, index){
-		if(typeof data === "string"){
-			data = JSON.parse(data);
-		}
+		if(this.initialized){
+			if(typeof data === "string"){
+				data = JSON.parse(data);
+			}
 
-		return this.rowManager.addRows(data, pos, index)
-		.then((rows)=>{
-			return rows[0].getComponent();
-		});
+			return this.rowManager.addRows(data, pos, index)
+			.then((rows)=>{
+				return rows[0].getComponent();
+			});
+		}else {
+			console.warn("addRow failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	//update a row if it exitsts otherwise create it
@@ -23166,7 +23200,11 @@ class Tabulator {
 	}
 
 	getRows(active){
-		return this.rowManager.getComponents(active);
+		if(this.initialized){
+			return this.rowManager.getComponents(active);
+		}else {
+			console.warn("getRows failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	//get position of row in table
@@ -23309,8 +23347,12 @@ class Tabulator {
 	//////////// General Public Functions ////////////
 	//redraw list without updating data
 	redraw(force){
-		this.columnManager.redraw(force);
-		this.rowManager.redraw(force);
+		if(this.initialized){
+			this.columnManager.redraw(force);
+			this.rowManager.redraw(force);
+		}else {
+			console.warn("redraw failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
+		}
 	}
 
 	setHeight(height){

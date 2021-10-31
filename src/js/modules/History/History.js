@@ -1,4 +1,6 @@
 import Module from '../../core/Module.js';
+import Row from '../../core/row/Row.js';
+import Cell from '../../core/cell/Cell.js';
 
 import defaultUndoers from './defaults/undoers.js';
 import defaultRedoers from './defaults/redoers.js';
@@ -58,7 +60,7 @@ class History extends Module{
 			}
 		}
 
-		this.history.action("rowDelete", row, {data:row.getData(), pos:!index, index:index});
+		this.action("rowDelete", row, {data:row.getData(), pos:!index, index:index});
 	}
 
 	cellUpdated(cell){
