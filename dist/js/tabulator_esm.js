@@ -1,4 +1,4 @@
-/* Tabulator v5.0.7 (c) Oliver Folkerd 2021 */
+/* Tabulator v5.0.8 (c) Oliver Folkerd 2021 */
 class CoreFeature{
 
 	constructor(table){
@@ -1648,7 +1648,7 @@ class ColumnComponent {
 	}
 }
 
-var defaultOptions = {
+var defaultColumnOptions = {
 	"title": undefined,
 	"field": undefined,
 	"columns": undefined,
@@ -2679,7 +2679,7 @@ class Column$1 extends CoreFeature{
 	}
 }
 
-Column$1.defaultOptionList = defaultOptions;
+Column$1.defaultOptionList = defaultColumnOptions;
 
 //public row object
 class RowComponent$1 {
@@ -3626,7 +3626,7 @@ class ColumnCalcs extends Module{
 
 		row.getComponent = () => {
 			if(!row.component){
-				row.component = new CalcComponent(this);
+				row.component = new CalcComponent(row);
 			}
 
 			return row.component;
@@ -6422,8 +6422,8 @@ function star(cell, onRendered, success, cancel, editorParams){
 //draggable progress bar
 function progress(cell, onRendered, success, cancel, editorParams){
 	var element = cell.getElement(),
-	max = typeof editorParams.max === "undefined" ? ( element.getElementsByTagName("div")[0]?.getAttribute("max") || 100) : editorParams.max,
-	min = typeof editorParams.min === "undefined" ? ( element.getElementsByTagName("div")[0]?.getAttribute("min") || 0) : editorParams.min,
+	max = typeof editorParams.max === "undefined" ? ((element.getElementsByTagName("div")[0] && element.getElementsByTagName("div")[0].getAttribute("max")) || 100) : editorParams.max,
+	min = typeof editorParams.min === "undefined" ? ((element.getElementsByTagName("div")[0] && element.getElementsByTagName("div")[0].getAttribute("min")) || 0) : editorParams.min,
 	percent = (max - min) / 100,
 	value = cell.getValue() || 0,
 	handle = document.createElement("div"),
@@ -8655,7 +8655,7 @@ class Filter extends Module{
 			if(this.table.options.filterMode === "remote"){
 				this.reloadData();
 			}else {
-				this.refreshData();
+				this.refreshData(true);
 			}
 		}
 
@@ -9173,7 +9173,7 @@ function datetime(cell, formatterParams, onRendered){
 	var value = cell.getValue();
 
 	if(typeof DT != "undefined"){
-		var newDatetime = (window.DateTime || luxon.DateTime).fromFormat(value, inputFormat);
+		var newDatetime = DT.fromFormat(String(value), inputFormat);
 
 		if(newDatetime.isValid){
 
@@ -9184,7 +9184,7 @@ function datetime(cell, formatterParams, onRendered){
 			return newDatetime.toFormat(outputFormat);
 		}else {
 
-			if(invalid === true){
+			if(invalid === true || !value){
 				return value;
 			}else if(typeof invalid === "function"){
 				return invalid(value);
@@ -9208,7 +9208,7 @@ function datetimediff (cell, formatterParams, onRendered) {
 	var value = cell.getValue();
 
 	if(typeof DT != "undefined"){
-		var newDatetime = DT.fromFormat(value, inputFormat);
+		var newDatetime = DT.fromFormat(String(value), inputFormat);
 
 		if (newDatetime.isValid){
 			if(humanize);else {
@@ -10305,10 +10305,16 @@ class Group{
 				group.wipe();
 			});
 		}else {
-			this.element = false;
-			this.arrowElement = false;
-			this.elementContents = false;
+			this.rows.forEach((row) => {
+				if(row.modules){
+					delete row.modules.group;
+				}
+			});
 		}
+
+		this.element = false;
+		this.arrowElement = false;
+		this.elementContents = false;
 	}
 
 	createElements(){
@@ -10530,7 +10536,7 @@ class Group{
 			}
 
 			this.generateGroupHeaderContents();
-
+			
 			if(this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
 				this.groupManager.table.modules.columnCalcs.recalcGroup(this);
 			}
@@ -11133,7 +11139,12 @@ class GroupRows extends Module{
 
 	setGroupBy(groups){
 		this.table.options.groupBy = groups;
-		this.configureGroupSetup();
+		if(!this.initialized){
+			this.initialize();
+		}else {
+			this.configureGroupSetup();
+		}
+
 		this.refreshData();
 
 		this.trackChanges();
@@ -11733,7 +11744,7 @@ class HtmlTableImport extends Module{
 
 		rows = rows ? rows.getElementsByTagName("tr") : [];
 
-		//check for tablator inline options
+		//check for Tabulator inline options
 		this._extractOptions(element, options);
 
 		if(headers.length){
@@ -11772,7 +11783,7 @@ class HtmlTableImport extends Module{
 	//extract tabulator attribute options
 	_extractOptions(element, options, defaultOptions){
 		var attributes = element.attributes;
-		var optionsArr = defaultOptions ? Object.assign([], defaultOptions) : Object.keys(options);
+		var optionsArr = defaultOptions ? Object.keys(defaultOptions) : Object.keys(options);
 		var optionsList = {};
 
 		optionsArr.forEach((item) => {
@@ -11839,11 +11850,8 @@ class HtmlTableImport extends Module{
 				col.width = width;
 			}
 
-			//check for tablator inline options
-			header.attributes;
-
-			// //check for tablator inline options
-			this._extractOptions(header, col, Column$1.prototype.defaultOptionList);
+			//check for Tabulator inline options
+			this._extractOptions(header, col, this.table.columnManager.optionsList.registeredDefaults);
 
 			this.fieldIndex[index] = col.field;
 
@@ -12820,10 +12828,10 @@ class Menu extends Module{
 Menu.moduleName = "menu";
 
 class MoveColumns extends Module{
-
+	
 	constructor(table){
 		super(table);
-
+		
 		this.placeholderElement = this.createPlaceholderElement();
 		this.hoverElement = false; //floating column header element
 		this.checkTimeout = false; //click check timeout holder
@@ -12836,35 +12844,36 @@ class MoveColumns extends Module{
 		this.autoScrollStep = 5; //auto scroll distance in pixels
 		this.autoScrollTimeout = false; //auto scroll timeout
 		this.touchMove = false;
-
+		
 		this.moveHover = this.moveHover.bind(this);
 		this.endMove = this.endMove.bind(this);
-
+		
 		this.registerTableOption("movableColumns", false); //enable movable columns
 	}
-
+	
 	createPlaceholderElement(){
 		var el = document.createElement("div");
-
+		
 		el.classList.add("tabulator-col");
 		el.classList.add("tabulator-col-placeholder");
-
+		
 		return el;
 	}
-
+	
 	initialize(){
-		this.subscribe("column-init", this.initializeColumn.bind(this));
+		if(this.table.options.movableColumns){
+			this.subscribe("column-init", this.initializeColumn.bind(this));
+		}
 	}
-
+	
 	initializeColumn(column){
 		var self = this,
 		config = {},
 		colEl;
-
+		
 		if(!column.modules.frozen){
-
 			colEl = column.getElement();
-
+			
 			config.mousemove = function(e){
 				if(column.parent === self.moving.parent){
 					if((((self.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(colEl).left) + self.table.columnManager.element.scrollLeft) > (column.getWidth() / 2)){
@@ -12880,7 +12889,7 @@ class MoveColumns extends Module{
 					}
 				}
 			}.bind(self);
-
+			
 			colEl.addEventListener("mousedown", function(e){
 				self.touchMove = false;
 				if(e.which === 1){
@@ -12889,7 +12898,7 @@ class MoveColumns extends Module{
 					}, self.checkPeriod);
 				}
 			});
-
+			
 			colEl.addEventListener("mouseup", function(e){
 				if(e.which === 1){
 					if(self.checkTimeout){
@@ -12897,18 +12906,18 @@ class MoveColumns extends Module{
 					}
 				}
 			});
-
+			
 			self.bindTouchEvents(column);
 		}
-
+		
 		column.modules.moveColumn = config;
 	}
-
+	
 	bindTouchEvents(column){
 		var colEl = column.getElement(),
 		startXMove = false, //shifting center position of the cell
 		nextCol, prevCol, nextColWidth, prevColWidth, nextColWidthLast, prevColWidthLast;
-
+		
 		colEl.addEventListener("touchstart", (e) => {
 			this.checkTimeout = setTimeout(() => {
 				this.touchMove = true;
@@ -12919,27 +12928,27 @@ class MoveColumns extends Module{
 				nextColWidthLast = 0;
 				prevColWidthLast = 0;
 				startXMove = false;
-
+				
 				this.startMove(e, column);
 			}, this.checkPeriod);
 		}, {passive: true});
-
+		
 		colEl.addEventListener("touchmove", (e) => {
 			var diff, moveToCol;
-
+			
 			if(this.moving){
 				this.moveHover(e);
-
+				
 				if(!startXMove){
 					startXMove = e.touches[0].pageX;
 				}
-
+				
 				diff = e.touches[0].pageX - startXMove;
-
+				
 				if(diff > 0){
 					if(nextCol && diff - nextColWidthLast > nextColWidth){
 						moveToCol = nextCol;
-
+						
 						if(moveToCol !== column){
 							startXMove = e.touches[0].pageX;
 							moveToCol.getElement().parentNode.insertBefore(this.placeholderElement, moveToCol.getElement().nextSibling);
@@ -12949,7 +12958,7 @@ class MoveColumns extends Module{
 				}else {
 					if(prevCol && -diff - prevColWidthLast >  prevColWidth){
 						moveToCol = prevCol;
-
+						
 						if(moveToCol !== column){
 							startXMove = e.touches[0].pageX;
 							moveToCol.getElement().parentNode.insertBefore(this.placeholderElement, moveToCol.getElement());
@@ -12957,7 +12966,7 @@ class MoveColumns extends Module{
 						}
 					}
 				}
-
+				
 				if(moveToCol){
 					nextCol = moveToCol.nextColumn();
 					nextColWidthLast = nextColWidth;
@@ -12968,7 +12977,7 @@ class MoveColumns extends Module{
 				}
 			}
 		}, {passive: true});
-
+		
 		colEl.addEventListener("touchend", (e) => {
 			if(this.checkTimeout){
 				clearTimeout(this.checkTimeout);
@@ -12978,43 +12987,43 @@ class MoveColumns extends Module{
 			}
 		});
 	}
-
+	
 	startMove(e, column){
 		var element = column.getElement(),
 		headerElement = this.table.columnManager.getElement(),
 		headersElement = this.table.columnManager.getHeadersElement();
-
+		
 		this.moving = column;
 		this.startX = (this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(element).left;
-
+		
 		this.table.element.classList.add("tabulator-block-select");
-
+		
 		//create placeholder
 		this.placeholderElement.style.width = column.getWidth() + "px";
 		this.placeholderElement.style.height = column.getHeight() + "px";
-
+		
 		element.parentNode.insertBefore(this.placeholderElement, element);
 		element.parentNode.removeChild(element);
-
+		
 		//create hover element
 		this.hoverElement = element.cloneNode(true);
 		this.hoverElement.classList.add("tabulator-moving");
-
+		
 		this.table.columnManager.getElement().appendChild(this.hoverElement);
-
+		
 		this.hoverElement.style.left = "0";
 		this.hoverElement.style.bottom = (headerElement.clientHeight - headersElement.offsetHeight) + "px";
-
+		
 		if(!this.touchMove){
 			this._bindMouseMove();
-
+			
 			document.body.addEventListener("mousemove", this.moveHover);
 			document.body.addEventListener("mouseup", this.endMove);
 		}
-
+		
 		this.moveHover(e);
 	}
-
+	
 	_bindMouseMove(){
 		this.table.columnManager.columnsByIndex.forEach(function(column){
 			if(column.modules.moveColumn.mousemove){
@@ -13022,7 +13031,7 @@ class MoveColumns extends Module{
 			}
 		});
 	}
-
+	
 	_unbindMouseMove(){
 		this.table.columnManager.columnsByIndex.forEach(function(column){
 			if(column.modules.moveColumn.mousemove){
@@ -13030,17 +13039,17 @@ class MoveColumns extends Module{
 			}
 		});
 	}
-
+	
 	moveColumn(column, after){
 		var movingCells = this.moving.getCells();
-
+		
 		this.toCol = column;
 		this.toColAfter = after;
-
+		
 		if(after){
 			column.getCells().forEach(function(cell, i){
 				var cellEl = cell.getElement(true);
-
+				
 				if(cellEl.parentNode && movingCells[i]){
 					cellEl.parentNode.insertBefore(movingCells[i].getElement(), cellEl.nextSibling);
 				}
@@ -13048,47 +13057,47 @@ class MoveColumns extends Module{
 		}else {
 			column.getCells().forEach(function(cell, i){
 				var cellEl = cell.getElement(true);
-
+				
 				if(cellEl.parentNode && movingCells[i]){
 					cellEl.parentNode.insertBefore(movingCells[i].getElement(), cellEl);
 				}
 			});
 		}
 	}
-
+	
 	endMove(e){
 		if(e.which === 1 || this.touchMove){
 			this._unbindMouseMove();
-
+			
 			this.placeholderElement.parentNode.insertBefore(this.moving.getElement(), this.placeholderElement.nextSibling);
 			this.placeholderElement.parentNode.removeChild(this.placeholderElement);
 			this.hoverElement.parentNode.removeChild(this.hoverElement);
-
+			
 			this.table.element.classList.remove("tabulator-block-select");
-
+			
 			if(this.toCol){
 				this.table.columnManager.moveColumnActual(this.moving, this.toCol, this.toColAfter);
 			}
-
+			
 			this.moving = false;
 			this.toCol = false;
 			this.toColAfter = false;
-
+			
 			if(!this.touchMove){
 				document.body.removeEventListener("mousemove", this.moveHover);
 				document.body.removeEventListener("mouseup", this.endMove);
 			}
 		}
 	}
-
+	
 	moveHover(e){
 		var columnHolder = this.table.columnManager.getElement(),
 		scrollLeft = columnHolder.scrollLeft,
 		xPos = ((this.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(columnHolder).left) + scrollLeft,
 		scrollPos;
-
+		
 		this.hoverElement.style.left = (xPos - this.startX) + "px";
-
+		
 		if(xPos - scrollLeft < this.autoScrollMargin){
 			if(!this.autoScrollTimeout){
 				this.autoScrollTimeout = setTimeout(() => {
@@ -13098,7 +13107,7 @@ class MoveColumns extends Module{
 				}, 1);
 			}
 		}
-
+		
 		if(scrollLeft + columnHolder.clientWidth - xPos < this.autoScrollMargin){
 			if(!this.autoScrollTimeout){
 				this.autoScrollTimeout = setTimeout(() => {
@@ -14074,7 +14083,8 @@ class Page extends Module{
 			margin = this.table.options.progressiveLoadScrollMargin || (element.clientHeight * 2);
 
 			if(diff < margin){
-				this.nextPage();
+				this.nextPage()
+				.catch(() => {}); //consume the exception thrown when on the last page
 			}
 		}
 	}
@@ -16405,7 +16415,7 @@ class SelectRow extends Module{
 			this.subscribe("rows-wipe", this.clearSelectionData.bind(this));
 			this.subscribe("rows-retrieve", this.rowRetrieve.bind(this));
 
-			if(this.table.options.selectable && this.table.options.selectablePersistence){
+			if(this.table.options.selectable && !this.table.options.selectablePersistence){
 				this.subscribe("data-refeshing", this.deselectRows.bind(this));
 			}
 		}
@@ -16666,6 +16676,7 @@ class SelectRow extends Module{
 		var self = this,
 		rowCount;
 
+		console.trace("deselect");
 		if(typeof rows == "undefined"){
 
 			rowCount = self.selectedRows.length;
@@ -16883,8 +16894,9 @@ function datetime$1(a, b, aRow, bRow, column, dir, params){
 	emptyAlign = 0;
 
 	if(typeof DT != "undefined"){
-		a = DT.fromFormat(a, format);
-		b = DT.fromFormat(b, format);
+		a = DT.fromFormat(String(a), format);
+		b = DT.fromFormat(String(b), format);
+
 		if(!a.isValid){
 			emptyAlign = !b.isValid ? 0 : -1;
 		}else if(!b.isValid){
@@ -17255,7 +17267,7 @@ class Sort extends Module{
 		if(this.table.options.sortMode === "remote"){
 			this.reloadData();
 		}else {
-			this.refreshData();
+			this.refreshData(true);
 		}
 
 		//TODO - Persist left position of row manager
@@ -17909,7 +17921,7 @@ var modules = /*#__PURE__*/Object.freeze({
 	ValidateModule: Validate
 });
 
-var defaultOptions$1 = {
+var defaultOptions = {
 
 	debugEventsExternal:false, //flag to console log events
 	debugEventsInternal:false, //flag to console log events
@@ -17971,10 +17983,10 @@ var defaultOptions$1 = {
 };
 
 class OptionsList {
-	constructor(table, msgType){
+	constructor(table, msgType, defaults = {}){
 		this.table = table;
 		this.msgType = msgType;
-		this.registeredDefaults = {};
+		this.registeredDefaults = Object.assign({}, defaults);
 	}
 
 	register(option, value){
@@ -18714,7 +18726,7 @@ class ColumnManager extends CoreFeature {
 		this.columnsByIndex = []; //columns by index
 		this.columnsByField = {}; //columns by field
 		this.scrollLeft = 0;
-		this.optionsList = new OptionsList(this.table, "column definition");
+		this.optionsList = new OptionsList(this.table, "column definition", defaultColumnOptions);
 
 		this.renderer = null;
 	}
@@ -21144,7 +21156,7 @@ class InteractionManager extends CoreFeature {
 	constructor (table){
 		super(table);
 
-		this.el = this.table.element;
+		this.el = null;
 
 		this.abortClasses = ["tabulator-headers", "tabulator-table"];
 
@@ -21169,7 +21181,10 @@ class InteractionManager extends CoreFeature {
 			"tabulator-group":"group",
 			"tabulator-col":"column",
 		};
+	}
 
+	initialize(){
+		this.el = this.table.element;
 		this.buildListenerMap();
 		this.bindSubscriptionWatchers();
 	}
@@ -21347,7 +21362,7 @@ class InteractionManager extends CoreFeature {
 	}
 }
 
-class ComponentFuctionBinder{
+class ComponentFunctionBinder{
 
 	constructor(table){
 		this.table = table;
@@ -22560,11 +22575,11 @@ class Tabulator {
 		this.interactionMonitor = false; //track user interaction
 		this.browser = ""; //hold current browser type
 		this.browserSlow = false; //handle reduced functionality for slower browsers
-		this.browserMobile = false; //check if running on moble, prevent resize cancelling edit on keyboard appearence
+		this.browserMobile = false; //check if running on mobile, prevent resize cancelling edit on keyboard appearance
 		this.rtl = false; //check if the table is in RTL mode
 		this.originalElement = null; //hold original table element if it has been replaced
 
-		this.componentFunctionBinder = new ComponentFuctionBinder(this); //bind component functions
+		this.componentFunctionBinder = new ComponentFunctionBinder(this); //bind component functions
 		this.dataLoader = false; //bind component functions
 
 		this.modules = {}; //hold all modules bound to this table
@@ -22579,13 +22594,13 @@ class Tabulator {
 
 			this.initialzeCoreSystems(options);
 
-			//delay table creation to allow event bindings immediatly after the constructor
+			//delay table creation to allow event bindings immediately after the constructor
 			setTimeout(() => {
 				this._create();
 			});
 		}
 
-		TableRegistry.register(this); //register table for inderdevice communication
+		TableRegistry.register(this); //register table for inter-device communication
 	}
 
 	initializeElement(element){
@@ -22619,7 +22634,7 @@ class Tabulator {
 
 		this._clearObjectPointers();
 
-		this._mapDepricatedFunctionality();
+		this._mapDeprecatedFunctionality();
 
 		this.externalEvents = new ExternalEventBus(this, this.options, this.options.debugEventsExternal);
 		this.eventBus = new InternalEventBus(this.options.debugEventsInternal);
@@ -22632,8 +22647,8 @@ class Tabulator {
 		this.footerManager.initialize();
 	}
 
-	//convert depricated functionality to new functions
-	_mapDepricatedFunctionality(){
+	//convert deprecated functionality to new functions
+	_mapDeprecatedFunctionality(){
 		//all previously deprecated functionality removed in the 5.0 release
 	}
 
@@ -22654,7 +22669,7 @@ class Tabulator {
 		this.element.classList.remove("tabulator-block-select");
 	}
 
-	//concreate table
+	//create table
 	_create(){
 		this.externalEvents.dispatch("tableBuilding");
 		this.eventBus.dispatch("table-building");
@@ -22758,6 +22773,8 @@ class Tabulator {
 		var element = this.element,
 		options = this.options;
 
+		this.interactionMonitor.initialize();
+
 		this.columnManager.initialize();
 		this.rowManager.initialize();
 
@@ -22816,7 +22833,7 @@ class Tabulator {
 	destroy(){
 		var element = this.element;
 
-		TableRegistry.deregister(this); //deregister table from inderdevice communication
+		TableRegistry.deregister(this); //deregister table from inter-device communication
 
 		this.eventBus.dispatch("table-destroy");
 
@@ -23169,7 +23186,7 @@ class Tabulator {
 		if(row){
 			return row.updateData(data)
 			.then(()=>{
-				resolve(row.getComponent());
+				return Promise.resolve(row.getComponent());
 			})
 		}else {
 			console.warn("Update Error - No matching row found:", index);
@@ -23200,11 +23217,7 @@ class Tabulator {
 	}
 
 	getRows(active){
-		if(this.initialized){
-			return this.rowManager.getComponents(active);
-		}else {
-			console.warn("getRows failed - table not yet initialized. Please wait for the `tableBuilt` event before calling this function.");
-		}
+		return this.rowManager.getComponents(active);
 	}
 
 	//get position of row in table
@@ -23403,7 +23416,7 @@ class Tabulator {
 }
 
 //default setup options
-Tabulator.defaultOptions = defaultOptions$1;
+Tabulator.defaultOptions = defaultOptions;
 
 //bind modules and static functionality
 new ModuleBinder(Tabulator);
