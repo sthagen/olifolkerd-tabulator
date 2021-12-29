@@ -277,9 +277,7 @@ class SelectRow extends Module{
 					this.childRowSelection(row, true);
 				}
 
-				if(!silent){
-					this.dispatchExternal("rowSelected", row.getComponent());
-				}
+				this.dispatchExternal("rowSelected", row.getComponent());
 
 				this._rowSelectionChanged(silent);
 			}
@@ -298,8 +296,7 @@ class SelectRow extends Module{
 	deselectRows(rows, silent){
 		var self = this,
 		rowCount;
-
-		console.trace("deselect")
+		
 		if(typeof rows == "undefined"){
 
 			rowCount = self.selectedRows.length;
@@ -351,9 +348,7 @@ class SelectRow extends Module{
 					this.childRowSelection(row, false);
 				}
 
-				if(!silent){
-					this.dispatchExternal("rowDeselected", row.getComponent());
-				}
+				this.dispatchExternal("rowDeselected", row.getComponent());
 
 				self._rowSelectionChanged(silent);
 			}
