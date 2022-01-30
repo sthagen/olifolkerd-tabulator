@@ -191,6 +191,10 @@ export default class Cell extends CoreFeature{
 
 			this.cellRendered();
 
+			if(this.column.definition.cellEdited){
+				this.column.definition.cellEdited.call(this.table, this.getComponent());
+			}
+
 			this.dispatchExternal("cellEdited", this.getComponent());
 
 			if(this.subscribedExternal("dataChanged")){
@@ -202,7 +206,7 @@ export default class Cell extends CoreFeature{
 	setValueProcessData(value, mutate){
 		var changed = false;
 
-		if(this.value != value){
+		if(this.value !== value){
 
 			changed = true;
 

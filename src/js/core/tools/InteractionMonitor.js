@@ -246,7 +246,7 @@ export default class InteractionManager extends CoreFeature {
 				switch(key){
 					case "row":
 					case "group":
-					if(listener.components.includes("row") || listener.components.includes("cell")){
+					if(listener.components.includes("row") || listener.components.includes("cell") || listener.components.includes("group")){
 						let rows = this.table.rowManager.getVisibleRows(true);
 						
 						component = rows.find((row) => {
@@ -263,7 +263,11 @@ export default class InteractionManager extends CoreFeature {
 					
 					case "cell":
 					if(listener.components.includes("cell")){
-						component = targets["row"].findCell(target);
+						if(targets["row"]){
+							component = targets["row"].findCell(target);
+						}else{
+							console.warn("Event Target Lookup Error - The row this cell is attached to cannot be found, has the table been reinitialized without being destroyed first?")
+						}
 					}
 					break;
 				}

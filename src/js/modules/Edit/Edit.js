@@ -54,12 +54,12 @@ class Edit extends Module{
 		this.subscribe("row-deleting", this.rowDeleteCheck.bind(this));
 		this.subscribe("data-refeshing", this.cancelEdit.bind(this));
 
-		this.subscribe("keybinding-nav-prev", this.navigatePrev.bind(this));
+		this.subscribe("keybinding-nav-prev", this.navigatePrev.bind(this, undefined));
 		this.subscribe("keybinding-nav-next", this.keybindingNavigateNext.bind(this));
-		this.subscribe("keybinding-nav-left", this.navigateLeft.bind(this));
-		this.subscribe("keybinding-nav-right", this.navigateRight.bind(this));
-		this.subscribe("keybinding-nav-up", this.navigateUp.bind(this));
-		this.subscribe("keybinding-nav-down", this.navigateDown.bind(this));
+		this.subscribe("keybinding-nav-left", this.navigateLeft.bind(this, undefined));
+		this.subscribe("keybinding-nav-right", this.navigateRight.bind(this, undefined));
+		this.subscribe("keybinding-nav-up", this.navigateUp.bind(this, undefined));
+		this.subscribe("keybinding-nav-down", this.navigateDown.bind(this, undefined));
 	}
 
 
@@ -72,9 +72,9 @@ class Edit extends Module{
 		newRow = this.options("tabEndNewRow");
 
 		if(cell){
-			if(!this.navigateNext(e)){
+			if(!this.navigateNext(cell, e)){
 				if(newRow){
-					cell.getElement().firstChild.blur();
+					// cell.getElement().firstChild.blur();
 
 					if(newRow === true){
 						newRow = this.table.addRow({})
@@ -88,7 +88,7 @@ class Edit extends Module{
 
 					newRow.then(() => {
 						setTimeout(() => {
-							nav.next();
+							cell.getComponent().navigateNext();
 						})
 					});
 				}
@@ -118,7 +118,7 @@ class Edit extends Module{
 	///////////////////////////////////
 	clearCellEdited(cells){
 		if(!cells){
-			cells = this.modules.edit.getEditedCells();
+			cells = this.table.modules.edit.getEditedCells();
 		}
 
 		if(!Array.isArray(cells)){
@@ -126,13 +126,12 @@ class Edit extends Module{
 		}
 
 		cells.forEach((cell) => {
-			this.modules.edit.clearEdited(cell._getSelf());
+			this.table.modules.edit.clearEdited(cell._getSelf());
 		});
 	}
 
-	navigatePrev(e){
-		var cell = this.currentCell,
-		nextCell, prevRow;
+	navigatePrev(cell = this.currentCell, e){
+		var nextCell, prevRow;
 
 		if(cell){
 
@@ -161,9 +160,8 @@ class Edit extends Module{
 		return false;
 	}
 
-	navigateNext(e){
-		var cell = this.currentCell,
-		nextCell, nextRow;
+	navigateNext(cell = this.currentCell, e){
+		var nextCell, nextRow;
 
 		if(cell){
 
@@ -192,9 +190,8 @@ class Edit extends Module{
 		return false;
 	}
 
-	navigateLeft(e){
-		var cell = this.currentCell,
-		index, nextCell;
+	navigateLeft(cell = this.currentCell, e){
+		var index, nextCell;
 
 		if(cell){
 
@@ -214,9 +211,8 @@ class Edit extends Module{
 		return false;
 	}
 
-	navigateRight(e){
-		var cell = this.currentCell,
-		index, nextCell;
+	navigateRight(cell = this.currentCell, e){
+		var index, nextCell;
 
 		if(cell){
 
@@ -236,9 +232,8 @@ class Edit extends Module{
 		return false;
 	}
 
-	navigateUp(e){
-		var cell = this.currentCell,
-		index, nextRow;
+	navigateUp(cell = this.currentCell, e){
+		var index, nextRow;
 
 		if(cell){
 
@@ -258,9 +253,8 @@ class Edit extends Module{
 		return false;
 	}
 
-	navigateDown(e){
-		var cell = this.currentCell,
-		index, nextRow;
+	navigateDown(cell = this.currentCell, e){
+		var index, nextRow;
 
 		if(cell){
 
@@ -404,8 +398,6 @@ class Edit extends Module{
 		cellEl;
 
 		this.invalidEdit = false;
-
-		console.log("clear", cancel, cell, cell.validate)
 
 		if(cell){
 			this.currentCell = false;

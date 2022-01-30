@@ -8,7 +8,6 @@ export default {
 	minHeight:false, //minimum height of tabulator
 	maxHeight:false, //maximum height of tabulator
 
-	columnMaxWidth:false, //minimum global width for a column
 	columnHeaderVertAlign:"top", //vertical alignment of column headers
 
 	columns:[],//store for colum header info
@@ -53,6 +52,7 @@ export default {
 	dataLoader:true,
 	dataLoaderLoading:false,
 	dataLoaderError:false,
+	dataLoaderErrorTimeout:3000,
 
 	dataSendParams:{},
 

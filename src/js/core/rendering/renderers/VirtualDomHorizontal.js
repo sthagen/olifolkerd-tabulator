@@ -25,10 +25,10 @@ export default class VirtualDomHorizontal extends Renderer{
 	}
 	
 	initialize(){
-		this.compatabilityCheck();
+		this.compatibilityCheck();
 	}
 	
-	compatabilityCheck(){
+	compatibilityCheck(){
 		var columns = this.options("columns"),
 		frozen = false,
 		ok = true;
@@ -114,7 +114,7 @@ export default class VirtualDomHorizontal extends Renderer{
 				config.width = width;
 				
 				if (this.options("layout") === "fitData") {
-					config.fitDataCheck = true;
+					config.fitDataCheck = column.modules.vdomHoz ? column.modules.vdomHoz.fitDataCheck : true;
 				}
 				
 				if((colPos + width > this.vDomScrollPosLeft) && (colPos < this.vDomScrollPosRight)){
@@ -327,7 +327,7 @@ export default class VirtualDomHorizontal extends Renderer{
 			
 			this.fitDataColActualWidthCheck(column);
 			
-			this.rightCol++;
+			this.rightCol++; // Don't move this below the >= check below
 			
 			if(this.rightCol >= (this.columns.length - 1)){
 				this.vDomPadRight = 0;
@@ -358,7 +358,9 @@ export default class VirtualDomHorizontal extends Renderer{
 			
 			this.fitDataColActualWidthCheck(column);
 			
-			if(!this.leftCol){
+			this.leftCol--; // don't move this below the <= check below
+
+			if(this.leftCol <= 0){ // replicating logic in addColRight
 				this.vDomPadLeft = 0;
 			}else{
 				this.vDomPadLeft -= column.getWidth();
@@ -366,7 +368,6 @@ export default class VirtualDomHorizontal extends Renderer{
 			
 			this.tableElement.style.paddingLeft = this.vDomPadLeft + "px";
 			
-			this.leftCol--;
 			
 			this.addColLeft();
 		}
@@ -384,7 +385,11 @@ export default class VirtualDomHorizontal extends Renderer{
 			rows.forEach((row) => {
 				if(row.type !== "group"){
 					var cell = row.getCell(column);
-					row.getElement().removeChild(cell.getElement());
+					try {
+						row.getElement().removeChild(cell.getElement());
+					} catch (ex) {
+						console.warn("Could not removeColRight", ex.message)
+					}
 				}
 			});
 			
@@ -414,7 +419,11 @@ export default class VirtualDomHorizontal extends Renderer{
 						el = cell.getElement();
 
 						if(el.parentNode){
-							row.getElement().removeChild(el);
+							try {
+								row.getElement().removeChild(el);
+							} catch (ex) {
+								console.warn("Could not removeColLeft", ex.message)
+							}
 						}
 					}
 				}
