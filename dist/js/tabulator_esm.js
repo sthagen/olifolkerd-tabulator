@@ -1,4 +1,4 @@
-/* Tabulator v5.1.1 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.1.2 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -7645,7 +7645,8 @@ class Export extends Module{
 
 			header.forEach((col) => {
 				if(col){
-					columns.push(new ExportColumn(col.title, col.column.getComponent(), col.width, col.height, col.depth));
+					let title = typeof col.title === "undefined" ? "" : col.title;
+					columns.push(new ExportColumn(title, col.column.getComponent(), col.width, col.height, col.depth));
 				}else {
 					columns.push(null);
 				}
@@ -8738,20 +8739,24 @@ class Filter extends Module{
 
 	//add filter to array
 	addFilter(field, type, value, params){
+		var changed = false;
 
 		if(!Array.isArray(field)){
 			field = [{field:field, type:type, value:value, params:params}];
 		}
 
 		field.forEach((filter) => {
-
 			filter = this.findFilter(filter);
 
 			if(filter){
 				this.filterList.push(filter);
-				this.changed = true;
+				changed = true;
 			}
 		});
+
+		if(changed){
+			this.trackChanges();
+		}
 	}
 
 	findFilter(filter){
@@ -9523,7 +9528,7 @@ function buttonCross(cell, formatterParams, onRendered){
 }
 
 function rownum(cell, formatterParams, onRendered){
-	return this.table.rowManager.activeRows.indexOf(cell.getRow()._getSelf()) + 1;
+	return this.table.rowManager.activeRows.indexOf(cell.getRow()._getSelf()) + 1 || "";
 }
 
 function handle(cell, formatterParams, onRendered){
@@ -14335,10 +14340,13 @@ class Page extends Module{
 	initialize(){
 		if(this.table.options.pagination){
 			this.subscribe("row-deleted", this.rowsUpdated.bind(this));
-			this.subscribe("row-adding-position", this.rowAddingPosition.bind(this));
 			this.subscribe("row-added", this.rowsUpdated.bind(this));
 			this.subscribe("data-processed", this.initialLoadComplete.bind(this));
 			this.subscribe("table-built", this.calculatePageSizes.bind(this));
+
+			if(this.table.options.paginationAddRow == "page"){
+				this.subscribe("row-adding-position", this.rowAddingPosition.bind(this));
+			}
 			
 			if(this.table.options.paginationMode === "remote"){
 				this.subscribe("data-params", this.remotePageParams.bind(this));
@@ -15309,11 +15317,11 @@ class Persistence extends Module{
 				this.subscribe("column-show", this.save.bind(this, "columns"));
 				this.subscribe("column-hide", this.save.bind(this, "columns"));
 				this.subscribe("column-moved", this.save.bind(this, "columns"));
-				this.subscribe("table-built", this.tableBuilt.bind(this), 0);
 			}
 
-			this.subscribe("table-redraw", this.tableRedraw.bind(this));
+			this.subscribe("table-built", this.tableBuilt.bind(this), 0);
 
+			this.subscribe("table-redraw", this.tableRedraw.bind(this));
 
 			this.subscribe("filter-changed", this.eventSave.bind(this, "filter"));
 			this.subscribe("sort-changed", this.eventSave.bind(this, "sort"));
@@ -15341,7 +15349,7 @@ class Persistence extends Module{
 			sorters = this.load("sort");
 
 			if(!sorters === false){
-				this.table.initialSort = sorters;
+				this.table.options.initialSort = sorters;
 			}
 		}
 
@@ -15349,7 +15357,7 @@ class Persistence extends Module{
 			filters = this.load("filter");
 
 			if(!filters === false){
-				this.table.initialFilter = filters;
+				this.table.options.initialFilter = filters;
 			}
 		}
 	}
@@ -15625,6 +15633,8 @@ class Persistence extends Module{
 }
 
 Persistence.moduleName = "persistence";
+
+Persistence.moduleInitOrder = 1;
 
 //load defaults
 Persistence.readers = defaultReaders;
@@ -16837,7 +16847,7 @@ class ResponsiveLayout extends Module{
 			var titleHighlight = document.createElement("strong");
 			titleData.appendChild(titleHighlight);
 			this.langBind("columns|" + item.field, function(text){
-				titleHighlight.innerText = text || item.title;
+				titleHighlight.innerHTML = text || item.title;
 			});
 
 			if(item.value instanceof Node){
@@ -21562,12 +21572,6 @@ class RowManager extends CoreFeature{
 		if(!force){
 			this.reRenderInPosition();
 			this.scrollHorizontal(left);
-			
-			if(!this.displayRowsCount){
-				if(this.table.options.placeholder){
-					this.getElement().appendChild(this.table.options.placeholder);
-				}
-			}
 		}else {
 			this.renderTable();
 		}
@@ -23187,19 +23191,31 @@ class ModuleBinder {
 
 		//ensure that module are bound to instantiated function
 		tabulator.prototype.bindModules = function(){
+			var orderedMods = [],
+			unOrderedMods = [];
+
 			this.modules = {};
 
 			for(var name in tabulator.moduleBindings){
 				let mod = tabulator.moduleBindings[name];
+				let module = new mod(this);
 
-				this.modules[name] = new mod(this);
+				this.modules[name] = module;
 
 				if(mod.prototype.moduleCore){
-					this.modulesCore[name] = this.modules[name];
+					this.modulesCore.push(module);
 				}else {
-					this.modulesRegular[name] = this.modules[name];
+					if(mod.moduleInitOrder){
+						orderedMods.push(module);
+					}else {
+						unOrderedMods.push(module);
+					}
 				}
 			}
+
+			orderedMods.sort((a, b) => a.moduleInitOrder > b.moduleInitOrder ? 1 : -1);
+
+			this.modulesRegular = orderedMods.concat(unOrderedMods);
 		};
 	}
 
@@ -23239,8 +23255,8 @@ class Tabulator {
 		this.dataLoader = false; //bind component functions
 
 		this.modules = {}; //hold all modules bound to this table
-		this.modulesCore = {}; //hold core modules bound to this table (for initialization purposes)
-		this.modulesRegular = {}; //hold regular modules bound to this table (for initialization purposes)
+		this.modulesCore = []; //hold core modules bound to this table (for initialization purposes)
+		this.modulesRegular = []; //hold regular modules bound to this table (for initialization purposes)
 
 		this.optionsList = new OptionsList(this, "table constructor");
 
@@ -23298,8 +23314,8 @@ class Tabulator {
 		this.interactionMonitor = new InteractionManager(this);
 
 		this.dataLoader.initialize();
-		this.columnManager.initialize();
-		this.rowManager.initialize();
+		// this.columnManager.initialize();
+		// this.rowManager.initialize();
 		this.footerManager.initialize();
 	}
 
@@ -23437,24 +23453,9 @@ class Tabulator {
 		this._detectBrowser();
 
 		//initialize core modules
-		for (let key in this.modulesCore){
-			let mod = this.modulesCore[key];
-
+		this.modulesCore.forEach((mod) => {
 			mod.initialize();
-		}
-
-		//configure placeholder element
-		if(typeof options.placeholder == "string"){
-			var el = document.createElement("div");
-			el.classList.add("tabulator-placeholder");
-
-			var span = document.createElement("span");
-			span.innerHTML = options.placeholder;
-
-			el.appendChild(span);
-
-			options.placeholder = el;
-		}
+		});
 
 		//build table elements
 		element.appendChild(this.columnManager.getElement());
@@ -23470,11 +23471,9 @@ class Tabulator {
 		}
 
 		//initialize regular modules
-		for (let key in this.modulesRegular){
-			let mod = this.modulesRegular[key];
-
+		this.modulesRegular.forEach((mod) => {
 			mod.initialize();
-		}
+		});
 
 		this.columnManager.setColumns(options.columns);
 
