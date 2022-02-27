@@ -1,4 +1,4 @@
-/* Tabulator v5.1.2 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.1.3 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -3324,7 +3324,7 @@ class ColumnCalcs extends Module{
 		this.subscribe("row-added", this.rowsUpdated.bind(this));
 		this.subscribe("column-moved", this.recalcActiveRows.bind(this));
 		this.subscribe("column-add", this.recalcActiveRows.bind(this));
-		this.subscribe("data-refreshed", this.recalcActiveRows.bind(this));
+		this.subscribe("data-refreshed", this.recalcActiveRowsRefresh.bind(this));
 		this.subscribe("table-redraw", this.tableRedraw.bind(this));
 		this.subscribe("rows-visible", this.visibleRows.bind(this));
 
@@ -3372,6 +3372,14 @@ class ColumnCalcs extends Module{
 		}
 	}
 
+	recalcActiveRowsRefresh(){
+		if(this.table.options.groupBy && this.table.options.dataTreeStartExpanded && this.table.options.dataTree){
+			this.recalcAll();
+		}else {
+			this.recalcActiveRows();
+		}
+	}
+
 	recalcActiveRows(){
 		this.recalc(this.table.rowManager.activeRows);
 	}
@@ -3379,7 +3387,6 @@ class ColumnCalcs extends Module{
 	cellValueChanged(cell){
 		if(cell.column.definition.topCalc || cell.column.definition.bottomCalc){
 			if(this.table.options.groupBy){
-
 				if(this.table.options.columnCalcs == "table" || this.table.options.columnCalcs == "both"){
 					this.recalcActiveRows();
 				}
@@ -3387,7 +3394,6 @@ class ColumnCalcs extends Module{
 				if(this.table.options.columnCalcs != "table"){
 					this.recalcRowGroup(cell.row);
 				}
-
 			}else {
 				this.recalcActiveRows();
 			}
@@ -3558,7 +3564,6 @@ class ColumnCalcs extends Module{
 			}
 
 			if(this.table.options.groupBy && this.table.options.columnCalcs !== "table"){
-
 
 				var groups = this.table.modules.groupRows.getChildGroups();
 
@@ -9574,8 +9579,10 @@ function responsiveCollapse(cell, formatterParams, onRendered){
 
 function rowSelection(cell, formatterParams, onRendered){
 	var checkbox = document.createElement("input");
+	var blocked = false;
 
 	checkbox.type = 'checkbox';
+	
 
 	if(this.table.modExists("selectRow", true)){
 
@@ -9589,8 +9596,23 @@ function rowSelection(cell, formatterParams, onRendered){
 			if(row instanceof RowComponent$1){
 
 				checkbox.addEventListener("change", (e) => {
-					row.toggleSelect();
+					if(this.table.options.selectableRangeMode === "click"){
+						if(!blocked){
+							row.toggleSelect();
+						}else {
+							blocked = false;
+						}
+					}else {
+						row.toggleSelect();
+					}
 				});
+
+				if(this.table.options.selectableRangeMode === "click"){
+					checkbox.addEventListener("click", (e) => {
+						blocked = true;
+						this.table.modules.selectRow.handleComplexRowClick(row._row, e);
+					});
+				}
 
 				checkbox.checked = row.isSelected && row.isSelected();
 				this.table.modules.selectRow.registerRowSelectCheckbox(row, checkbox);
@@ -9853,6 +9875,7 @@ class FrozenColumns extends Module{
 		this.initializationMode = "left";
 		this.active = false;
 		this.scrollEndTimer = false;
+		this.blocked = true;
 
 		this.registerColumnOption("frozen");
 	}
@@ -9880,6 +9903,16 @@ class FrozenColumns extends Module{
 		this.subscribe("scroll-horizontal", this.scrollHorizontal.bind(this));
 		this.subscribe("columns-loading", this.reset.bind(this));
 		this.subscribe("table-redraw", this.layout.bind(this));
+		this.subscribe("layout-refreshing", this.blockLayout.bind(this));
+		this.subscribe("layout-refreshed", this.unblockLayout.bind(this));
+	}
+
+	blockLayout(){
+		this.blocked = true;
+	}
+
+	unblockLayout(){
+		this.blocked = false;
 	}
 
 	layoutCell(cell){
@@ -10062,11 +10095,10 @@ class FrozenColumns extends Module{
 		return column.parent.isGroup ? this.getColGroupParentElement(column.parent) : column.getElement();
 	}
 
-	//layout columns appropropriatly
+	//layout columns appropriately
 	layout(){
 
-		if(this.active){
-
+		if(this.active && !this.blocked){
 			//calculate row padding
 			this.calcMargins();
 
@@ -10089,6 +10121,10 @@ class FrozenColumns extends Module{
 		var rowEl = row.getElement();
 
 		rowEl.style.paddingLeft = this.leftMargin;
+
+		if(this.table.options.layout === "fitDataFill" && this.rightColumns.length){
+			this.table.rowManager.getTableElement().style.minWidth = "calc(100% - " + this.rightMargin + ")";
+		}
 
 		this.leftColumns.forEach((column) => {
 			var cell = row.getCell(column);
@@ -10328,7 +10364,7 @@ class GroupComponent {
 
 //Group functions
 class Group{
-
+	
 	constructor(groupManager, parent, level, key, field, generator, oldGroup){
 		this.groupManager = groupManager;
 		this.parent = parent;
@@ -10352,17 +10388,17 @@ class Group{
 		this.initialized = false;
 		this.modules = {};
 		this.arrowElement = false;
-
+		
 		this.visible = oldGroup ? oldGroup.visible : (typeof groupManager.startOpen[level] !== "undefined" ? groupManager.startOpen[level] : groupManager.startOpen[0]);
-
+		
 		this.component = null;
-
+		
 		this.createElements();
 		this.addBindings();
-
+		
 		this.createValueGroups();
 	}
-
+	
 	wipe(){
 		if(this.groupList.length){
 			this.groupList.forEach(function(group){
@@ -10375,32 +10411,32 @@ class Group{
 				}
 			});
 		}
-
+		
 		this.element = false;
 		this.arrowElement = false;
 		this.elementContents = false;
 	}
-
+	
 	createElements(){
 		var arrow = document.createElement("div");
 		arrow.classList.add("tabulator-arrow");
-
+		
 		this.element = document.createElement("div");
 		this.element.classList.add("tabulator-row");
 		this.element.classList.add("tabulator-group");
 		this.element.classList.add("tabulator-group-level-" + this.level);
 		this.element.setAttribute("role", "rowgroup");
-
+		
 		this.arrowElement = document.createElement("div");
 		this.arrowElement.classList.add("tabulator-group-toggle");
 		this.arrowElement.appendChild(arrow);
-
+		
 		//setup movable rows
 		if(this.groupManager.table.options.movableRows !== false && this.groupManager.table.modExists("moveRow")){
 			this.groupManager.table.modules.moveRow.initializeGroupHeader(this);
 		}
 	}
-
+	
 	createValueGroups(){
 		var level = this.level + 1;
 		if(this.groupManager.allowedValues && this.groupManager.allowedValues[level]){
@@ -10409,13 +10445,13 @@ class Group{
 			});
 		}
 	}
-
+	
 	addBindings(){
 		var toggleElement;
-
+		
 		if(this.groupManager.table.options.groupToggleElement){
 			toggleElement = this.groupManager.table.options.groupToggleElement == "arrow" ? this.arrowElement : this.element;
-
+			
 			toggleElement.addEventListener("click", (e) => {
 				e.stopPropagation();
 				e.stopImmediatePropagation();
@@ -10423,23 +10459,23 @@ class Group{
 			});
 		}
 	}
-
+	
 	_createGroup(groupID, level){
 		var groupKey = level + "_" + groupID;
 		var group = new Group(this.groupManager, this, level, groupID,  this.groupManager.groupIDLookups[level].field, this.groupManager.headerGenerator[level] || this.groupManager.headerGenerator[0], this.old ? this.old.groups[groupKey] : false);
-
+		
 		this.groups[groupKey] = group;
 		this.groupList.push(group);
 	}
-
+	
 	_addRowToGroup(row){
-
+		
 		var level = this.level + 1;
-
+		
 		if(this.hasSubGroups){
 			var groupID = this.groupManager.groupIDLookups[level].func(row.getData()),
 			groupKey = level + "_" + groupID;
-
+			
 			if(this.groupManager.allowedValues && this.groupManager.allowedValues[level]){
 				if(this.groups[groupKey]){
 					this.groups[groupKey].addRow(row);
@@ -10448,24 +10484,24 @@ class Group{
 				if(!this.groups[groupKey]){
 					this._createGroup(groupID, level);
 				}
-
+				
 				this.groups[groupKey].addRow(row);
 			}
 		}
 	}
-
+	
 	_addRow(row){
 		this.rows.push(row);
 		row.modules.group = this;
 	}
-
+	
 	insertRow(row, to, after){
 		var data = this.conformRowData({});
-
+		
 		row.updateData(data);
-
+		
 		var toIndex = this.rows.indexOf(to);
-
+		
 		if(toIndex > -1){
 			if(after){
 				this.rows.splice(toIndex+1, 0, row);
@@ -10479,28 +10515,30 @@ class Group{
 				this.rows.unshift(row);
 			}
 		}
-
+		
 		row.modules.group = this;
-
+		
 		this.generateGroupHeaderContents();
-
+		
 		if(this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
 			this.groupManager.table.modules.columnCalcs.recalcGroup(this);
 		}
-
+		
 		this.groupManager.updateGroupRows(true);
 	}
-
+	
 	scrollHeader(left){
-		this.arrowElement.style.marginLeft = left;
-
-		this.groupList.forEach(function(child){
-			child.scrollHeader(left);
-		});
+		if(this.arrowElement){
+			this.arrowElement.style.marginLeft = left;
+			
+			this.groupList.forEach(function(child){
+				child.scrollHeader(left);
+			});
+		}
 	}
-
+	
 	getRowIndex(row){}
-
+	
 	//update row data to match grouping contraints
 	conformRowData(data){
 		if(this.field){
@@ -10508,59 +10546,59 @@ class Group{
 		}else {
 			console.warn("Data Conforming Error - Cannot conform row data to match new group as groupBy is a function");
 		}
-
+		
 		if(this.parent){
 			data = this.parent.conformRowData(data);
 		}
-
+		
 		return data;
 	}
-
+	
 	removeRow(row){
 		var index = this.rows.indexOf(row);
 		var el = row.getElement();
-
-
+		
+		
 		if(index > -1){
 			this.rows.splice(index, 1);
 		}
-
+		
 		if(!this.groupManager.table.options.groupValues && !this.rows.length){
 			if(this.parent){
 				this.parent.removeGroup(this);
 			}else {
 				this.groupManager.removeGroup(this);
 			}
-
+			
 			this.groupManager.updateGroupRows(true);
 		}else {
-
+			
 			if(el.parentNode){
 				el.parentNode.removeChild(el);
 			}
-
+			
 			this.generateGroupHeaderContents();
 			
 			if(this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
 				this.groupManager.table.modules.columnCalcs.recalcGroup(this);
 			}
-
+			
 		}
 	}
-
+	
 	removeGroup(group){
 		var groupKey = group.level + "_" + group.key,
 		index;
-
+		
 		if(this.groups[groupKey]){
 			delete this.groups[groupKey];
-
+			
 			index = this.groupList.indexOf(group);
-
+			
 			if(index > -1){
 				this.groupList.splice(index, 1);
 			}
-
+			
 			if(!this.groupList.length){
 				if(this.parent){
 					this.parent.removeGroup(this);
@@ -10570,66 +10608,66 @@ class Group{
 			}
 		}
 	}
-
+	
 	getHeadersAndRows(noCalc){
 		var output = [];
-
+		
 		output.push(this);
-
+		
 		this._visSet();
-
+		
 		if(this.visible){
 			if(this.groupList.length){
 				this.groupList.forEach(function(group){
 					output = output.concat(group.getHeadersAndRows(noCalc));
 				});
-
+				
 			}else {
 				if(!noCalc && this.groupManager.table.options.columnCalcs != "table" && this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.modules.columnCalcs.hasTopCalcs()){
 					if(this.calcs.top){
 						this.calcs.top.detachElement();
 						this.calcs.top.deleteCells();
 					}
-
+					
 					this.calcs.top = this.groupManager.table.modules.columnCalcs.generateTopRow(this.rows);
 					output.push(this.calcs.top);
 				}
-
+				
 				output = output.concat(this.rows);
-
+				
 				if(!noCalc && this.groupManager.table.options.columnCalcs != "table" &&  this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.modules.columnCalcs.hasBottomCalcs()){
 					if(this.calcs.bottom){
 						this.calcs.bottom.detachElement();
 						this.calcs.bottom.deleteCells();
 					}
-
+					
 					this.calcs.bottom = this.groupManager.table.modules.columnCalcs.generateBottomRow(this.rows);
 					output.push(this.calcs.bottom);
 				}
 			}
 		}else {
 			if(!this.groupList.length && this.groupManager.table.options.columnCalcs != "table"){
-
+				
 				if(this.groupManager.table.modExists("columnCalcs")){
-
+					
 					if(!noCalc && this.groupManager.table.modules.columnCalcs.hasTopCalcs()){
 						if(this.calcs.top){
 							this.calcs.top.detachElement();
 							this.calcs.top.deleteCells();
 						}
-
+						
 						if(this.groupManager.table.options.groupClosedShowCalcs){
 							this.calcs.top = this.groupManager.table.modules.columnCalcs.generateTopRow(this.rows);
 							output.push(this.calcs.top);
 						}
 					}
-
+					
 					if(!noCalc && this.groupManager.table.modules.columnCalcs.hasBottomCalcs()){
 						if(this.calcs.bottom){
 							this.calcs.bottom.detachElement();
 							this.calcs.bottom.deleteCells();
 						}
-
+						
 						if(this.groupManager.table.options.groupClosedShowCalcs){
 							this.calcs.bottom = this.groupManager.table.modules.columnCalcs.generateBottomRow(this.rows);
 							output.push(this.calcs.bottom);
@@ -10637,29 +10675,29 @@ class Group{
 					}
 				}
 			}
-
+			
 		}
-
+		
 		return output;
 	}
-
+	
 	getData(visible, transform){
 		var output = [];
-
+		
 		this._visSet();
-
+		
 		if(!visible || (visible && this.visible)){
 			this.rows.forEach((row) => {
 				output.push(row.getData(transform || "data"));
 			});
 		}
-
+		
 		return output;
 	}
-
+	
 	getRowCount(){
 		var count = 0;
-
+		
 		if(this.groupList.length){
 			this.groupList.forEach((group) => {
 				count += group.getRowCount();
@@ -10669,7 +10707,7 @@ class Group{
 		}
 		return count;
 	}
-
+	
 	toggleVisibility(){
 		if(this.visible){
 			this.hide();
@@ -10677,55 +10715,55 @@ class Group{
 			this.show();
 		}
 	}
-
+	
 	hide(){
 		this.visible = false;
-
+		
 		if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
-
+			
 			this.element.classList.remove("tabulator-group-visible");
-
+			
 			if(this.groupList.length){
 				this.groupList.forEach((group) => {
-
+					
 					var rows = group.getHeadersAndRows();
-
+					
 					rows.forEach((row) => {
 						row.detachElement();
 					});
 				});
-
+				
 			}else {
 				this.rows.forEach((row) => {
 					var rowEl = row.getElement();
 					rowEl.parentNode.removeChild(rowEl);
 				});
 			}
-
+			
 			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
-
+			
 			this.groupManager.table.rowManager.checkClassicModeGroupHeaderWidth();
-
+			
 		}else {
 			this.groupManager.updateGroupRows(true);
 		}
-
+		
 		this.groupManager.table.externalEvents.dispatch("groupVisibilityChanged", this.getComponent(), false);
 	}
-
+	
 	show(){
 		this.visible = true;
-
+		
 		if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
-
+			
 			this.element.classList.add("tabulator-group-visible");
-
+			
 			var prev = this.generateElement();
-
+			
 			if(this.groupList.length){
 				this.groupList.forEach((group) => {
 					var rows = group.getHeadersAndRows();
-
+					
 					rows.forEach((row) => {
 						var rowEl = row.getElement();
 						prev.parentNode.insertBefore(rowEl, prev.nextSibling);
@@ -10733,7 +10771,7 @@ class Group{
 						prev = rowEl;
 					});
 				});
-
+				
 			}else {
 				this.rows.forEach((row) => {
 					var rowEl = row.getElement();
@@ -10742,36 +10780,36 @@ class Group{
 					prev = rowEl;
 				});
 			}
-
+			
 			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
-
+			
 			this.groupManager.table.rowManager.checkClassicModeGroupHeaderWidth();
 		}else {
 			this.groupManager.updateGroupRows(true);
 		}
-
+		
 		this.groupManager.table.externalEvents.dispatch("groupVisibilityChanged", this.getComponent(), true);
 	}
-
+	
 	_visSet(){
 		var data = [];
-
+		
 		if(typeof this.visible == "function"){
-
+			
 			this.rows.forEach(function(row){
 				data.push(row.getData());
 			});
-
+			
 			this.visible = this.visible(this.key, this.getRowCount(), data, this.getComponent());
 		}
 	}
-
+	
 	getRowGroup(row){
 		var match = false;
 		if(this.groupList.length){
 			this.groupList.forEach(function(group){
 				var result = group.getRowGroup(row);
-
+				
 				if(result){
 					match = result;
 				}
@@ -10783,50 +10821,50 @@ class Group{
 				match = this;
 			}
 		}
-
+		
 		return match;
 	}
-
+	
 	getSubGroups(component){
 		var output = [];
-
+		
 		this.groupList.forEach(function(child){
 			output.push(component ? child.getComponent() : child);
 		});
-
+		
 		return output;
 	}
-
+	
 	getRows(compoment){
 		var output = [];
-
+		
 		this.rows.forEach(function(row){
 			output.push(compoment ? row.getComponent() : row);
 		});
-
+		
 		return output;
 	}
-
+	
 	generateGroupHeaderContents(){
 		var data = [];
-
+		
 		this.rows.forEach(function(row){
 			data.push(row.getData());
 		});
-
+		
 		this.elementContents = this.generator(this.key, this.getRowCount(), data, this.getComponent());
-
+		
 		while(this.element.firstChild) this.element.removeChild(this.element.firstChild);
-
+		
 		if(typeof this.elementContents === "string"){
 			this.element.innerHTML = this.elementContents;
 		}else {
 			this.element.appendChild(this.elementContents);
 		}
-
+		
 		this.element.insertBefore(this.arrowElement, this.element.firstChild);
 	}
-
+	
 	getPath(path = []) {
 		path.unshift(this.key);
 		if(this.parent) {
@@ -10834,94 +10872,94 @@ class Group{
 		}
 		return path;
 	}
-
+	
 	////////////// Standard Row Functions //////////////
-
+	
 	getElement(){
 		return this.elementContents ? this.element : this.generateElement();
 	}
-
+	
 	generateElement(){
 		this.addBindings = false;
-
+		
 		this._visSet();
-
+		
 		if(this.visible){
 			this.element.classList.add("tabulator-group-visible");
 		}else {
 			this.element.classList.remove("tabulator-group-visible");
 		}
-
+		
 		for(var i = 0; i < this.element.childNodes.length; ++i){
 			this.element.childNodes[i].parentNode.removeChild(this.element.childNodes[i]);
 		}
-
+		
 		this.generateGroupHeaderContents();
-
+		
 		// this.addBindings();
-
+		
 		return this.element;
 	}
-
+	
 	detachElement(){
 		if (this.element && this.element.parentNode){
 			this.element.parentNode.removeChild(this.element);
 		}
 	}
-
+	
 	//normalize the height of elements in the row
 	normalizeHeight(){
 		this.setHeight(this.element.clientHeight);
 	}
-
+	
 	initialize(force){
 		if(!this.initialized || force){
 			this.normalizeHeight();
 			this.initialized = true;
 		}
 	}
-
+	
 	reinitialize(){
 		this.initialized = false;
 		this.height = 0;
-
+		
 		if(Helpers.elVisible(this.element)){
 			this.initialize(true);
 		}
 	}
-
+	
 	setHeight(height){
 		if(this.height != height){
 			this.height = height;
 			this.outerHeight = this.element.offsetHeight;
 		}
 	}
-
+	
 	//return rows outer height
 	getHeight(){
 		return this.outerHeight;
 	}
-
+	
 	getGroup(){
 		return this;
 	}
-
+	
 	reinitializeHeight(){}
-
+	
 	calcHeight(){}
-
+	
 	setCellHeight(){}
-
+	
 	clearCellHeight(){}
-
+	
 	deinitializeHeight(){}
-
+	
 	//////////////// Object Generation /////////////////
 	getComponent(){
 		if(!this.component){
 			this.component = new GroupComponent(this);
 		}
-
+		
 		return this.component;
 	}
 }
@@ -15160,12 +15198,12 @@ var defaultReaders = {
 
 		//if cookie exists, decode and load column data into tabulator
 		if(cookiePos > -1){
-			cookie = cookie.substr(cookiePos);
+			cookie = cookie.slice(cookiePos);
 
 			end = cookie.indexOf(";");
 
 			if(end > -1){
-				cookie = cookie.substr(0, end);
+				cookie = cookie.slice(0, end);
 			}
 
 			data = cookie.replace(key + "=", "");
@@ -16102,186 +16140,196 @@ class ReactiveData extends Module{
 ReactiveData.moduleName = "reactiveData";
 
 class ResizeColumns extends Module{
-
+	
 	constructor(table){
 		super(table);
-
+		
 		this.startColumn = false;
 		this.startX = false;
 		this.startWidth = false;
 		this.handle = null;
 		this.prevHandle = null;
-
+		
 		this.registerColumnOption("resizable", true);
 	}
-
+	
 	initialize(){
 		// if(this.table.options.resizableColumns){
-			this.subscribe("cell-layout", this.layoutCellHandles.bind(this));
-			this.subscribe("column-init", this.layoutColumnHeader.bind(this));
+		this.subscribe("cell-layout", this.layoutCellHandles.bind(this));
+		this.subscribe("column-init", this.layoutColumnHeader.bind(this));
 		// }
 	}
-
+	
 	layoutCellHandles(cell){
 		if(cell.row.type === "row"){
 			this.initializeColumn("cell", cell.column, cell.element);
 		}
 	}
-
+	
 	layoutColumnHeader(column){
 		this.initializeColumn("header", column, column.element);
 	}
-
+	
 	initializeColumn(type, column, element){
 		var self = this,
 		variableHeight = false,
 		mode = column.definition.resizable;
-
+		
 		//set column resize mode
 		if(type === "header"){
 			variableHeight = column.definition.formatter == "textarea" || column.definition.variableHeight;
 			column.modules.resize = {variableHeight:variableHeight};
 		}
-
+		
 		if(mode === true || mode == type){
-
+			
 			var handle = document.createElement('div');
 			handle.className = "tabulator-col-resize-handle";
-
-
+			
+			
 			var prevHandle = document.createElement('div');
 			prevHandle.className = "tabulator-col-resize-handle prev";
-
+			
 			handle.addEventListener("click", function(e){
 				e.stopPropagation();
 			});
-
+			
 			var handleDown = function(e){
 				var nearestColumn = column.getLastColumn();
-
+				
 				if(nearestColumn && self._checkResizability(nearestColumn)){
 					self.startColumn = column;
 					self._mouseDown(e, nearestColumn, handle);
 				}
 			};
-
+			
 			handle.addEventListener("mousedown", handleDown);
 			handle.addEventListener("touchstart", handleDown, {passive: true});
-
+			
 			//reszie column on  double click
 			handle.addEventListener("dblclick", function(e){
-				var col = column.getLastColumn();
-
+				var col = column.getLastColumn(),
+				oldWidth;
+				
 				if(col && self._checkResizability(col)){
+					oldWidth = col.getWidth();
+
 					e.stopPropagation();
 					col.reinitializeWidth(true);
+
+					if(oldWidth !== col.getWidth()){
+						self.dispatch("column-resized", col);
+						self.table.externalEvents.dispatch("columnResized", col.getComponent());
+					}
 				}
 			});
-
-
+			
+			
 			prevHandle.addEventListener("click", function(e){
 				e.stopPropagation();
 			});
-
+			
 			var prevHandleDown = function(e){
 				var nearestColumn, colIndex, prevColumn;
-
+				
 				nearestColumn = column.getFirstColumn();
-
+				
 				if(nearestColumn){
 					colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
 					prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
-
+					
 					if(prevColumn && self._checkResizability(prevColumn)){
 						self.startColumn = column;
 						self._mouseDown(e, prevColumn, prevHandle);
 					}
 				}
 			};
-
+			
 			prevHandle.addEventListener("mousedown", prevHandleDown);
 			prevHandle.addEventListener("touchstart", prevHandleDown, {passive: true});
-
+			
 			//resize column on double click
 			prevHandle.addEventListener("dblclick", function(e){
 				var nearestColumn, colIndex, prevColumn;
-
+				
 				nearestColumn = column.getFirstColumn();
-
+				
 				if(nearestColumn){
 					colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
 					prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
-
+					
 					if(prevColumn && self._checkResizability(prevColumn)){
 						e.stopPropagation();
 						prevColumn.reinitializeWidth(true);
 					}
 				}
 			});
-
+			
 			element.appendChild(handle);
 			element.appendChild(prevHandle);
 		}
 	}
-
+	
 	_checkResizability(column){
 		return column.definition.resizable;
 	}
-
+	
 	_mouseDown(e, column, handle){
 		var self = this;
-
+		
 		self.table.element.classList.add("tabulator-block-select");
 
 		function mouseMove(e){
 			// self.table.columnManager.tempScrollBlock();
-
+			
 			if(self.table.rtl){
 				column.setWidth(self.startWidth - ((typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX) - self.startX));
 			}else {
 				column.setWidth(self.startWidth + ((typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX) - self.startX));
 			}
-
+			
 			self.table.columnManager.renderer.rerenderColumns(true);
-
+			
 			if(!self.table.browserSlow && column.modules.resize && column.modules.resize.variableHeight){
 				column.checkCellHeights();
 			}
 		}
-
+		
 		function mouseUp(e){
-
+			
 			//block editor from taking action while resizing is taking place
 			if(self.startColumn.modules.edit){
 				self.startColumn.modules.edit.blocked = false;
 			}
-
+			
 			if(self.table.browserSlow && column.modules.resize && column.modules.resize.variableHeight){
 				column.checkCellHeights();
 			}
-
+			
 			document.body.removeEventListener("mouseup", mouseUp);
 			document.body.removeEventListener("mousemove", mouseMove);
-
+			
 			handle.removeEventListener("touchmove", mouseMove);
 			handle.removeEventListener("touchend", mouseUp);
-
+			
 			self.table.element.classList.remove("tabulator-block-select");
 
-			self.dispatch("column-resized", column);
-			self.table.externalEvents.dispatch("columnResized", column.getComponent());
+			if(self.startWidth !== column.getWidth()){
+				self.dispatch("column-resized", column);
+				self.table.externalEvents.dispatch("columnResized", column.getComponent());
+			}
 		}
-
+		
 		e.stopPropagation(); //prevent resize from interfereing with movable columns
-
+		
 		//block editor from taking action while resizing is taking place
 		if(self.startColumn.modules.edit){
 			self.startColumn.modules.edit.blocked = true;
 		}
-
+		
 		self.startX = typeof e.screenX === "undefined" ? e.touches[0].screenX : e.screenX;
 		self.startWidth = column.getWidth();
-
+		
 		document.body.addEventListener("mousemove", mouseMove);
 		document.body.addEventListener("mouseup", mouseUp);
 		handle.addEventListener("touchmove", mouseMove, {passive: true});
@@ -16870,179 +16918,130 @@ class ResponsiveLayout extends Module{
 ResponsiveLayout.moduleName = "responsiveLayout";
 
 class SelectRow extends Module{
-
+	
 	constructor(table){
 		super(table);
-
+		
 		this.selecting = false; //flag selecting in progress
 		this.lastClickedRow = false; //last clicked row
 		this.selectPrev = []; //hold previously selected element for drag drop selection
 		this.selectedRows = []; //hold selected rows
 		this.headerCheckboxElement = null; // hold header select element
-
+		
 		this.registerTableOption("selectable", "highlight"); //highlight rows on hover
 		this.registerTableOption("selectableRangeMode", "drag");  //highlight rows on hover
 		this.registerTableOption("selectableRollingSelection", true); //roll selection once maximum number of selectable rows is reached
 		this.registerTableOption("selectablePersistence", true); // maintain selection when table view is updated
 		this.registerTableOption("selectableCheck", function(data, row){return true;}); //check wheather row is selectable
-
+		
 		this.registerTableFunction("selectRow", this.selectRows.bind(this));
 		this.registerTableFunction("deselectRow", this.deselectRows.bind(this));
 		this.registerTableFunction("toggleSelectRow", this.toggleRow.bind(this));
 		this.registerTableFunction("getSelectedRows", this.getSelectedRows.bind(this));
 		this.registerTableFunction("getSelectedData", this.getSelectedData.bind(this));
-
+		
 		//register component functions
 		this.registerComponentFunction("row", "select", this.selectRows.bind(this));
 		this.registerComponentFunction("row", "deselect", this.deselectRows.bind(this));
 		this.registerComponentFunction("row", "toggleSelect", this.toggleRow.bind(this));
 		this.registerComponentFunction("row", "isSelected", this.isRowSelected.bind(this));
 	}
-
+	
 	initialize(){
 		if(this.table.options.selectable !== false){
 			this.subscribe("row-init", this.initializeRow.bind(this));
 			this.subscribe("row-deleting", this.rowDeleted.bind(this));
 			this.subscribe("rows-wipe", this.clearSelectionData.bind(this));
 			this.subscribe("rows-retrieve", this.rowRetrieve.bind(this));
-
+			
 			if(this.table.options.selectable && !this.table.options.selectablePersistence){
 				this.subscribe("data-refreshing", this.deselectRows.bind(this));
 			}
 		}
 	}
-
+	
 	rowRetrieve(type, prevValue){
 		return type === "selected" ? this.selectedRows : prevValue;
 	}
-
+	
 	rowDeleted(row){
 		this._deselectRow(row, true);
 	}
-
+	
 	clearSelectionData(silent){
 		this.selecting = false;
 		this.lastClickedRow = false;
 		this.selectPrev = [];
 		this.selectedRows = [];
-
+		
 		if(silent !== true){
 			this._rowSelectionChanged();
 		}
 	}
-
+	
 	initializeRow(row){
 		var self = this,
 		element = row.getElement();
-
+		
 		// trigger end of row selection
 		var endSelect = function(){
-
+			
 			setTimeout(function(){
 				self.selecting = false;
 			}, 50);
-
+			
 			document.body.removeEventListener("mouseup", endSelect);
 		};
-
+		
 		row.modules.select = {selected:false};
-
+		
 		//set row selection class
 		if(self.table.options.selectableCheck.call(this.table, row.getComponent())){
 			element.classList.add("tabulator-selectable");
 			element.classList.remove("tabulator-unselectable");
-
+			
 			if(self.table.options.selectable && self.table.options.selectable != "highlight"){
 				if(self.table.options.selectableRangeMode === "click"){
-					element.addEventListener("click", function(e){
-						if(e.shiftKey){
-							self.table._clearSelection();
-							self.lastClickedRow = self.lastClickedRow || row;
-
-							var lastClickedRowIdx = self.table.rowManager.getDisplayRowIndex(self.lastClickedRow);
-							var rowIdx = self.table.rowManager.getDisplayRowIndex(row);
-
-							var fromRowIdx = lastClickedRowIdx <= rowIdx ? lastClickedRowIdx : rowIdx;
-							var toRowIdx = lastClickedRowIdx >= rowIdx ? lastClickedRowIdx : rowIdx;
-
-							var rows = self.table.rowManager.getDisplayRows().slice(0);
-							var toggledRows = rows.splice(fromRowIdx, toRowIdx - fromRowIdx + 1);
-
-							if(e.ctrlKey || e.metaKey){
-								toggledRows.forEach(function(toggledRow){
-									if(toggledRow !== self.lastClickedRow){
-
-										if(self.table.options.selectable !== true && !self.isRowSelected(row)){
-											if(self.selectedRows.length < self.table.options.selectable){
-												self.toggleRow(toggledRow);
-											}
-										}else {
-											self.toggleRow(toggledRow);
-										}
-									}
-								});
-								self.lastClickedRow = row;
-							}else {
-								self.deselectRows(undefined, true);
-
-								if(self.table.options.selectable !== true){
-									if(toggledRows.length > self.table.options.selectable){
-										toggledRows = toggledRows.slice(0, self.table.options.selectable);
-									}
-								}
-
-								self.selectRows(toggledRows);
-							}
-							self.table._clearSelection();
-						}
-						else if(e.ctrlKey || e.metaKey){
-							self.toggleRow(row);
-							self.lastClickedRow = row;
-						}else {
-							self.deselectRows(undefined, true);
-							self.selectRows(row);
-							self.lastClickedRow = row;
-						}
-					});
+					element.addEventListener("click", this.handleComplexRowClick.bind(this, row));
 				}else {
 					element.addEventListener("click", function(e){
 						if(!self.table.modExists("edit") || !self.table.modules.edit.getCurrentCell()){
 							self.table._clearSelection();
 						}
-
+						
 						if(!self.selecting){
 							self.toggleRow(row);
 						}
 					});
-
+					
 					element.addEventListener("mousedown", function(e){
 						if(e.shiftKey){
 							self.table._clearSelection();
-
+							
 							self.selecting = true;
-
+							
 							self.selectPrev = [];
-
+							
 							document.body.addEventListener("mouseup", endSelect);
 							document.body.addEventListener("keyup", endSelect);
-
+							
 							self.toggleRow(row);
-
+							
 							return false;
 						}
 					});
-
+					
 					element.addEventListener("mouseenter", function(e){
 						if(self.selecting){
 							self.table._clearSelection();
 							self.toggleRow(row);
-
+							
 							if(self.selectPrev[1] == row){
 								self.toggleRow(self.selectPrev[0]);
 							}
 						}
 					});
-
+					
 					element.addEventListener("mouseout", function(e){
 						if(self.selecting){
 							self.table._clearSelection();
@@ -17051,13 +17050,64 @@ class SelectRow extends Module{
 					});
 				}
 			}
-
+			
 		}else {
 			element.classList.add("tabulator-unselectable");
 			element.classList.remove("tabulator-selectable");
 		}
 	}
-
+	
+	handleComplexRowClick(row, e){
+		if(e.shiftKey){
+			this.table._clearSelection();
+			this.lastClickedRow = this.lastClickedRow || row;
+			
+			var lastClickedRowIdx = this.table.rowManager.getDisplayRowIndex(this.lastClickedRow);
+			var rowIdx = this.table.rowManager.getDisplayRowIndex(row);
+			
+			var fromRowIdx = lastClickedRowIdx <= rowIdx ? lastClickedRowIdx : rowIdx;
+			var toRowIdx = lastClickedRowIdx >= rowIdx ? lastClickedRowIdx : rowIdx;
+			
+			var rows = this.table.rowManager.getDisplayRows().slice(0);
+			var toggledRows = rows.splice(fromRowIdx, toRowIdx - fromRowIdx + 1);
+			
+			if(e.ctrlKey || e.metaKey){
+				toggledRows.forEach((toggledRow)=>{
+					if(toggledRow !== this.lastClickedRow){
+						
+						if(this.table.options.selectable !== true && !this.isRowSelected(row)){
+							if(this.selectedRows.length < this.table.options.selectable){
+								this.toggleRow(toggledRow);
+							}
+						}else {
+							this.toggleRow(toggledRow);
+						}
+					}
+				});
+				this.lastClickedRow = row;
+			}else {
+				this.deselectRows(undefined, true);
+				
+				if(this.table.options.selectable !== true){
+					if(toggledRows.length > this.table.options.selectable){
+						toggledRows = toggledRows.slice(0, this.table.options.selectable);
+					}
+				}
+				
+				this.selectRows(toggledRows);
+			}
+			this.table._clearSelection();
+		}
+		else if(e.ctrlKey || e.metaKey){
+			this.toggleRow(row);
+			this.lastClickedRow = row;
+		}else {
+			this.deselectRows(undefined, true);
+			this.selectRows(row);
+			this.lastClickedRow = row;
+		}
+	}
+	
 	//toggle row selection
 	toggleRow(row){
 		if(this.table.options.selectableCheck.call(this.table, row.getComponent())){
@@ -17068,24 +17118,24 @@ class SelectRow extends Module{
 			}
 		}
 	}
-
+	
 	//select a number of rows
 	selectRows(rows){
 		var rowMatch;
-
+		
 		switch(typeof rows){
 			case "undefined":
 			this.table.rowManager.rows.forEach((row) => {
 				this._selectRow(row, true, true);
 			});
-
+			
 			this._rowSelectionChanged();
 			break;
-
+			
 			case "string":
-
+			
 			rowMatch = this.table.rowManager.findRow(rows);
-
+			
 			if(rowMatch){
 				this._selectRow(rowMatch, true, true);
 			}else {
@@ -17093,16 +17143,16 @@ class SelectRow extends Module{
 					this._selectRow(row, true, true);
 				});
 			}
-
+			
 			this._rowSelectionChanged();
 			break;
-
+			
 			default:
 			if(Array.isArray(rows)){
 				rows.forEach((row) => {
 					this._selectRow(row, true, true);
 				});
-
+				
 				this._rowSelectionChanged();
 			}else {
 				this._selectRow(rows, false, true);
@@ -17110,10 +17160,10 @@ class SelectRow extends Module{
 			break;
 		}
 	}
-
+	
 	//select an individual row
 	_selectRow(rowInfo, silent, force){
-
+		
 		//handle max row count
 		if(!isNaN(this.table.options.selectable) && this.table.options.selectable !== true && !force){
 			if(this.selectedRows.length >= this.table.options.selectable){
@@ -17124,29 +17174,29 @@ class SelectRow extends Module{
 				}
 			}
 		}
-
+		
 		var row = this.table.rowManager.findRow(rowInfo);
-
+		
 		if(row){
 			if(this.selectedRows.indexOf(row) == -1){
 				row.getElement().classList.add("tabulator-selected");
 				if(!row.modules.select){
 					row.modules.select = {};
 				}
-
+				
 				row.modules.select.selected = true;
 				if(row.modules.select.checkboxEl){
 					row.modules.select.checkboxEl.checked = true;
 				}
-
+				
 				this.selectedRows.push(row);
-
+				
 				if(this.table.options.dataTreeSelectPropagate){
 					this.childRowSelection(row, true);
 				}
-
+				
 				this.dispatchExternal("rowSelected", row.getComponent());
-
+				
 				this._rowSelectionChanged(silent);
 			}
 		}else {
@@ -17155,69 +17205,69 @@ class SelectRow extends Module{
 			}
 		}
 	}
-
+	
 	isRowSelected(row){
 		return this.selectedRows.indexOf(row) !== -1;
 	}
-
+	
 	//deselect a number of rows
 	deselectRows(rows, silent){
 		var self = this,
 		rowCount;
 		
 		if(typeof rows == "undefined"){
-
+			
 			rowCount = self.selectedRows.length;
-
+			
 			for(let i = 0; i < rowCount; i++){
 				self._deselectRow(self.selectedRows[0], true);
 			}
-
+			
 			self._rowSelectionChanged(silent);
-
+			
 		}else {
 			if(Array.isArray(rows)){
 				rows.forEach(function(row){
 					self._deselectRow(row, true);
 				});
-
+				
 				self._rowSelectionChanged(silent);
 			}else {
 				self._deselectRow(rows, silent);
 			}
 		}
 	}
-
+	
 	//deselect an individual row
 	_deselectRow(rowInfo, silent){
 		var self = this,
 		row = self.table.rowManager.findRow(rowInfo),
 		index;
-
+		
 		if(row){
 			index = self.selectedRows.findIndex(function(selectedRow){
 				return selectedRow == row;
 			});
-
+			
 			if(index > -1){
-
+				
 				row.getElement().classList.remove("tabulator-selected");
 				if(!row.modules.select){
 					row.modules.select = {};
 				}
-
+				
 				row.modules.select.selected = false;
 				if(row.modules.select.checkboxEl){
 					row.modules.select.checkboxEl.checked = false;
 				}
 				self.selectedRows.splice(index, 1);
-
+				
 				if(this.table.options.dataTreeSelectPropagate){
 					this.childRowSelection(row, false);
 				}
-
+				
 				this.dispatchExternal("rowDeselected", row.getComponent());
-
+				
 				self._rowSelectionChanged(silent);
 			}
 		}else {
@@ -17226,28 +17276,28 @@ class SelectRow extends Module{
 			}
 		}
 	}
-
+	
 	getSelectedData(){
 		var data = [];
-
+		
 		this.selectedRows.forEach(function(row){
 			data.push(row.getData());
 		});
-
+		
 		return data;
 	}
-
+	
 	getSelectedRows(){
-
+		
 		var rows = [];
-
+		
 		this.selectedRows.forEach(function(row){
 			rows.push(row.getComponent());
 		});
-
+		
 		return rows;
 	}
-
+	
 	_rowSelectionChanged(silent){
 		if(this.headerCheckboxElement){
 			if(this.selectedRows.length === 0){
@@ -17261,27 +17311,27 @@ class SelectRow extends Module{
 				this.headerCheckboxElement.checked = false;
 			}
 		}
-
+		
 		if(!silent){
 			this.dispatchExternal("rowSelectionChanged", this.getSelectedData(), this.getSelectedRows());
 		}
 	}
-
+	
 	registerRowSelectCheckbox (row, element) {
 		if(!row._row.modules.select){
 			row._row.modules.select = {};
 		}
-
+		
 		row._row.modules.select.checkboxEl = element;
 	}
-
+	
 	registerHeaderSelectCheckbox (element) {
 		this.headerCheckboxElement = element;
 	}
-
+	
 	childRowSelection(row, select){
 		var children = this.table.modules.dataTree.getChildren(row, true);
-
+		
 		if(select){
 			for(let child of children){
 				this._selectRow(child, true);
@@ -21601,8 +21651,6 @@ class FooterManager extends CoreFeature{
 		this.containerElement = this.createContainerElement(); //containing element
 		this.external = false;
 		this.links = [];
-
-		this.initializeElement();
 	}
 
 	initialize(){
@@ -21634,7 +21682,7 @@ class FooterManager extends CoreFeature{
 			switch(typeof this.table.options.footerElement){
 				case "string":
 				if(this.table.options.footerElement[0] === "<"){
-					this.element.innerHTML = this.table.options.footerElement;
+					this.containerElement.innerHTML = this.table.options.footerElement;
 				}else {
 					this.external = true;
 					this.element = document.querySelector(this.table.options.footerElement);
@@ -22844,6 +22892,7 @@ class Layout extends Module{
 
 	//trigger table layout
 	layout(){
+		this.dispatch("layout-refreshing");
 		Layout.modes[this.mode].call(this, this.table.columnManager.columnsByIndex);
 
 		this.dispatch("layout-refreshed");
@@ -23264,7 +23313,7 @@ class Tabulator {
 
 		if(this.initializeElement(element)){
 
-			this.initialzeCoreSystems(options);
+			this.initializeCoreSystems(options);
 
 			//delay table creation to allow event bindings immediately after the constructor
 			setTimeout(() => {
@@ -23294,7 +23343,7 @@ class Tabulator {
 		}
 	}
 
-	initialzeCoreSystems(options){
+	initializeCoreSystems(options){
 		this.columnManager = new ColumnManager(this);
 		this.rowManager = new RowManager(this);
 		this.footerManager = new FooterManager(this);
@@ -23523,7 +23572,7 @@ class Tabulator {
 			this.browserSlow = false;
 		}
 
-		this.browserMobile = /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(ua)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(ua.substr(0,4));
+		this.browserMobile = /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(ua)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(ua.slice(0,4));
 	}
 
 	////////////////// Data Handling //////////////////
