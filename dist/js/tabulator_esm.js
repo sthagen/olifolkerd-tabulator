@@ -1,4 +1,4 @@
-/* Tabulator v5.1.6 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.1.7 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -18886,9 +18886,12 @@ class VirtualDomHorizontal extends Renderer{
 	}
 
 	vertScrollListen(){
-		this.subscribe("scroll-vertical", () => {
-			this.visibleRows = null;
-		});
+		this.subscribe("scroll-vertical", this.clearVisRowCache.bind(this));
+		this.subscribe("data-refreshed", this.clearVisRowCache.bind(this));
+	}
+
+	clearVisRowCache(){
+		this.visibleRows = null;
 	}
 	
 	//////////////////////////////////////
