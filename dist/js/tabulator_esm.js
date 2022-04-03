@@ -1,4 +1,4 @@
-/* Tabulator v5.1.7 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.1.8 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -7342,6 +7342,7 @@ class Edit extends Module{
 					cell.column.definition.cellEditing.call(this.table, component);
 				}
 
+				this.dispatch("cell-editing", cell);
 				this.dispatchExternal("cellEditing", component);
 
 				params = typeof cell.column.modules.edit.params === "function" ? cell.column.modules.edit.params(component) : cell.column.modules.edit.params;
@@ -9236,14 +9237,12 @@ function datetime(cell, formatterParams, onRendered){
 		var newDatetime = inputFormat === "iso" ? DT.fromISO(String(value)) : DT.fromFormat(String(value), inputFormat);
 
 		if(newDatetime.isValid){
-
 			if(formatterParams.timezone){
-				newDatetime = newDatetime.shiftTimezone(formatterParams.timezone);
+				newDatetime = newDatetime.setZone(formatterParams.timezone);
 			}
 
 			return newDatetime.toFormat(outputFormat);
 		}else {
-
 			if(invalid === true || !value){
 				return value;
 			}else if(typeof invalid === "function"){
@@ -13125,6 +13124,7 @@ class Menu extends Module{
 		
 		setTimeout(() => {
 			this.table.rowManager.element.addEventListener("scroll", this.blurEvent);
+			this.subscribe("cell-editing", this.blurEvent);
 			document.body.addEventListener("click", this.blurEvent);
 			document.body.addEventListener("contextmenu", this.blurEvent);
 			window.addEventListener("resize", this.blurEvent);
@@ -13178,6 +13178,7 @@ class Menu extends Module{
 		document.body.removeEventListener("contextmenu", this.blurEvent);
 		window.removeEventListener("resize", this.blurEvent);
 		this.table.rowManager.element.removeEventListener("scroll", this.blurEvent);
+		this.unsubscribe("cell-editing", this.blurEvent);
 		
 		if(this.currentComponent){
 			this.dispatchExternal("menuClosed", this.currentComponent.getComponent());
@@ -22190,14 +22191,14 @@ class ComponentFunctionBinder{
 		}
 
 		if(this.bindings[type][funcName]){
-			console.warn("Unable to bind component handler, a matching function name is already bound", type, funcName, hanlder);
+			console.warn("Unable to bind component handler, a matching function name is already bound", type, funcName, handler);
 		}else {
 			this.bindings[type][funcName] = handler;
 		}
 	}
 
 	handle(type, component, name){
-		if(this.bindings[type] && this.bindings[type][name]){
+		if(this.bindings[type] && this.bindings[type][name] && typeof this.bindings[type][name].bind === 'function'){
 			return this.bindings[type][name].bind(null, component);
 		}else {
 			if(name !== "then" && typeof name === "string" && !name.startsWith("_")){
