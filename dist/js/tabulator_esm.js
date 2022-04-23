@@ -1,4 +1,4 @@
-/* Tabulator v5.2.1 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.2.2 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -6533,7 +6533,7 @@ class Edit{
         this.actions.success(output);
         
         if(this.isFilter){
-            this.initialValues = output;
+            this.initialValues = output && !Array.isArray[output] ? [output] : output;
         }
     }
     
@@ -16661,7 +16661,7 @@ class ResizeColumns extends Module{
 		
 		if((mode === true || mode == type) && this._checkResizability(nearestColumn)){
 			
-			var handle = document.createElement('div');
+			var handle = document.createElement('span');
 			handle.className = "tabulator-col-resize-handle";
 			
 			handle.addEventListener("click", function(e){
@@ -17928,7 +17928,7 @@ function datetime$1(a, b, aRow, bRow, column, dir, params){
 		if(DT.isDateTime(b)){
 			 b = b;
 		}else if(format === "iso"){
-			 a = DT.fromISO(String(b));
+			 b = DT.fromISO(String(b));
 		}else {
 			 b = DT.fromFormat(String(b), format);
 		}

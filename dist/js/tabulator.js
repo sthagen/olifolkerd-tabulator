@@ -1,4 +1,4 @@
-/* Tabulator v5.2.1 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.2.2 (c) Oliver Folkerd 2022 */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -13490,7 +13490,7 @@
         this.actions.success(output);
 
         if (this.isFilter) {
-          this.initialValues = output;
+          this.initialValues = output && !Array.isArray[output] ? [output] : output;
         }
       }
     }]);
@@ -24068,7 +24068,7 @@
         }
 
         if ((mode === true || mode == type) && this._checkResizability(nearestColumn)) {
-          var handle = document.createElement('div');
+          var handle = document.createElement('span');
           handle.className = "tabulator-col-resize-handle";
           handle.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -25445,7 +25445,7 @@
       if (DT.isDateTime(b)) {
         b = b;
       } else if (format === "iso") {
-        a = DT.fromISO(String(b));
+        b = DT.fromISO(String(b));
       } else {
         b = DT.fromFormat(String(b), format);
       }
