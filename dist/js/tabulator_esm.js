@@ -13406,7 +13406,7 @@ class MoveColumns extends Module{
 		config = {},
 		colEl;
 		
-		if(!column.modules.frozen){
+		if(!column.modules.frozen && !column.isGroup){
 			colEl = column.getElement();
 			
 			config.mousemove = function(e){
@@ -19407,6 +19407,8 @@ class Renderer extends CoreFeature{
 						this.elementVertical.scrollTop = this.elementVertical.scrollTop - this.elementVertical.clientHeight + rowEl.offsetHeight;
 					}
 
+					case "top":
+					this.elementVertical.scrollTop = rowEl.offsetTop;					
 					break;
 				}
 
