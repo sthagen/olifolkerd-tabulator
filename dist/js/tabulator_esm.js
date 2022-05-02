@@ -1,4 +1,4 @@
-/* Tabulator v5.2.2 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.2.3 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -4138,8 +4138,21 @@ class DataTree extends Module{
 			this.subscribe("edit-cancelled", this.cellValueChanged.bind(this));
 			this.subscribe("column-moving-rows", this.columnMoving.bind(this));
 			this.subscribe("table-built", this.initializeElementField.bind(this));
+			this.subscribe("table-redrawing", this.tableRedrawing.bind(this));
 
 			this.registerDisplayHandler(this.getRows.bind(this), 30);
+		}
+	}
+
+	tableRedrawing(force){
+		var rows;
+
+		if(force){
+			rows = this.table.rowManager.getRows();
+			
+			rows.forEach((row) => {
+				this.reinitializeRowChildren(row);
+			});
 		}
 	}
 
