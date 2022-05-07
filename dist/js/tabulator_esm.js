@@ -9,8 +9,8 @@ class CoreFeature{
 	/////////////// DataLoad /////////////////
 	//////////////////////////////////////////
 
-	reloadData(data, silent){
-		return this.table.dataLoader.load(data, undefined, undefined, undefined, silent);
+	reloadData(data, silent, columnsChanged){
+		return this.table.dataLoader.load(data, undefined, undefined, undefined, silent, columnsChanged);
 	}
 
 	//////////////////////////////////////////
@@ -4446,6 +4446,10 @@ class DataTree extends Module{
 
 	getTreeParent(row){
 		return row.modules.dataTree.parent ? row.modules.dataTree.parent.getComponent() : false;
+	}
+
+	getTreeParentRoot(row){
+		return row.modules.dataTree.parent ? this.getTreeParentRoot(row.modules.dataTree.parent) : row;
 	}
 
 	getFilteredTreeChildren(row){
@@ -8947,7 +8951,7 @@ class Filter extends Module{
 	refreshFilter(){
 		if(this.tableInitialized){
 			if(this.table.options.filterMode === "remote"){
-				this.reloadData();
+				this.reloadData(null, false, false);
 			}else {
 				this.refreshData(true);
 			}
@@ -11683,6 +11687,10 @@ class GroupRows extends Module{
 
 	getRowGroup(row){
 		var match = false;
+
+		if(this.options("dataTree")){
+			row = this.table.modules.dataTree.getTreeParentRoot(row);
+		}
 
 		this.groupList.forEach((group) => {
 			var result = group.getRowGroup(row);
@@ -18304,7 +18312,7 @@ class Sort extends Module{
 
 	refreshSort(){
 		if(this.table.options.sortMode === "remote"){
-			this.reloadData();
+			this.reloadData(null, false, false);
 		}else {
 			this.refreshData(true);
 		}
@@ -22855,7 +22863,7 @@ class DataLoader extends CoreFeature{
 
 	initialize(){}
 
-	load(data, params, config, replace, silent){
+	load(data, params, config, replace, silent, columnsChanged){
 		var requestNo = ++this.requestOrder;
 
 		this.dispatchExternal("dataLoading", data);
@@ -22891,7 +22899,7 @@ class DataLoader extends CoreFeature{
 
 					if(rowData !== false){
 						this.dispatchExternal("dataLoaded", rowData);
-						this.table.rowManager.setData(rowData,  replace, !replace);
+						this.table.rowManager.setData(rowData,  replace, typeof columnsChanged === "undefined" ? !replace : columnsChanged);
 					}
 				}else {
 					console.warn("Data Load Response Blocked - An active data load request was blocked by an attempt to change table data while the request was being made");
@@ -22918,7 +22926,7 @@ class DataLoader extends CoreFeature{
 				data = [];
 			}
 
-			this.table.rowManager.setData(data, replace, !replace);
+			this.table.rowManager.setData(data, replace, typeof columnsChanged === "undefined" ? !replace : columnsChanged);
 			return Promise.resolve();
 		}
 	}
