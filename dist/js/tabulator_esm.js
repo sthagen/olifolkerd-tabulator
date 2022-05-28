@@ -1,4 +1,4 @@
-/* Tabulator v5.2.4 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.2.5 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -194,6 +194,8 @@ class Popup extends CoreFeature{
         
         this.blurEvent = this.hide.bind(this, false);
         this.escEvent = this._escapeCheck.bind(this);
+
+        this.destroyBinding = this.hide.bind(this, true);
     }
     
     _lookupContainer(){
@@ -311,6 +313,8 @@ class Popup extends CoreFeature{
         this._fitToScreen(x, y, parentEl, parentOffset, position);
         
         this.visible = true;
+
+        this.subscribe("table-destroy", this.destroyBinding);
         
         return this;
     }
@@ -406,6 +410,8 @@ class Popup extends CoreFeature{
             if(this.blurCallback && !silent){
                 this.blurCallback();
             }
+
+            this.unsubscribe("table-destroy", this.destroyBinding);
         }
         
         return this;
@@ -1564,7 +1570,6 @@ class Cell extends CoreFeature{
 			}
 			break;
 			case "undefined":
-			case "null":
 			this.element.innerHTML = "";
 			break;
 			default:
@@ -2066,8 +2071,6 @@ class Column extends CoreFeature{
 			}
 		}
 
-		this.contentElement = this._bindEvents();
-
 		this.contentElement = this._buildColumnHeaderContent();
 
 		this.element.appendChild(this.contentElement);
@@ -2079,83 +2082,6 @@ class Column extends CoreFeature{
 		}
 
 		this.dispatch("column-init", this);
-	}
-
-	_bindEvents(){
-		var def = this.definition,
-		dblTap,	tapHold, tap;
-
-		//setup header click event bindings
-		if(typeof(def.headerClick) == "function"){
-			this.element.addEventListener("click", (e) => {def.headerClick(e, this.getComponent());});
-		}
-
-		if(typeof(def.headerDblClick) == "function"){
-			this.element.addEventListener("dblclick", (e) => {def.headerDblClick(e, this.getComponent());});
-		}
-
-		if(typeof(def.headerContext) == "function"){
-			this.element.addEventListener("contextmenu", (e) => {def.headerContext(e, this.getComponent());});
-		}
-
-		//setup header tap event bindings
-		if(typeof(def.headerTap) == "function"){
-			tap = false;
-
-			this.element.addEventListener("touchstart", (e) => {
-				tap = true;
-			}, {passive: true});
-
-			this.element.addEventListener("touchend", (e) => {
-				if(tap){
-					def.headerTap(e, this.getComponent());
-				}
-
-				tap = false;
-			});
-		}
-
-		if(typeof(def.headerDblTap) == "function"){
-			dblTap = null;
-
-			this.element.addEventListener("touchend", (e) => {
-
-				if(dblTap){
-					clearTimeout(dblTap);
-					dblTap = null;
-
-					def.headerDblTap(e, this.getComponent());
-				}else {
-
-					dblTap = setTimeout(() => {
-						clearTimeout(dblTap);
-						dblTap = null;
-					}, 300);
-				}
-
-			});
-		}
-
-		if(typeof(def.headerTapHold) == "function"){
-			tapHold = null;
-
-			this.element.addEventListener("touchstart", (e) => {
-				clearTimeout(tapHold);
-
-				tapHold = setTimeout(function(){
-					clearTimeout(tapHold);
-					tapHold = null;
-					tap = false;
-					def.headerTapHold(e, this.getComponent());
-				}, 1000);
-
-			}, {passive: true});
-
-			this.element.addEventListener("touchend", (e) => {
-				clearTimeout(tapHold);
-				tapHold = null;
-			});
-		}
 	}
 
 	//build header element for header
@@ -2284,7 +2210,6 @@ class Column extends CoreFeature{
 			}
 			break;
 			case "undefined":
-			case "null":
 			el.innerHTML = "";
 			break;
 			default:
@@ -4650,11 +4575,10 @@ function csv(list, options, setFileContents){
 
 					switch(typeof col.value){
 						case "object":
-						col.value = JSON.stringify(col.value);
+						col.value = col.value !== null ? JSON.stringify(col.value) : "";
 						break;
 
 						case "undefined":
-						case "null":
 						col.value = "";
 						break;
 					}
@@ -4774,11 +4698,10 @@ function pdf(list, options, setFileContents){
 			if(col){
 				switch(typeof col.value){
 					case "object":
-					col.value = JSON.stringify(col.value);
+					col.value = col.value !== null ? JSON.stringify(col.value) : "";
 					break;
 
 					case "undefined":
-					case "null":
 					col.value = "";
 					break;
 				}
@@ -5631,7 +5554,7 @@ class Edit{
         this.initialValues = this.params.multiselect ? initialValue : [initialValue];
         
         if(this.isFilter){
-            this.input.value = this.initialValues.join(",");
+            this.input.value = this.initialValues ? this.initialValues.join(",") : "";
             this.headerFilterInitialListGen();            
         }
     }
@@ -8188,11 +8111,10 @@ class Export extends Module{
 				}else {
 					switch(typeof value){
 						case "object":
-						value = JSON.stringify(value);
+						value = value !== null ? JSON.stringify(value) : "";
 						break;
 
 						case "undefined":
-						case "null":
 						value = "";
 						break;
 
@@ -15150,7 +15072,6 @@ class Page extends Module{
 				}
 				break;
 				case "undefined":
-				case "null":
 				this.pageCounterElement.innerHTML = "";
 				break;
 				default:
@@ -16735,7 +16656,7 @@ class ResizeColumns extends Module{
 			
 			config.handleEl = handle;
 			
-			if(element.parentNode){
+			if(element.parentNode && column.visible){
 				element.after(handle);			
 			}
 		}
@@ -18517,7 +18438,7 @@ class Sort extends Module{
 	//set the column header sort direction
 	setColumnHeader(column, dir){
 		column.modules.sort.dir = dir;
-		column.getElement().setAttribute("aria-sort", dir);
+		column.getElement().setAttribute("aria-sort", dir === "asc" ? "ascending" : "descending");
 	}
 
 	//sort each item in sort list
@@ -19459,6 +19380,8 @@ class Renderer extends CoreFeature{
 					}else {
 						this.elementVertical.scrollTop = this.elementVertical.scrollTop - this.elementVertical.clientHeight + rowEl.offsetHeight;
 					}
+
+					break;
 
 					case "top":
 					this.elementVertical.scrollTop = rowEl.offsetTop;					
@@ -21420,7 +21343,7 @@ class RowManager extends CoreFeature{
 		
 		el.classList.add("tabulator-tableholder");
 		el.setAttribute("tabindex", 0);
-		el.setAttribute("role", "rowgroup");
+		// el.setAttribute("role", "rowgroup");
 		
 		return el;
 	}
