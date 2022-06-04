@@ -195,7 +195,13 @@ class Popup extends CoreFeature{
         this.blurEvent = this.hide.bind(this, false);
         this.escEvent = this._escapeCheck.bind(this);
 
-        this.destroyBinding = this.hide.bind(this, true);
+        this.destroyBinding = this.tableDestroyed;
+        this.destroyed = false;
+    }
+
+    tableDestroyed(){
+        this.destroyed = true;
+        this.hide(true);
     }
     
     _lookupContainer(){
@@ -279,6 +285,10 @@ class Popup extends CoreFeature{
     
     show(origin, position){
         var x, y, parentEl, parentOffset, coords;
+
+        if(this.destroyed || this.table.destroyed){
+            return this;
+        }
         
         if(origin instanceof HTMLElement){
             parentEl = origin;
@@ -315,6 +325,10 @@ class Popup extends CoreFeature{
         this.visible = true;
 
         this.subscribe("table-destroy", this.destroyBinding);
+
+        this.element.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+        });
         
         return this;
     }
@@ -366,8 +380,10 @@ class Popup extends CoreFeature{
                 this.subscribe("cell-editing", this.blurEvent);
                 document.body.addEventListener("click", this.blurEvent);
                 document.body.addEventListener("contextmenu", this.blurEvent);
+                document.body.addEventListener("mousedown", this.blurEvent);
                 window.addEventListener("resize", this.blurEvent);
                 document.body.addEventListener("keydown", this.escEvent);
+
             }, 100);
             
             this.blurCallback = callback;
@@ -388,6 +404,7 @@ class Popup extends CoreFeature{
                 document.body.removeEventListener("keydown", this.escEvent);
                 document.body.removeEventListener("click", this.blurEvent);
                 document.body.removeEventListener("contextmenu", this.blurEvent);
+                document.body.removeEventListener("mousedown", this.blurEvent);
                 window.removeEventListener("resize", this.blurEvent);
                 this.table.rowManager.element.removeEventListener("scroll", this.blurEvent);
                 this.unsubscribe("cell-editing", this.blurEvent);
@@ -5513,6 +5530,8 @@ class Edit{
         
         this.listIteration = 0;
         
+        this.lastAction="";
+        
         this.blurable = true;
         
         this.actions = {
@@ -5643,7 +5662,7 @@ class Edit{
     _initializeParams(params){
         var valueKeys = ["values", "valuesURL", "valuesLookup"],
         valueCheck;
-
+        
         params = Object.assign({}, params);
         
         params.verticalNavigation = params.verticalNavigation || "editor";
@@ -5652,9 +5671,9 @@ class Edit{
         params.filterDelay = typeof params.filterDelay === "undefined" ? 300 : params.filterDelay;
         
         params.emptyValue = Object.keys(params).includes("emptyValue") ? params.emptyValue : "";
-
+        
         valueCheck = Object.keys(params).filter(key => valueKeys.includes(key)).length;
-
+        
         if(!valueCheck){
             console.warn("list editor config error - either the values, valuesURL, or valuesLookup option must be set");
         }else if(valueCheck > 1){
@@ -5854,10 +5873,12 @@ class Edit{
     }
     
     _keyEnter(e){
-        if(this.focusedItem){
-            this._chooseItem(this.focusedItem);
+        if(this.params.autocomplete && this.lastAction === "typing"){
+            this._resolveValue(true);
         }else {
-            this._cancel();
+            if(this.focusedItem){
+                this._chooseItem(this.focusedItem);
+            }
         }
     }
     
@@ -5886,6 +5907,7 @@ class Edit{
     
     _keyAutoCompLetter(e){
         this._filter();
+        this.lastAction = "typing";
         this.typing = true;
     }
     
@@ -5910,6 +5932,8 @@ class Edit{
     }
     
     _focusItem(item){
+        this.lastAction = "focus";
+        
         if(this.focusedItem && this.focusedItem.element){
             this.focusedItem.element.classList.remove("focused");
         }
@@ -6079,6 +6103,12 @@ class Edit{
             
             this._parseListItem(value, data, 0);
         });
+
+        if(!this.currentItems.length && this.params.freetext){
+            this.input.value = this.initialValues;
+            this.typing = true;
+            this.lastAction = "typing";
+        }
         
         this.data = data;
         
@@ -6422,6 +6452,8 @@ class Edit{
         }else {
             this.currentItems = [item];
             item.selected = true;
+
+            console.log("choose");
             
             this.input.value = item.label;
             
@@ -24020,6 +24052,7 @@ class Tabulator {
 		this.optionsList = new OptionsList(this, "table constructor");
 		
 		this.initialized = false;
+		this.destroyed = false;
 		
 		if(this.initializeElement(element)){
 			
@@ -24247,6 +24280,8 @@ class Tabulator {
 	//deconstructor
 	destroy(){
 		var element = this.element;
+		
+		this.destroyed = true;
 		
 		TableRegistry.deregister(this); //deregister table from inter-device communication
 		
