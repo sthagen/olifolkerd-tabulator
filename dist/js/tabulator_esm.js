@@ -1,4 +1,4 @@
-/* Tabulator v5.3.0 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.3.1 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -6793,7 +6793,7 @@ class Edit{
 			if(!startVis){
 				setTimeout(() => {
 					this.popup.hideOnBlur(this._resolveValue.bind(this, true));
-				});
+				}, 10);
 			}
 		}
 	}
@@ -11444,7 +11444,7 @@ class Group{
 	hide(){
 		this.visible = false;
 		
-		if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
+		if(this.groupManager.table.rowManager.getRenderMode() == "basic" && !this.groupManager.table.options.pagination){
 			
 			this.element.classList.remove("tabulator-group-visible");
 			
@@ -11467,7 +11467,7 @@ class Group{
 			
 			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
 			
-			this.groupManager.table.rowManager.checkClassicModeGroupHeaderWidth();
+			this.groupManager.checkBasicModeGroupHeaderWidth();
 			
 		}else {
 			this.groupManager.updateGroupRows(true);
@@ -11479,7 +11479,7 @@ class Group{
 	show(){
 		this.visible = true;
 		
-		if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
+		if(this.groupManager.table.rowManager.getRenderMode() == "basic" && !this.groupManager.table.options.pagination){
 			
 			this.element.classList.add("tabulator-group-visible");
 			
@@ -11508,7 +11508,7 @@ class Group{
 			
 			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
 			
-			this.groupManager.table.rowManager.checkClassicModeGroupHeaderWidth();
+			this.groupManager.checkBasicModeGroupHeaderWidth();
 		}else {
 			this.groupManager.updateGroupRows(true);
 		}
@@ -12269,6 +12269,28 @@ class GroupRows extends Module{
 			}
 		}
 	}
+
+	checkBasicModeGroupHeaderWidth(){
+		var element = this.table.rowManager.tableElement,
+		onlyGroupHeaders = true;
+
+		this.table.rowManager.getDisplayRows().forEach((row, index) =>{
+			this.table.rowManager.styleRow(row, index);
+			element.appendChild(row.getElement());
+			row.initialize(true);
+
+			if(row.type !== "group"){
+				onlyGroupHeaders = false;
+			}
+		});
+
+		if(onlyGroupHeaders){
+			element.style.minWidth = this.table.columnManager.getWidth() + "px";
+		}else {
+			element.style.minWidth = "";
+		}
+	}
+
 }
 
 GroupRows.moduleName = "groupRows";
@@ -17667,8 +17689,9 @@ class ResponsiveLayout extends Module{
 			this.subscribe("column-delete", this.initializeResponsivity.bind(this));
 
 			this.subscribe("table-redrawing", this.tableRedraw.bind(this));
-
+			
 			if(this.table.options.responsiveLayout === "collapse"){
+				this.subscribe("row-data-changed", this.generateCollapsedRowContent.bind(this));
 				this.subscribe("row-init", this.initializeRow.bind(this));
 				this.subscribe("row-layout", this.layoutRow.bind(this));
 			}
@@ -22829,6 +22852,8 @@ class RowManager extends CoreFeature{
 		}
 		
 		if(renderClass){
+			this.renderMode = this.table.options.renderVertical;
+			
 			this.renderer = new renderClass(this.table, this.element, this.tableElement);
 			this.renderer.initialize();
 			
