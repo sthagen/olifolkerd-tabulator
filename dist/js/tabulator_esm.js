@@ -1,4 +1,4 @@
-/* Tabulator v5.3.1 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.3.2 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -469,90 +469,121 @@ class Popup extends CoreFeature{
 }
 
 class Module extends CoreFeature{
-
+	
 	constructor(table, name){
 		super(table);
-
+		
 		this._handler = null;
 	}
-
+	
 	initialize(){
 		// setup module when table is initialized, to be overridden in module
 	}
-
-
+	
+	
 	///////////////////////////////////
 	////// Options Registration ///////
 	///////////////////////////////////
-
+	
 	registerTableOption(key, value){
 		this.table.optionsList.register(key, value);
 	}
-
+	
 	registerColumnOption(key, value){
 		this.table.columnManager.optionsList.register(key, value);
 	}
-
+	
 	///////////////////////////////////
 	/// Public Function Registration ///
 	///////////////////////////////////
-
+	
 	registerTableFunction(name, func){
 		if(typeof this.table[name] === "undefined"){
 			this.table[name] = (...args) => {
 				this.table.initGuard(name);
-
+				
 				return func(...args);
 			};
 		}else {
 			console.warn("Unable to bind table function, name already in use", name);
 		}
 	}
-
+	
 	registerComponentFunction(component, func, handler){
 		return this.table.componentFunctionBinder.bind(component, func, handler);
 	}
-
+	
 	///////////////////////////////////
 	////////// Data Pipeline //////////
 	///////////////////////////////////
-
+	
 	registerDataHandler(handler, priority){
 		this.table.rowManager.registerDataPipelineHandler(handler, priority);
 		this._handler = handler;
 	}
-
+	
 	registerDisplayHandler(handler, priority){
 		this.table.rowManager.registerDisplayPipelineHandler(handler, priority);
 		this._handler = handler;
 	}
+	
+	displayRows(adjust){
+		var index = this.table.rowManager.displayRows.length - 1, 
+		lookupIndex;
+		
+		if(this._handler){
+			lookupIndex = this.table.rowManager.displayPipeline.findIndex((item) => {
+				return item.handler === this._handler;
+			});
 
+			if(lookupIndex > -1){
+				index = lookupIndex;
+			}
+		}
+		
+		if(adjust){
+			index = index + adjust;
+		}
+
+		if(this._handler){
+			if(index > -1){
+				return this.table.rowManager.getDisplayRows(index);
+			}else {
+				return this.activeRows();
+			}
+		}	
+	}
+	
+	activeRows(){
+		return this.table.rowManager.activeRows;
+	}
+	
 	refreshData(renderInPosition, handler){
 		if(!handler){
 			handler = this._handler;
 		}
-
+		
 		if(handler){
 			this.table.rowManager.refreshActiveData(handler, false, renderInPosition);
 		}
 	}
-
+	
 	///////////////////////////////////
 	//////// Footer Management ////////
 	///////////////////////////////////
-
+	
 	footerAppend(element){
 		return this.table.footerManager.append(element);
 	}
-
+	
 	footerPrepend(element){
 		return this.table.footerManager.prepend(element);
 	}
-
+	
 	footerRemove(element){
 		return this.table.footerManager.remove(element);
 	} 
-
+	
 	///////////////////////////////////
 	//////// Popups Management ////////
 	///////////////////////////////////
@@ -560,15 +591,15 @@ class Module extends CoreFeature{
 	popup(menuEl, menuContainer){
 		return new Popup(this.table, menuEl, menuContainer);
 	}
-
+	
 	///////////////////////////////////
 	//////// Alert Management ////////
 	///////////////////////////////////
-
+	
 	alert(content, type){
 		return this.table.alertManager.alert(content, type);
 	}
-
+	
 	clearAlert(){
 		return this.table.alertManager.clear();
 	}
@@ -4043,8 +4074,6 @@ class DataTree extends Module{
 
 		this.startOpen = function(){};
 
-		this.displayIndex = 0;
-
 		this.registerTableOption("dataTree", false); //enable data tree
 		this.registerTableOption("dataTreeFilter", true); //filter child rows
 		this.registerTableOption("dataTreeSort", true); //sort child rows
@@ -4318,14 +4347,6 @@ class DataTree extends Module{
 				el.insertBefore(config.controlEl, el.firstChild);
 			}
 		}
-	}
-
-	setDisplayIndex (index) {
-		this.displayIndex = index;
-	}
-
-	getDisplayIndex () {
-		return this.displayIndex;
 	}
 
 	getRows(rows){
@@ -11063,7 +11084,7 @@ class GroupComponent {
 	}
 
 	isVisible(){
-		return this._group.visible;
+		return this._group._visible;
 	}
 
 	show(){
@@ -11465,9 +11486,7 @@ class Group{
 				});
 			}
 			
-			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
-			
-			this.groupManager.checkBasicModeGroupHeaderWidth();
+			this.groupManager.updateGroupRows(true);
 			
 		}else {
 			this.groupManager.updateGroupRows(true);
@@ -11505,10 +11524,8 @@ class Group{
 					prev = rowEl;
 				});
 			}
-			
-			this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex());
-			
-			this.groupManager.checkBasicModeGroupHeaderWidth();
+
+			this.groupManager.updateGroupRows(true);
 		}else {
 			this.groupManager.updateGroupRows(true);
 		}
@@ -11700,7 +11717,6 @@ class GroupRows extends Module{
 		this.groupList = []; //ordered list of groups
 		this.allowedValues = false;
 		this.groups = {}; //hold row groups
-		this.displayIndex = 0; //index in display pipeline
 
 		this.displayHandler = this.getRows.bind(this);
 
@@ -12008,22 +12024,12 @@ class GroupRows extends Module{
 		}
 	}
 
-
 	rowsUpdated(row){
 		this.updateGroupRows(true);
 	}
 
 	cellUpdated(cell){
 		this.reassignRowToGroup(cell.row);
-	}
-
-
-	setDisplayIndex(index){
-		this.displayIndex = index;
-	}
-
-	getDisplayIndex(){
-		return this.displayIndex;
 	}
 
 	//return appropriate rows with group headers
@@ -13085,7 +13091,7 @@ class Interaction extends Module{
 		var range;
 
 		if(this.table.modExists("edit")){
-			if (this.table.modules.edit.currentCell === this){
+			if (this.table.modules.edit.currentCell === cell){
 				return; //prevent instant selection of editor content
 			}
 		}
@@ -15028,8 +15034,6 @@ class Page extends Module{
 
 		this.remoteRowCountEstimate = null;
 		
-		this.displayIndex = 0; //index in display pipeline
-		
 		this.initialLoad = true;
 		this.dataChanging = false; //flag to check if data is being changed by this module
 		
@@ -15475,14 +15479,6 @@ class Page extends Module{
 		this.dispatch("page-changed");
 	}
 	
-	setDisplayIndex(index){
-		this.displayIndex = index;
-	}
-	
-	getDisplayIndex(){
-		return this.displayIndex;
-	}
-	
 	//calculate maximum page from number of rows
 	setMaxRows(rowCount){
 		if(!rowCount){
@@ -15549,9 +15545,9 @@ class Page extends Module{
 	}
 	
 	setPageToRow(row){
-		var rows = this.table.rowManager.getDisplayRows(this.displayIndex - 1);
+		var rows = this.displayRows(-1);
 		var index = rows.indexOf(row);
-		
+	
 		if(index > -1){
 			var page = this.size === true ? 1 : Math.ceil((index + 1) / this.size);
 			
@@ -18862,7 +18858,6 @@ class Sort extends Module{
 						}
 					}
 
-
 					if (this.table.options.columnHeaderSortMulti && (e.shiftKey || e.ctrlKey)) {
 						sorters = this.getSort();
 
@@ -18873,11 +18868,9 @@ class Sort extends Module{
 						if(match > -1){
 							sorters[match].dir = dir;
 
-							if(match != sorters.length -1){
-								match = sorters.splice(match, 1)[0];
-								if(dir != "none"){
-									sorters.push(match);
-								}
+							match = sorters.splice(match, 1)[0];
+							if(dir != "none"){
+								sorters.push(match);
 							}
 						}else {
 							if(dir != "none"){
@@ -19092,7 +19085,7 @@ class Sort extends Module{
 		var sortEl = column.modules.sort.element,
 		arrowEl;
 
-		if(typeof this.table.options.headerSortElement === "function"){
+		if(column.definition.headerSort && typeof this.table.options.headerSortElement === "function"){
 			while(sortEl.firstChild) sortEl.removeChild(sortEl.firstChild);
 
 			arrowEl = this.table.options.headerSortElement.call(this.table, column.getComponent(), dir);
@@ -21075,14 +21068,14 @@ class ColumnManager extends CoreFeature {
 	}
 	
 	moveColumn(from, to, after){
-		this.moveColumnActual(from, to, after);
-		
 		to.element.parentNode.insertBefore(from.element, to.element);
 		
 		if(after){
 			to.element.parentNode.insertBefore(to.element, from.element);
 		}
 		
+		this.moveColumnActual(from, to, after);
+
 		this.verticalAlignHeaders();
 		
 		this.table.rowManager.reinitialize();
@@ -22597,81 +22590,82 @@ class RowManager extends CoreFeature{
 		index = 0,
 		cascadeOrder = ["all", "dataPipeline", "display", "displayPipeline", "end"];
 		
-		
-		if(typeof handler === "function"){
-			index = this.dataPipeline.findIndex((item) => {
-				return item.handler === handler;
-			});
-			
-			if(index > -1){
-				stage = "dataPipeline";
-				
-				if(skipStage){
-					if(index == this.dataPipeline.length - 1){
-						stage = "display";
-					}else {
-						index++;
-					}
-				}
-			}else {
-				index = this.displayPipeline.findIndex((item) => {
+		if(!this.table.destroyed){
+			if(typeof handler === "function"){
+				index = this.dataPipeline.findIndex((item) => {
 					return item.handler === handler;
 				});
 				
 				if(index > -1){
-					stage = "displayPipeline";
+					stage = "dataPipeline";
 					
 					if(skipStage){
-						if(index == this.displayPipeline.length - 1){
-							stage = "end";
+						if(index == this.dataPipeline.length - 1){
+							stage = "display";
 						}else {
 							index++;
 						}
 					}
 				}else {
-					console.error("Unable to refresh data, invalid handler provided", handler);
-					return;
-				}
-			}
-		}else {
-			stage = handler || "all";
-			index = 0;
-		}
-		
-		if(this.redrawBlock){
-			if(!this.redrawBlockRestoreConfig || (this.redrawBlockRestoreConfig && ((this.redrawBlockRestoreConfig.stage === stage && index < this.redrawBlockRestoreConfig.index) || (cascadeOrder.indexOf(stage) < cascadeOrder.indexOf(this.redrawBlockRestoreConfig.stage))))){
-				this.redrawBlockRestoreConfig = {
-					handler: handler,
-					skipStage: skipStage,
-					renderInPosition: renderInPosition,
-					stage:stage,
-					index:index,
-				};
-			}
-			
-			return;
-		}else {
-			if(Helpers.elVisible(this.element)){
-				if(renderInPosition){
-					this.reRenderInPosition(this.refreshPipelines.bind(this, handler, stage, index, renderInPosition));
-				}else {
-					this.refreshPipelines(handler, stage, index, renderInPosition);
+					index = this.displayPipeline.findIndex((item) => {
+						return item.handler === handler;
+					});
 					
-					if(!handler){
-						this.table.columnManager.renderer.renderColumns();
-					}
-					
-					this.renderTable();
-					
-					if(table.options.layoutColumnsOnNewData){
-						this.table.columnManager.redraw(true);
+					if(index > -1){
+						stage = "displayPipeline";
+						
+						if(skipStage){
+							if(index == this.displayPipeline.length - 1){
+								stage = "end";
+							}else {
+								index++;
+							}
+						}
+					}else {
+						console.error("Unable to refresh data, invalid handler provided", handler);
+						return;
 					}
 				}
 			}else {
-				this.refreshPipelines(handler, stage, index, renderInPosition);
+				stage = handler || "all";
+				index = 0;
 			}
 			
-			this.dispatch("data-refreshed");
+			if(this.redrawBlock){
+				if(!this.redrawBlockRestoreConfig || (this.redrawBlockRestoreConfig && ((this.redrawBlockRestoreConfig.stage === stage && index < this.redrawBlockRestoreConfig.index) || (cascadeOrder.indexOf(stage) < cascadeOrder.indexOf(this.redrawBlockRestoreConfig.stage))))){
+					this.redrawBlockRestoreConfig = {
+						handler: handler,
+						skipStage: skipStage,
+						renderInPosition: renderInPosition,
+						stage:stage,
+						index:index,
+					};
+				}
+				
+				return;
+			}else {
+				if(Helpers.elVisible(this.element)){
+					if(renderInPosition){
+						this.reRenderInPosition(this.refreshPipelines.bind(this, handler, stage, index, renderInPosition));
+					}else {
+						this.refreshPipelines(handler, stage, index, renderInPosition);
+						
+						if(!handler){
+							this.table.columnManager.renderer.renderColumns();
+						}
+						
+						this.renderTable();
+						
+						if(table.options.layoutColumnsOnNewData){
+							this.table.columnManager.redraw(true);
+						}
+					}
+				}else {
+					this.refreshPipelines(handler, stage, index, renderInPosition);
+				}
+				
+				this.dispatch("data-refreshed");
+			}
 		}
 	}
 	
@@ -22704,7 +22698,7 @@ class RowManager extends CoreFeature{
 			case "displayPipeline":
 				for(let i = index; i < this.displayPipeline.length; i++){
 					let result = this.displayPipeline[i].handler((i ? this.getDisplayRows(i - 1) : this.activeRows).slice(0), renderInPosition);
-					
+
 					this.setDisplayRows(result || this.getDisplayRows(i - 1).slice(0), i);
 				}
 			
@@ -22741,28 +22735,13 @@ class RowManager extends CoreFeature{
 		this.displayRowsCount = this.displayRows[0].length;
 	}
 	
-	getNextDisplayIndex(){
-		return this.displayRows.length;
-	}
-	
 	//set display row pipeline data
 	setDisplayRows(displayRows, index){
-		
-		var output = true;
-		
-		if(index && typeof this.displayRows[index] != "undefined"){
-			this.displayRows[index] = displayRows;
-			output = true;
-		}else {
-			this.displayRows.push(displayRows);
-			output = index = this.displayRows.length -1;
-		}
-		
+		this.displayRows[index] = displayRows;
+
 		if(index == this.displayRows.length -1){
 			this.displayRowsCount = this.displayRows[this.displayRows.length -1].length;
 		}
-		
-		return output;
 	}
 	
 	getDisplayRows(index){
@@ -23397,12 +23376,13 @@ class InteractionManager extends CoreFeature {
 		//ensure row component is looked up before cell
 		var keys = Object.keys(targets).reverse(),
 		listener = this.listeners[type],
+		matches = {},
 		targetMatches = {};
 		
 		for(let key of keys){
-			let component;
-			let target = targets[key];
-			let previousTarget = this.previousTargets[key];
+			let component,
+			target = targets[key],
+			previousTarget = this.previousTargets[key];
 			
 			if(previousTarget && previousTarget.target === target){
 				component = previousTarget.component;
@@ -23431,8 +23411,8 @@ class InteractionManager extends CoreFeature {
 					
 					case "cell":
 						if(listener.components.includes("cell")){
-							if(targets["row"] instanceof Row){
-								component = targets["row"].findCell(target);
+							if(matches["row"] instanceof Row){
+								component = matches["row"].findCell(target);
 							}else {	
 								if(targets["row"]){
 									console.warn("Event Target Lookup Error - The row this cell is attached to cannot be found, has the table been reinitialized without being destroyed first?");
@@ -23444,7 +23424,7 @@ class InteractionManager extends CoreFeature {
 			}
 			
 			if(component){
-				targets[key] = component;
+				matches[key] = component;
 				targetMatches[key] = {
 					target:target,
 					component:component,
@@ -23454,12 +23434,12 @@ class InteractionManager extends CoreFeature {
 		
 		this.previousTargets = targetMatches;
 		
-		return targets;
+		return matches;
 	}
 	
 	triggerEvents(type, e, targets){
 		var listener = this.listeners[type];
-		
+
 		for(let key in targets){
 			if(targets[key] && listener.components.includes(key)){
 				this.dispatch(key + "-" + type, e, targets[key]);
@@ -25133,7 +25113,7 @@ class Tabulator {
 				data = JSON.parse(data);
 			}
 			
-			if(data){
+			if(data && data.length > 0){
 				data.forEach((item) => {
 					var row = this.rowManager.findRow(item[this.options.index]);
 					
@@ -25199,7 +25179,7 @@ class Tabulator {
 				data = JSON.parse(data);
 			}
 			
-			if(data){
+			if(data && data.length > 0){
 				data.forEach((item) => {
 					var row = this.rowManager.findRow(item[this.options.index]);
 					
