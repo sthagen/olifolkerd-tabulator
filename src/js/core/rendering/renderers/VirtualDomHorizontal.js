@@ -343,6 +343,12 @@ export default class VirtualDomHorizontal extends Renderer{
 					this.fitDataColActualWidthCheck(column);
 					
 					this.rightCol++; // Don't move this below the >= check below
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.rightCol = this.rightCol;
+						}
+					});
 					
 					if(this.rightCol >= (this.columns.length - 1)){
 						this.vDomPadRight = 0;
@@ -382,6 +388,12 @@ export default class VirtualDomHorizontal extends Renderer{
 					});
 					
 					this.leftCol--; // don't move this below the <= check below
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.leftCol = this.leftCol;
+						}
+					});
 					
 					if(this.leftCol <= 0){ // replicating logic in addColRight
 						this.vDomPadLeft = 0;
@@ -434,6 +446,12 @@ export default class VirtualDomHorizontal extends Renderer{
 					
 					this.vDomPadRight += column.getWidth();
 					this.rightCol --;
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.rightCol = this.rightCol;
+						}
+					});
 				}else{
 					working = false;
 				}
@@ -472,6 +490,12 @@ export default class VirtualDomHorizontal extends Renderer{
 					
 					this.vDomPadLeft += column.getWidth();
 					this.leftCol ++;
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.leftCol = this.leftCol;
+						}
+					});
 				}else{
 					working = false;
 				}

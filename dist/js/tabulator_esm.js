@@ -1,4 +1,4 @@
-/* Tabulator v5.4.0 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.4.1 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -6015,6 +6015,7 @@ class Edit{
 		this.listIteration = 0;
 		
 		this.lastAction="";
+		this.filterTerm="";
 		
 		this.blurable = true;
 		
@@ -9306,9 +9307,9 @@ class Filter extends Module{
 				});
 
 				editorElement.addEventListener("focus", (e) => {
-					var left = this.table.columnManager.element.scrollLeft;
+					var left = this.table.columnManager.contentsElement.scrollLeft;
 
-					var headerPos = this.table.rowManager.element.scrollLeft + parseInt(this.table.columnManager.element.style.marginLeft);
+					var headerPos = this.table.rowManager.element.scrollLeft;
 
 					if(left !== headerPos){
 						this.table.rowManager.scrollHorizontal(left);
@@ -12143,6 +12144,9 @@ class GroupRows extends Module{
 			this.groupList.forEach(function(group){
 				group.wipe();
 			});
+			
+			this.groupList = [];
+			this.groups = {};
 		}
 	}
 	
@@ -12229,7 +12233,12 @@ class GroupRows extends Module{
 				this.assignRowToGroup(row, oldGroups);
 			});
 		}
+		
+		Object.values(oldGroups).forEach((group) => {
+			group.wipe();
+		});	
 	}
+	
 	
 	createGroup(groupID, level, oldGroups){
 		var groupKey = level + "_" + groupID,
@@ -15596,6 +15605,7 @@ class Page extends Module{
 		if(!this.initialLoad){
 			if(this.mode == "local" || force){
 				this.page = 1;
+				this.trackChanges();
 			}
 		}
 	}
@@ -20595,6 +20605,12 @@ class VirtualDomHorizontal extends Renderer{
 					this.fitDataColActualWidthCheck(column);
 					
 					this.rightCol++; // Don't move this below the >= check below
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.rightCol = this.rightCol;
+						}
+					});
 					
 					if(this.rightCol >= (this.columns.length - 1)){
 						this.vDomPadRight = 0;
@@ -20634,6 +20650,12 @@ class VirtualDomHorizontal extends Renderer{
 					});
 					
 					this.leftCol--; // don't move this below the <= check below
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.leftCol = this.leftCol;
+						}
+					});
 					
 					if(this.leftCol <= 0){ // replicating logic in addColRight
 						this.vDomPadLeft = 0;
@@ -20686,6 +20708,12 @@ class VirtualDomHorizontal extends Renderer{
 					
 					this.vDomPadRight += column.getWidth();
 					this.rightCol --;
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.rightCol = this.rightCol;
+						}
+					});
 				}else {
 					working = false;
 				}
@@ -20724,6 +20752,12 @@ class VirtualDomHorizontal extends Renderer{
 					
 					this.vDomPadLeft += column.getWidth();
 					this.leftCol ++;
+
+					this.getVisibleRows().forEach((row) => {
+						if(row.type !== "group"){
+							row.modules.vdomHoz.leftCol = this.leftCol;
+						}
+					});
 				}else {
 					working = false;
 				}
