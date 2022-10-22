@@ -1,4 +1,4 @@
-/* Tabulator v5.4.1 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.4.2 (c) Oliver Folkerd 2022 */
 class CoreFeature{
 
 	constructor(table){
@@ -2727,6 +2727,16 @@ class Column extends CoreFeature{
 		return width;
 	}
 
+	getLeftOffset(){
+		var offset = this.element.offsetLeft;
+
+		if(this.parent.isGroup){
+			offset += this.parent.getLeftOffset();
+		}
+
+		return offset;
+	}
+
 	getHeight(){
 		return Math.ceil(this.element.getBoundingClientRect().height);
 	}
@@ -3817,6 +3827,16 @@ class ColumnCalcs extends Module{
 		
 		if(changed){
 			this.table.rowManager.adjustTableSize();
+		}
+	}
+	
+	reinitializeCalcs(){
+		if(this.topCalcs.length){
+			this.initializeTopRow();
+		}
+
+		if(this.botCalcs.length){
+			this.initializeBottomRow();
 		}
 	}
 	
@@ -11206,17 +11226,19 @@ class Group{
 		this.createValueGroups();
 	}
 	
-	wipe(){
-		if(this.groupList.length){
-			this.groupList.forEach(function(group){
-				group.wipe();
-			});
-		}else {
-			this.rows.forEach((row) => {
-				if(row.modules){
-					delete row.modules.group;
-				}
-			});
+	wipe(elementsOnly){
+		if(!elementsOnly){
+			if(this.groupList.length){
+				this.groupList.forEach(function(group){
+					group.wipe();
+				});
+			}else {
+				this.rows.forEach((row) => {
+					if(row.modules){
+						delete row.modules.group;
+					}
+				});
+			}
 		}
 		
 		this.element = false;
@@ -11849,7 +11871,7 @@ class GroupRows extends Module{
 			
 			this.groupIDLookups = [];
 			
-			if(Array.isArray(groupBy)){
+			if(groupBy){
 				if(this.table.modExists("columnCalcs") && this.table.options.columnCalcs != "table" && this.table.options.columnCalcs != "both"){
 					this.table.modules.columnCalcs.removeCalcs();
 				}
@@ -11989,6 +12011,10 @@ class GroupRows extends Module{
 		}
 		
 		this.configureGroupSetup();
+
+		if(!groups && this.table.modExists("columnCalcs") && this.table.options.columnCalcs === true){
+			this.table.modules.columnCalcs.reinitializeCalcs();
+		}
 		
 		this.refreshData();
 		
@@ -12235,7 +12261,7 @@ class GroupRows extends Module{
 		}
 		
 		Object.values(oldGroups).forEach((group) => {
-			group.wipe();
+			group.wipe(true);
 		});	
 	}
 	
@@ -14006,7 +14032,7 @@ class MoveColumns extends Module{
 			
 			config.mousemove = function(e){
 				if(column.parent === self.moving.parent){
-					if((((self.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(colEl).left) + self.table.columnManager.element.scrollLeft) > (column.getWidth() / 2)){
+					if((((self.touchMove ? e.touches[0].pageX : e.pageX) - Helpers.elOffset(colEl).left) + self.table.columnManager.contentsElement.scrollLeft) > (column.getWidth() / 2)){
 						if(self.toCol !== column || !self.toColAfter){
 							colEl.parentNode.insertBefore(self.placeholderElement, colEl.nextSibling);
 							self.moveColumn(column, true);
@@ -21365,9 +21391,10 @@ class ColumnManager extends CoreFeature {
 	
 	scrollToColumn(column, position, ifVisible){
 		var left = 0,
-		offset = 0,
+		offset = column.getLeftOffset(),
 		adjust = 0,
 		colEl = column.getElement();
+		
 		
 		return new Promise((resolve, reject) => {
 			
@@ -21395,16 +21422,13 @@ class ColumnManager extends CoreFeature {
 				
 				//check column visibility
 				if(!ifVisible){
-					
-					offset = colEl.offsetLeft;
-					
 					if(offset > 0 && offset + colEl.offsetWidth < this.element.clientWidth){
 						return false;
 					}
 				}
 				
 				//calculate scroll position
-				left = colEl.offsetLeft + adjust;
+				left = offset + adjust;
 				
 				left = Math.max(Math.min(left, this.table.rowManager.element.scrollWidth - this.table.rowManager.element.clientWidth),0);
 				
