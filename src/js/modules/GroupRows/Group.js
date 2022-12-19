@@ -71,7 +71,7 @@ class Group{
 		this.arrowElement = document.createElement("div");
 		this.arrowElement.classList.add("tabulator-group-toggle");
 		this.arrowElement.appendChild(arrow);
-		
+
 		//setup movable rows
 		if(this.groupManager.table.options.movableRows !== false && this.groupManager.table.modExists("moveRow")){
 			this.groupManager.table.modules.moveRow.initializeGroupHeader(this);
@@ -209,19 +209,22 @@ class Group{
 				this.parent.removeGroup(this);
 			}else{
 				this.groupManager.removeGroup(this);
-			}
+			}		
 			
 			this.groupManager.updateGroupRows(true);
+			
 		}else{
 			
 			if(el.parentNode){
 				el.parentNode.removeChild(el);
 			}
-			
-			this.generateGroupHeaderContents();
-			
-			if(this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
-				this.groupManager.table.modules.columnCalcs.recalcGroup(this);
+
+			if(!this.groupManager.blockRedraw){
+				this.generateGroupHeaderContents();
+				
+				if(this.groupManager.table.modExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
+					this.groupManager.table.modules.columnCalcs.recalcGroup(this);
+				}
 			}
 			
 		}

@@ -66,18 +66,32 @@ export default class RowManager extends CoreFeature{
 	}
 	
 	initializePlaceholder(){
+		var placeholder = this.table.options.placeholder;
+
 		//configure placeholder element
-		if(typeof this.table.options.placeholder == "string"){
+		if(placeholder){	
 			let el = document.createElement("div");
 			el.classList.add("tabulator-placeholder");
-			
-			let contents = document.createElement("div");
-			contents.classList.add("tabulator-placeholder-contents");
-			contents.innerHTML = this.table.options.placeholder;
-			
-			el.appendChild(contents);
-			
-			this.placeholderContents = contents;
+
+			if(typeof placeholder == "string"){
+				let contents = document.createElement("div");
+				contents.classList.add("tabulator-placeholder-contents");
+				contents.innerHTML = placeholder;
+				
+				el.appendChild(contents);
+				
+				this.placeholderContents = contents;
+				
+			}else if(typeof HTMLElement !== "undefined" && placeholder instanceof HTMLElement){
+				
+				el.appendChild(placeholder);
+				this.placeholderContents = placeholder;
+			}else{
+				console.warn("Invalid placeholder provided, must be string or HTML Element", placeholder);
+
+				this.el = null;
+			}
+
 			this.placeholder = el;
 		}
 	}
@@ -235,18 +249,24 @@ export default class RowManager extends CoreFeature{
 	_wipeElements(){
 		this.dispatch("rows-wipe");
 		
+		this.destroy();
+		
+		this.adjustTableSize();
+
+		this.dispatch("rows-wiped");
+	}
+
+	destroy(){
 		this.rows.forEach((row) => {
 			row.wipe();
 		});
-		
+
 		this.rows = [];
 		this.activeRows = [];
 		this.activeRowsPipeline = [];
 		this.activeRowsCount = 0;
 		this.displayRows = [];
 		this.displayRowsCount = 0;
-		
-		this.adjustTableSize();
 	}
 	
 	deleteRow(row, blockRedraw){
@@ -294,7 +314,7 @@ export default class RowManager extends CoreFeature{
 	}
 	
 	//add multiple rows
-	addRows(data, pos, index){
+	addRows(data, pos, index, refreshDisplayOnly){
 		var rows = [];
 		
 		return new Promise((resolve, reject) => {
@@ -313,8 +333,8 @@ export default class RowManager extends CoreFeature{
 				rows.push(row);
 				this.dispatch("row-added", row, data, pos, index);
 			});
-			
-			this.refreshActiveData(false, false, true);
+
+			this.refreshActiveData(refreshDisplayOnly ? "displayPipeline" : false, false, true);
 			
 			this.regenerateRowPositions();
 			
@@ -794,22 +814,21 @@ export default class RowManager extends CoreFeature{
 	getRows(type){
 		var rows = [];
 
-		if(!type || type === true){
-			rows = this.chain("rows-retrieve", type, null, this.rows) || this.rows;
-		}else{
-			switch(type){
-				case "active":
-					rows = this.activeRows;
-					break;
+		switch(type){
+			case "active":
+				rows = this.activeRows;
+				break;
+			
+			case "display":
+				rows = this.table.rowManager.getDisplayRows();
+				break;
 				
-				case "display":
-					rows = this.table.rowManager.getDisplayRows();
-					break;
-					
-				case "visible":
-					rows = this.getVisibleRows(false, true);
-					break;
-			}
+			case "visible":
+				rows = this.getVisibleRows(false, true);
+				break;
+
+			default:
+				rows = this.chain("rows-retrieve", type, null, this.rows) || this.rows;
 		}
 		
 		return rows;
