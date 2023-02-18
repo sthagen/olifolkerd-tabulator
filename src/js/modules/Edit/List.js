@@ -83,10 +83,12 @@ export default class Edit{
 		
 		function clickStop(e){
 			e.stopPropagation();
+		}	
+	
+		if(!this.isFilter){
+			this.input.style.height = "100%";
+			this.input.focus({preventScroll: true});
 		}
-		
-		this.input.style.height = "100%";
-		this.input.focus({preventScroll: true});
 		
 		
 		cellEl.addEventListener("click", clickStop);
@@ -385,9 +387,11 @@ export default class Edit{
 	}
 	
 	_keySide(e){
-		e.stopImmediatePropagation();
-		e.stopPropagation();
-		e.preventDefault();
+		if(!this.params.autocomplete){
+			e.stopImmediatePropagation();
+			e.stopPropagation();
+			e.preventDefault();
+		}
 	}
 	
 	_keyEnter(e){

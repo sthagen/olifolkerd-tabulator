@@ -1,4 +1,4 @@
-/* Tabulator v5.4.3 (c) Oliver Folkerd 2022 */
+/* Tabulator v5.4.3 (c) Oliver Folkerd 2023 */
 class CoreFeature{
 
 	constructor(table){
@@ -3360,7 +3360,7 @@ class Row extends CoreFeature{
 		
 		column = this.table.columnManager.findColumn(column);
 		
-		if(!this.initialized){
+		if(!this.initialized && this.cells.length === 0){
 			this.generateCells();
 		}
 		
@@ -3384,7 +3384,7 @@ class Row extends CoreFeature{
 	}
 	
 	getCells(){
-		if(!this.initialized){
+		if(!this.initialized && this.cells.length === 0){
 			this.generateCells();
 		}
 		
@@ -5343,11 +5343,13 @@ function input(cell, onRendered, success, cancel, editorParams){
 	input.value = typeof cellValue !== "undefined" ? cellValue : "";
 
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
 
-		if(editorParams.selectContents){
-			input.select();
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 
@@ -5422,15 +5424,17 @@ function textarea(cell, onRendered, success, cancel, editorParams){
 	input.value = value;
 
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
 
-		input.scrollHeight;
-		input.style.height = input.scrollHeight + "px";
-		cell.getRow().normalizeHeight();
+			input.scrollHeight;
+			input.style.height = input.scrollHeight + "px";
+			cell.getRow().normalizeHeight();
 
-		if(editorParams.selectContents){
-			input.select();
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 
@@ -5554,17 +5558,19 @@ function number(cell, onRendered, success, cancel, editorParams){
 	};
 
 	onRendered(function () {
-		//submit new value on blur
-		input.removeEventListener("blur", blurFunc);
+		if(!cell._getSelf){
+			//submit new value on blur
+			input.removeEventListener("blur", blurFunc);
 
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
 
-		//submit new value on blur
-		input.addEventListener("blur", blurFunc);
+			//submit new value on blur
+			input.addEventListener("blur", blurFunc);
 
-		if(editorParams.selectContents){
-			input.select();
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 
@@ -5622,26 +5628,26 @@ function number(cell, onRendered, success, cancel, editorParams){
 function range(cell, onRendered, success, cancel, editorParams){
 	var cellValue = cell.getValue(),
 	input = document.createElement("input");
-
+	
 	input.setAttribute("type", "range");
-
+	
 	if (typeof editorParams.max != "undefined") {
 		input.setAttribute("max", editorParams.max);
 	}
-
+	
 	if (typeof editorParams.min != "undefined") {
 		input.setAttribute("min", editorParams.min);
 	}
-
+	
 	if (typeof editorParams.step != "undefined") {
 		input.setAttribute("step", editorParams.step);
 	}
-
+	
 	//create and style input
 	input.style.padding = "4px";
 	input.style.width = "100%";
 	input.style.boxSizing = "border-box";
-
+	
 	if(editorParams.elementAttributes && typeof editorParams.elementAttributes == "object"){
 		for (let key in editorParams.elementAttributes){
 			if(key.charAt(0) == "+"){
@@ -5652,21 +5658,23 @@ function range(cell, onRendered, success, cancel, editorParams){
 			}
 		}
 	}
-
+	
 	input.value = cellValue;
-
+	
 	onRendered(function () {
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
+		}
 	});
-
+	
 	function onChange(){
 		var value = input.value;
-
+		
 		if(!isNaN(value) && value !==""){
 			value = Number(value);
 		}
-
+		
 		if(value != cellValue){
 			if(success(value)){
 				cellValue = value; //persist value if successfully validated incase editor is used as header filter
@@ -5675,12 +5683,12 @@ function range(cell, onRendered, success, cancel, editorParams){
 			cancel();
 		}
 	}
-
+	
 	//submit new value on blur
 	input.addEventListener("blur", function(e){
 		onChange();
 	});
-
+	
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
 		switch(e.keyCode){
@@ -5688,13 +5696,13 @@ function range(cell, onRendered, success, cancel, editorParams){
 			// case 9:
 				onChange();
 				break;
-
+			
 			case 27:
 				cancel();
 				break;
 		}
 	});
-
+	
 	return input;
 }
 
@@ -5758,15 +5766,17 @@ function date(cell, onRendered, success, cancel, editorParams){
 	input.value = cellValue;
 	
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
-		
-		if(editorParams.selectContents){
-			input.select();
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
+			
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 	
-	function onChange(e){
+	function onChange(){
 		var value = input.value;
 		
 		if(((cellValue === null || typeof cellValue === "undefined") && value !== "") || value !== cellValue){
@@ -5783,9 +5793,12 @@ function date(cell, onRendered, success, cancel, editorParams){
 		}
 	}
 	
-	//submit new value on blur or change
-	input.addEventListener("change", onChange);
-	input.addEventListener("blur", onChange);
+	//submit new value on blur
+	input.addEventListener("blur", function(e) {
+		if (e.relatedTarget || e.rangeParent || e.explicitOriginalTarget !== input) {
+			onChange(); // only on a "true" blur; not when focusing browser's date/time picker
+		}
+	});
 	
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
@@ -5814,7 +5827,7 @@ function time(cell, onRendered, success, cancel, editorParams){
 	var inputFormat = editorParams.format,
 	DT = inputFormat ? (window.DateTime || luxon.DateTime) : null, 
 	newDatetime;
-
+	
 	//create and style input
 	var cellValue = cell.getValue(),
 	input = document.createElement("input");
@@ -5846,34 +5859,36 @@ function time(cell, onRendered, success, cancel, editorParams){
 			}else {
 				newDatetime = DT.fromFormat(String(cellValue), inputFormat);
 			}
-
+			
 			cellValue = newDatetime.toFormat("hh:mm");
-
+			
 		}else {
 			console.error("Editor Error - 'date' editor 'inputFormat' param is dependant on luxon.js");
 		}
 	}
-
+	
 	input.value = cellValue;
 	
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
-		
-		if(editorParams.selectContents){
-			input.select();
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
+			
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 	
-	function onChange(e){
+	function onChange(){
 		var value = input.value;
-
+		
 		if(((cellValue === null || typeof cellValue === "undefined") && value !== "") || value !== cellValue){
-
+			
 			if(value && inputFormat){
 				value = DT.fromFormat(String(value), "hh:mm").toFormat(inputFormat);
 			}
-
+			
 			if(success(value)){
 				cellValue = input.value; //persist value if successfully validated incase editor is used as header filter
 			}
@@ -5882,9 +5897,12 @@ function time(cell, onRendered, success, cancel, editorParams){
 		}
 	}
 	
-	//submit new value on blur or change
-	input.addEventListener("change", onChange);
-	input.addEventListener("blur", onChange);
+	//submit new value on blur
+	input.addEventListener("blur", function(e) {
+		if (e.relatedTarget || e.rangeParent || e.explicitOriginalTarget !== input) {
+			onChange(); // only on a "true" blur; not when focusing browser's date/time picker
+		}
+	});
 	
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
@@ -5913,7 +5931,7 @@ function datetime(cell, onRendered, success, cancel, editorParams){
 	var inputFormat = editorParams.format,
 	DT = inputFormat ? (window.DateTime || luxon.DateTime) : null, 
 	newDatetime;
-
+	
 	//create and style input
 	var cellValue = cell.getValue(),
 	input = document.createElement("input");
@@ -5945,33 +5963,35 @@ function datetime(cell, onRendered, success, cancel, editorParams){
 			}else {
 				newDatetime = DT.fromFormat(String(cellValue), inputFormat);
 			}
-
+			
 			cellValue = newDatetime.toFormat("yyyy-MM-dd")  + "T" + newDatetime.toFormat("hh:mm");
 		}else {
 			console.error("Editor Error - 'date' editor 'inputFormat' param is dependant on luxon.js");
 		}
 	}
-
+	
 	input.value = cellValue;
 	
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
-		
-		if(editorParams.selectContents){
-			input.select();
+		if(!cell._getSelf){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
+			
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 	
-	function onChange(e){
+	function onChange(){
 		var value = input.value;
-
+		
 		if(((cellValue === null || typeof cellValue === "undefined") && value !== "") || value !== cellValue){
-
+			
 			if(value && inputFormat){
 				value = DT.fromISO(String(value)).toFormat(inputFormat);
 			}
-
+			
 			if(success(value)){
 				cellValue = input.value; //persist value if successfully validated incase editor is used as header filter
 			}
@@ -5980,9 +6000,12 @@ function datetime(cell, onRendered, success, cancel, editorParams){
 		}
 	}
 	
-	//submit new value on blur or change
-	input.addEventListener("change", onChange);
-	input.addEventListener("blur", onChange);
+	//submit new value on blur
+	input.addEventListener("blur", function(e) {
+		if (e.relatedTarget || e.rangeParent || e.explicitOriginalTarget !== input) {
+			onChange(); // only on a "true" blur; not when focusing browser's date/time picker
+		}
+	});
 	
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
@@ -6088,10 +6111,12 @@ class Edit{
 		
 		function clickStop(e){
 			e.stopPropagation();
+		}	
+	
+		if(!this.isFilter){
+			this.input.style.height = "100%";
+			this.input.focus({preventScroll: true});
 		}
-		
-		this.input.style.height = "100%";
-		this.input.focus({preventScroll: true});
 		
 		
 		cellEl.addEventListener("click", clickStop);
@@ -6390,9 +6415,11 @@ class Edit{
 	}
 	
 	_keySide(e){
-		e.stopImmediatePropagation();
-		e.stopPropagation();
-		e.preventDefault();
+		if(!this.params.autocomplete){
+			e.stopImmediatePropagation();
+			e.stopPropagation();
+			e.preventDefault();
+		}
 	}
 	
 	_keyEnter(e){
@@ -7347,11 +7374,11 @@ function tickCross(cell, onRendered, success, cancel, editorParams){
 	indetermState = false,
 	trueValueSet = Object.keys(editorParams).includes("trueValue"),
 	falseValueSet = Object.keys(editorParams).includes("falseValue");
-
+	
 	input.setAttribute("type", "checkbox");
 	input.style.marginTop = "5px";
 	input.style.boxSizing = "border-box";
-
+	
 	if(editorParams.elementAttributes && typeof editorParams.elementAttributes == "object"){
 		for (let key in editorParams.elementAttributes){
 			if(key.charAt(0) == "+"){
@@ -7362,35 +7389,39 @@ function tickCross(cell, onRendered, success, cancel, editorParams){
 			}
 		}
 	}
-
+	
 	input.value = value;
-
+	
 	if(tristate && (typeof value === "undefined" || value === indetermValue || value === "")){
 		indetermState = true;
 		input.indeterminate = true;
 	}
-
+	
 	if(this.table.browser != "firefox"){ //prevent blur issue on mac firefox
 		onRendered(function(){
-			input.focus({preventScroll: true});
+			if(!cell._getSelf){
+				input.focus({preventScroll: true});
+			}
 		});
 	}
-
+	
 	input.checked = trueValueSet ? value === editorParams.trueValue : (value === true || value === "true" || value === "True" || value === 1);
-
+	
 	onRendered(function(){
-		input.focus();
+		if(!cell._getSelf){
+			input.focus();
+		}
 	});
-
+	
 	function setValue(blur){
 		var checkedValue = input.checked;
-
+		
 		if(trueValueSet && checkedValue){
 			checkedValue = editorParams.trueValue;
 		}else if(falseValueSet && !checkedValue){
 			checkedValue = editorParams.falseValue;
 		}
-
+		
 		if(tristate){
 			if(!blur){
 				if(input.checked && !indetermState){
@@ -7413,16 +7444,16 @@ function tickCross(cell, onRendered, success, cancel, editorParams){
 			return checkedValue;
 		}
 	}
-
+	
 	//submit new value on blur
 	input.addEventListener("change", function(e){
 		success(setValue());
 	});
-
+	
 	input.addEventListener("blur", function(e){
 		success(setValue(true));
 	});
-
+	
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
 		if(e.keyCode == 13){
@@ -7432,7 +7463,7 @@ function tickCross(cell, onRendered, success, cancel, editorParams){
 			cancel();
 		}
 	});
-
+	
 	return input;
 }
 
@@ -11143,7 +11174,7 @@ class GroupComponent {
 				if (typeof target[name] !== "undefined") {
 					return target[name];
 				}else {
-					return target._group.groupManager.table.componentFunctionBinder.handle("row", target._group, name);
+					return target._group.groupManager.table.componentFunctionBinder.handle("group", target._group, name);
 				}
 			}
 		});
@@ -20080,24 +20111,28 @@ class OptionsList {
 		this.msgType = msgType;
 		this.registeredDefaults = Object.assign({}, defaults);
 	}
-
+	
 	register(option, value){
 		this.registeredDefaults[option] = value;
 	}
-
+	
 	generate(defaultOptions, userOptions = {}){
-		var output = Object.assign({}, this.registeredDefaults);
-
+		var output = Object.assign({}, this.registeredDefaults),
+		warn = this.table.options.debugInvalidOptions || userOptions.debugInvalidOptions === true;
+		
 		Object.assign(output, defaultOptions);
-
-		if(userOptions.debugInvalidOptions !== false || this.table.options.debugInvalidOptions){
-			for (let key in userOptions){
-				if(!output.hasOwnProperty(key)){
+		
+		for (let key in userOptions){
+			if(!output.hasOwnProperty(key)){
+				if(warn){
 					console.warn("Invalid " + this.msgType + " option:", key);
 				}
+
+				output[key] = userOptions.key;
 			}
 		}
-
+	
+		
 		for (let key in output){
 			if(key in userOptions){
 				output[key] = userOptions[key];
@@ -20111,7 +20146,7 @@ class OptionsList {
 				}
 			}
 		}
-
+		
 		return output;
 	}
 }
@@ -22615,7 +22650,7 @@ class RowManager extends CoreFeature{
 			data.forEach((item, i) => {
 				var row = this.addRow(item, pos, index, true);
 				rows.push(row);
-				this.dispatch("row-added", row, data, pos, index);
+				this.dispatch("row-added", row, item, pos, index);
 			});
 
 			this.refreshActiveData(refreshDisplayOnly ? "displayPipeline" : false, false, true);
@@ -23046,7 +23081,7 @@ class RowManager extends CoreFeature{
 	}
 	
 	setActiveRows(activeRows){
-		this.activeRows = activeRows;
+		this.activeRows = this.activeRows = Object.assign([], activeRows);
 		this.activeRowsCount = this.activeRows.length;
 	}
 	
@@ -24396,7 +24431,7 @@ function fitDataStretch(columns, forced){
 
 //resize columns to fit
 function fitColumns(columns, forced){
-	var totalWidth = this.table.rowManager.element.getBoundingClientRect().width; //table element width
+	var totalWidth = this.table.rowManager.element.clientWidth; //table element width
 	var fixedWidth = 0; //total width of columns with a defined width
 	var flexWidth = 0; //total width available to flexible columns
 	var flexGrowUnits = 0; //total number of widthGrow blocks across all columns
