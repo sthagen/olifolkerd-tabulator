@@ -300,7 +300,7 @@ export default class RowManager extends CoreFeature{
 		this.dispatchExternal("rowDeleted", row.getComponent());
 		
 		if(!this.displayRowsCount){
-			this._showPlaceholder();
+			this.tableEmpty();
 		}
 		
 		if(this.subscribedExternal("dataChanged")){
@@ -892,7 +892,7 @@ export default class RowManager extends CoreFeature{
 			this.renderer = new renderClass(this.table, this.element, this.tableElement);
 			this.renderer.initialize();
 			
-			if((this.table.element.clientHeight || this.table.options.height)){
+			if((this.table.element.clientHeight || this.table.options.height) && !(this.table.options.minHeight && this.table.options.maxHeight)){
 				this.fixedHeight = true;
 			}else{
 				this.fixedHeight = false;
@@ -918,6 +918,11 @@ export default class RowManager extends CoreFeature{
 			
 			if(this.firstRender){
 				this.firstRender = false;
+
+				if(!this.fixedHeight){
+					this.adjustTableSize();
+				}
+				
 				this.layoutRefresh(true);
 			}
 		}else{
@@ -958,6 +963,11 @@ export default class RowManager extends CoreFeature{
 		
 		this.renderer.clearRows();
 	}
+
+	tableEmpty(){
+		this.renderEmptyScroll();
+		this._showPlaceholder();
+	}
 	
 	_showPlaceholder(){
 		if(this.placeholder){
@@ -975,6 +985,7 @@ export default class RowManager extends CoreFeature{
 
 		// clear empty table placeholder min
 		this.tableElement.style.minWidth = "";
+		this.tableElement.style.display = "";
 	}
 	
 	_positionPlaceholder(){

@@ -102,7 +102,7 @@ export default class VirtualDomVertical extends Renderer{
 			this._virtualRenderFill((topRow === false ? this.rows.length - 1 : topRow), true, topOffset || 0);
 		}else{
 			this.clear();
-			this.table.rowManager._showPlaceholder();
+			this.table.rowManager.tableEmpty();
 		}
 
 		this.scrollColumns(left);
@@ -317,7 +317,7 @@ export default class VirtualDomVertical extends Renderer{
 			this.scrollTop = Math.min(this.scrollTop, this.elementVertical.scrollHeight - containerHeight);
 
 			//adjust for horizontal scrollbar if present (and not at top of table)
-			if(this.elementVertical.scrollWidth > this.elementVertical.offsetWidth && forceMove){
+			if(this.elementVertical.scrollWidth > this.elementVertical.clientWidth && forceMove){
 				this.scrollTop += this.elementVertical.offsetHeight - containerHeight;
 			}
 

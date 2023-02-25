@@ -262,7 +262,6 @@
 
 .tabulator .tabulator-header .tabulator-calcs-holder {
   box-sizing: border-box;
-  min-width: 600%;
   background: white !important;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   border-bottom: 1px solid #aaa;
@@ -274,10 +273,6 @@
 
 .tabulator .tabulator-header .tabulator-calcs-holder .tabulator-row .tabulator-col-resize-handle {
   display: none;
-}
-
-.tabulator .tabulator-header .tabulator-frozen-rows-holder {
-  min-width: 600%;
 }
 
 .tabulator .tabulator-header .tabulator-frozen-rows-holder:empty {

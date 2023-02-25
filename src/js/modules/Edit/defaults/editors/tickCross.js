@@ -30,21 +30,15 @@ export default function(cell, onRendered, success, cancel, editorParams){
 		input.indeterminate = true;
 	}
 	
-	if(this.table.browser != "firefox"){ //prevent blur issue on mac firefox
+	if(this.table.browser != "firefox" && this.table.browser != "safari"){ //prevent blur issue on mac firefox
 		onRendered(function(){
-			if(!cell._getSelf){
+			if(cell._getSelf){
 				input.focus({preventScroll: true});
 			}
 		});
 	}
 	
 	input.checked = trueValueSet ? value === editorParams.trueValue : (value === true || value === "true" || value === "True" || value === 1);
-	
-	onRendered(function(){
-		if(!cell._getSelf){
-			input.focus();
-		}
-	});
 	
 	function setValue(blur){
 		var checkedValue = input.checked;
@@ -82,7 +76,7 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	input.addEventListener("change", function(e){
 		success(setValue());
 	});
-	
+
 	input.addEventListener("blur", function(e){
 		success(setValue(true));
 	});

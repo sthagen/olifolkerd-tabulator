@@ -1,6 +1,7 @@
 //input element
 export default function(cell, onRendered, success, cancel, editorParams){
 	var inputFormat = editorParams.format,
+	vertNav = editorParams.verticalNavigation || "editor",
 	DT = inputFormat ? (window.DateTime || luxon.DateTime) : null, 
 	newDatetime;
 	
@@ -39,14 +40,14 @@ export default function(cell, onRendered, success, cancel, editorParams){
 			cellValue = newDatetime.toFormat("hh:mm");
 			
 		}else{
-			console.error("Editor Error - 'date' editor 'inputFormat' param is dependant on luxon.js");
+			console.error("Editor Error - 'date' editor 'format' param is dependant on luxon.js");
 		}
 	}
 	
 	input.value = cellValue;
 	
 	onRendered(function(){
-		if(!cell._getSelf){
+		if(cell._getSelf){
 			input.focus({preventScroll: true});
 			input.style.height = "100%";
 			
@@ -57,12 +58,26 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	});
 	
 	function onChange(){
-		var value = input.value;
+		var value = input.value,
+		luxTime;
 		
 		if(((cellValue === null || typeof cellValue === "undefined") && value !== "") || value !== cellValue){
 			
 			if(value && inputFormat){
-				value = DT.fromFormat(String(value), "hh:mm").toFormat(inputFormat);
+				luxTime = DT.fromFormat(String(value), "hh:mm");
+
+				switch(inputFormat){
+					case true:
+						value = luxTime;
+						break;
+
+					case "iso":
+						value = luxTime.toISO();
+						break;
+
+					default:
+						value = luxTime.toFormat(inputFormat);
+				}
 			}
 			
 			if(success(value)){
@@ -95,6 +110,14 @@ export default function(cell, onRendered, success, cancel, editorParams){
 			case 35:
 			case 36:
 				e.stopPropagation();
+				break;
+
+			case 38: //up arrow
+			case 40: //down arrow
+				if(vertNav == "editor"){
+					e.stopImmediatePropagation();
+					e.stopPropagation();
+				}
 				break;
 		}
 	});
