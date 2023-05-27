@@ -18,7 +18,7 @@ export default class Edit{
 		
 		this.initialValues = null; 
 		
-		this.isFilter = !cell._getSelf;
+		this.isFilter = cell.getType() === "header";
 		
 		this.filterTimeout = null;
 		this.filtered = false;
@@ -84,7 +84,7 @@ export default class Edit{
 		function clickStop(e){
 			e.stopPropagation();
 		}	
-	
+		
 		if(!this.isFilter){
 			this.input.style.height = "100%";
 			this.input.focus({preventScroll: true});
@@ -308,6 +308,7 @@ export default class Edit{
 				break;
 			
 			case 9: //tab
+				this._keyTab(e);
 				break;
 			
 			default:
@@ -353,6 +354,16 @@ export default class Edit{
 	//////////////////////////////////////
 	//////// Keyboard Navigation /////////
 	//////////////////////////////////////
+	
+	_keyTab(e){
+		if(this.params.autocomplete && this.lastAction === "typing"){
+			this._resolveValue(true);
+		}else{
+			if(this.focusedItem){
+				this._chooseItem(this.focusedItem, true);
+			}
+		}
+	}
 	
 	_keyUp(e){
 		var index = this.displayItems.indexOf(this.focusedItem);
@@ -991,7 +1002,7 @@ export default class Edit{
 	
 	_resolveValue(blur){
 		var output, initialValue;
-
+		
 		if(this.popup){
 			this.popup.hide(true);
 		}
