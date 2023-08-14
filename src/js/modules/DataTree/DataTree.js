@@ -67,6 +67,9 @@ class DataTree extends Module{
 						this.branchEl = options.dataTreeBranchElement;
 					}
 				}
+			}else{
+				this.branchEl = document.createElement("div");
+				this.branchEl.classList.add("tabulator-data-tree-branch-empty");
 			}
 
 			if(options.dataTreeCollapseElement){
@@ -570,7 +573,7 @@ class DataTree extends Module{
 		var config = row.modules.dataTree,
 		output = [];
 
-		if(config.children){
+		if(config && config.children){
 
 			if(!Array.isArray(config.children)){
 				config.children = this.generateChildren(row);
