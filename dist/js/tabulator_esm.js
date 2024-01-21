@@ -1,4 +1,4 @@
-/* Tabulator v5.5.2 (c) Oliver Folkerd 2023 */
+/* Tabulator v5.5.2 (c) Oliver Folkerd 2024 */
 class CoreFeature{
 
 	constructor(table){
@@ -152,6 +152,25 @@ class Helpers{
 			top: box.top + window.pageYOffset - document.documentElement.clientTop,
 			left: box.left + window.pageXOffset - document.documentElement.clientLeft
 		};
+	}
+
+	static retrieveNestedData(separator, field, data){
+		var structure = separator ? field.split(separator) : [field],
+		length = structure.length,
+		output;
+
+		for(let i = 0; i < length; i++){
+
+			data = data[structure[i]];
+
+			output = data;
+
+			if(!data){
+				break;
+			}
+		}
+
+		return output;
 	}
 
 	static deepClone(obj, clone, list = []){
@@ -975,7 +994,7 @@ class Ajax extends Module{
 				ajaxParams = ajaxParams.call(this.table);
 			}
 			
-			params = Object.assign(params, ajaxParams);
+			params = Object.assign(Object.assign({}, ajaxParams), params);
 		}		
 		
 		return params;
@@ -7666,21 +7685,24 @@ class Edit$1 extends Module{
 				if(newRow){
 					cell.getElement().firstChild.blur();
 					
-					if(newRow === true){
-						newRow = this.table.addRow({});
-					}else {
-						if(typeof newRow == "function"){
-							newRow = this.table.addRow(newRow(cell.row.getComponent()));
+					if(!this.invalidEdit){
+						
+						if(newRow === true){
+							newRow = this.table.addRow({});
 						}else {
-							newRow = this.table.addRow(Object.assign({}, newRow));
+							if(typeof newRow == "function"){
+								newRow = this.table.addRow(newRow(cell.row.getComponent()));
+							}else {
+								newRow = this.table.addRow(Object.assign({}, newRow));
+							}
 						}
-					}
-					
-					newRow.then(() => {
-						setTimeout(() => {
-							cell.getComponent().navigateNext();
+						
+						newRow.then(() => {
+							setTimeout(() => {
+								cell.getComponent().navigateNext();
+							});
 						});
-					});
+					}
 				}
 			}
 		}
@@ -7936,7 +7958,7 @@ class Edit$1 extends Module{
 			this.cancelEdit();
 		}
 	}
-
+	
 	rowEditableCheck(row){
 		row.getCells().forEach((cell) => {
 			if(cell.column.modules.edit && typeof cell.column.modules.edit.check === "function"){
@@ -7957,30 +7979,30 @@ class Edit$1 extends Module{
 		//set column editor
 		switch(typeof column.definition.editor){
 			case "string":
-				if(this.editors[column.definition.editor]){
-					config.editor = this.editors[column.definition.editor];
-				}else {
-					console.warn("Editor Error - No such editor found: ", column.definition.editor);
-				}
-				break;
+			if(this.editors[column.definition.editor]){
+				config.editor = this.editors[column.definition.editor];
+			}else {
+				console.warn("Editor Error - No such editor found: ", column.definition.editor);
+			}
+			break;
 			
 			case "function":
-				config.editor = column.definition.editor;
-				break;
+			config.editor = column.definition.editor;
+			break;
 			
 			case "boolean":
-				if(column.definition.editor === true){
-					if(typeof column.definition.formatter !== "function"){
-						if(this.editors[column.definition.formatter]){
-							config.editor = this.editors[column.definition.formatter];
-						}else {
-							config.editor = this.editors["input"];
-						}
+			if(column.definition.editor === true){
+				if(typeof column.definition.formatter !== "function"){
+					if(this.editors[column.definition.formatter]){
+						config.editor = this.editors[column.definition.formatter];
 					}else {
-						console.warn("Editor Error - Cannot auto lookup editor for a custom formatter: ", column.definition.formatter);
+						config.editor = this.editors["input"];
 					}
+				}else {
+					console.warn("Editor Error - Cannot auto lookup editor for a custom formatter: ", column.definition.formatter);
 				}
-				break;
+			}
+			break;
 		}
 		
 		if(config.editor){
@@ -8123,25 +8145,25 @@ class Edit$1 extends Module{
 	
 	allowEdit(cell) {
 		var check = cell.column.modules.edit ? true : false;
-
+		
 		if(cell.column.modules.edit){
 			switch(typeof cell.column.modules.edit.check){
 				case "function":
-					if(cell.row.initialized){
-						check = cell.column.modules.edit.check(cell.getComponent());
-					}
-					break;
-
+				if(cell.row.initialized){
+					check = cell.column.modules.edit.check(cell.getComponent());
+				}
+				break;
+				
 				case "string":
-					check = !!cell.row.data[cell.column.modules.edit.check];
-					break;
-
+				check = !!cell.row.data[cell.column.modules.edit.check];
+				break;
+				
 				case "boolean":
-					check = cell.column.modules.edit.check;
-					break;
+				check = cell.column.modules.edit.check;
+				break;
 			}
 		}
-
+		
 		return check;
 	}
 	
@@ -8153,7 +8175,7 @@ class Edit$1 extends Module{
 		cellEditor, component, params;
 		
 		//prevent editing if another cell is refusing to leave focus (eg. validation fail)
-
+		
 		if(this.currentCell){
 			if(!this.invalidEdit && this.currentCell !== cell){
 				this.cancelEdit();
@@ -10058,7 +10080,8 @@ function link(cell, formatterParams, onRendered){
 	if(label){
 		if(formatterParams.urlField){
 			data = cell.getData();
-			value = data[formatterParams.urlField];
+
+			value = Helpers.retrieveNestedData(this.table.options.nestedFieldSeparator, formatterParams.urlField, data);
 		}
 
 		if(formatterParams.url){
@@ -16502,7 +16525,7 @@ class Persistence extends Module{
 	}
 
 	setColumnLayout(layout){
-		this.table.columnManager.setColumns(this.mergeDefinition(this.table.options.columns, layout));
+		this.table.columnManager.setColumns(this.mergeDefinition(this.table.options.columns, layout, true));
 		return true;
 	}
 
@@ -16568,7 +16591,7 @@ class Persistence extends Module{
 	}
 
 	//merge old and new column definitions
-	mergeDefinition(oldCols, newCols){
+	mergeDefinition(oldCols, newCols, mergeAllNew){
 		var output = [];
 
 		newCols = newCols || [];
@@ -16578,7 +16601,9 @@ class Persistence extends Module{
 			keys;
 
 			if(from){
-				if(this.config.columns === true || this.config.columns == undefined){
+				if(mergeAllNew){
+					keys = Object.keys(column);
+				}else if(this.config.columns === true || this.config.columns == undefined){
 					keys =  Object.keys(from);
 					keys.push("width");
 				}else {
@@ -21565,7 +21590,7 @@ class ColumnManager extends CoreFeature {
 		var matches = [];
 		
 		Object.keys(this.columnsByField).forEach((field) => {
-			var fieldRoot = field.split(".")[0];
+			var fieldRoot = this.table.options.nestedFieldSeparator ? field.split(this.table.options.nestedFieldSeparator)[0] : field;
 			if(fieldRoot === root){
 				matches.push(this.columnsByField[field]);
 			}
@@ -23365,7 +23390,7 @@ class RowManager extends CoreFeature{
 	refreshPipelines(handler, stage, index, renderInPosition){
 		this.dispatch("data-refreshing");
 		
-		if(!handler){
+		if(!handler || !this.activeRowsPipeline[0]){
 			this.activeRowsPipeline[0] = this.rows.slice(0);
 		}
 		
@@ -23375,7 +23400,6 @@ class RowManager extends CoreFeature{
 			//handle case where all data needs refreshing
 			
 			case "dataPipeline":
-			
 				for(let i = index; i < this.dataPipeline.length; i++){
 					let result = this.dataPipeline[i].handler(this.activeRowsPipeline[i].slice(0));
 				
