@@ -596,8 +596,9 @@ class Edit extends Module{
 		allowEdit = true,
 		rendered = function(){},
 		element = cell.getElement(),
+		editFinished = false,
 		cellEditor, component, params;
-		
+
 		//prevent editing if another cell is refusing to leave focus (eg. validation fail)
 		
 		if(this.currentCell){
@@ -609,12 +610,14 @@ class Edit extends Module{
 		
 		//handle successful value change
 		function success(value){
-			if(self.currentCell === cell){
+			if(self.currentCell === cell && !editFinished){
 				var valid = self.chain("edit-success", [cell, value], true, true);
-				
+
 				if(valid === true || self.table.options.validationMode === "highlight"){
+
+					editFinished = true;
+
 					self.clearEditor();
-					
 					
 					if(!cell.modules.edit){
 						cell.modules.edit = {};
@@ -627,12 +630,17 @@ class Edit extends Module{
 					}
 					
 					cell.setValue(value, true);
-					
+
 					return valid === true;
 				}else{
+					editFinished = true;
 					self.invalidEdit = true;
 					self.focusCellNoEvent(cell, true);
 					rendered();
+
+					setTimeout(() => {
+						editFinished = false;
+					}, 10);
 					return false;
 				}
 			}else{
@@ -642,7 +650,9 @@ class Edit extends Module{
 		
 		//handle aborted edit
 		function cancel(){
-			if(self.currentCell === cell){
+			// editFinished = true;
+
+			if(self.currentCell === cell && !editFinished){
 				self.cancelEdit();
 			}else{
 				// console.warn("Edit Success Error - cannot call cancel on a cell that is no longer being edited");
