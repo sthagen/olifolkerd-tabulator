@@ -1,4 +1,4 @@
-/* Tabulator v6.0.0 (c) Oliver Folkerd 2024 */
+/* Tabulator v6.0.1 (c) Oliver Folkerd 2024 */
 class CoreFeature{
 
 	constructor(table){
@@ -28300,11 +28300,11 @@ class Tabulator extends ModuleBinder{
 		this._buildElement();
 		
 		this._initializeTable();
+
+		this.initialized = true;
 		
 		this._loadInitialData()
 			.finally(() => {
-				this.initialized = true;
-
 				this.eventBus.dispatch("table-initialized");
 				this.externalEvents.dispatch("tableBuilt");
 			});	
