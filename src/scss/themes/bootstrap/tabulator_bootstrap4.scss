@@ -1,5 +1,6 @@
-@import "functions4.scss";
-@import "variables4.scss";
+@use "sass:color";
+@use "variables4.scss" as *;
+@use "../../tabulator.scss" as *;
 
 // Style conversion file, bootstrap to tabulator
 
@@ -38,7 +39,7 @@ $footerActiveColor:$pagination-active-color !default; //footer bottom active tex
 
 $table-cell-padding-sm: 5px;
 
-@import "../../tabulator.scss";
+@use "../../tabulator.scss";
 
 .tabulator{
 	background-color: $backgroundColor;

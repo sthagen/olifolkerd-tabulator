@@ -1,3 +1,4 @@
+@use "sass:color";
 
 //Main Theme Variables
 $backgroundColor: #222 !default; //background color of tabulator
@@ -48,7 +49,7 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 
 
 
-@import "../tabulator.scss";
+@use "../tabulator.scss";
 
 //Tabulator Containing Element
 .tabulator{
@@ -77,10 +78,10 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 		}
 		
 		.tabulator-calcs-holder{
-			background:darken($headerBackgroundColor, 10%) !important;
+			background:color.adjust($headerBackgroundColor, $lightness: -10%) !important;
 			
 			.tabulator-row{
-				background:darken($headerBackgroundColor, 10%) !important;
+				background:color.adjust($headerBackgroundColor, $lightness: -10%) !important;
 			}
 		}
 	}
@@ -89,10 +90,10 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 	.tabulator-footer{
 		
 		.tabulator-calcs-holder{
-			background:darken($footerBackgroundColor, 5%) !important;
+			background:color.adjust($footerBackgroundColor, $lightness: -5%) !important;
 			
 			.tabulator-row{
-				background:darken($footerBackgroundColor, 5%) !important;
+				background:color.adjust($footerBackgroundColor, $lightness: -5%) !important;
 			}
 		}
 		

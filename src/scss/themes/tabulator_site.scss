@@ -1,3 +1,4 @@
+@use "sass:color";
 
 //Main Theme Variables
 $backgroundColor: #fff !default; //background color of tabulator
@@ -44,7 +45,7 @@ $rangeHeaderSelectedTextColor: #FFFFFF !default; //header text color when select
 $rangeHeaderHighlightBackground: $rowSelectedBackground !default; //header background color when highlighted
 $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when highlighted
 
-@import "../tabulator.scss";
+@use "../tabulator.scss";
 
 .tabulator{
 	border:none;
@@ -74,13 +75,13 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 		}
 
 		.tabulator-calcs-holder{
-			background:lighten($headerBackgroundColor, 10%) !important;
+			background:color.adjust($headerBackgroundColor, $lightness: 10%) !important;
 
 			border-top:1px solid $rowBorderColor;
 			border-bottom:none;
 
 			.tabulator-row{
-				background:lighten($headerBackgroundColor, 10%) !important;
+				background:color.adjust($headerBackgroundColor, $lightness: 10%) !important;
 			}
 		}
 	}
@@ -95,7 +96,7 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 			.tabulator-row{
 				&.tabulator-calcs{
 					font-weight: bold;
-					background:lighten($headerBackgroundColor, 15%) !important;
+					background:color.adjust($headerBackgroundColor, $lightness: 15%) !important;
 					color:$headerTextColor;
 				}
 
@@ -118,13 +119,13 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 		.tabulator-calcs-holder{
 			margin:-8px -10px 8px -10px;
 
-			background:lighten($footerBackgroundColor, 10%) !important;
+			background:color.adjust($footerBackgroundColor, $lightness: 10%) !important;
 
 			border-top:none;
 			border-bottom:1px solid $rowBorderColor;
 
 			.tabulator-row{
-				background:lighten($footerBackgroundColor, 10%) !important;
+				background:color.adjust($footerBackgroundColor, $lightness: 10%) !important;
 				color:$headerTextColor !important;
 			}
 		}
@@ -203,7 +204,7 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 
 		@media (hover:hover) and (pointer:fine){
 			&:hover{
-				background-color:darken($headerBackgroundColor, 10%);
+				background-color:color.adjust($headerBackgroundColor, $lightness: -10%);
 			}
 		}
 
@@ -223,7 +224,7 @@ $rangeHeaderTextHighlightBackground: #000000 !default; //header text color when 
 
 		@media (hover:hover) and (pointer:fine){
 			&:hover{
-				background-color:darken($headerBackgroundColor, 10%);
+				background-color:color.adjust($headerBackgroundColor, $lightness: -10%);
 			}
 		}
 

@@ -27,7 +27,7 @@ export default class FrozenRows extends Module{
 
 		this.topElement.classList.add("tabulator-frozen-rows-holder");
 		
-		fragment.appendChild(document.createElement("br"));
+		//fragment.appendChild(document.createElement("br"));
 		fragment.appendChild(this.topElement);
 
 		// this.table.columnManager.element.append(this.topElement);

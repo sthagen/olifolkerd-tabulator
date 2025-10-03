@@ -11473,7 +11473,7 @@ class FrozenRows extends Module{
 
 		this.topElement.classList.add("tabulator-frozen-rows-holder");
 		
-		fragment.appendChild(document.createElement("br"));
+		//fragment.appendChild(document.createElement("br"));
 		fragment.appendChild(this.topElement);
 
 		// this.table.columnManager.element.append(this.topElement);
@@ -17841,7 +17841,7 @@ class ReactiveData extends Module{
 					enumerable: true,
 					configurable:true,
 					writable:true,
-					value: this.origFuncs.key,
+					value: this.origFuncs[key],
 				});
 			}
 		}
@@ -18629,7 +18629,7 @@ class ResizeTable extends Module{
 	
 	initializeVisibilityObserver(){
 		this.visibilityObserver = new IntersectionObserver((entries) => {
-			this.visible = entries[0].isIntersecting;
+			this.visible = entries[entries.length - 1].isIntersecting;
 			
 			if(!this.initialized){
 				this.initialized = true;
@@ -19751,8 +19751,8 @@ class Range extends CoreFeature{
 		this.right = 0;
 		
 		this.table = table;
-		this.start = {row:0, col:0};
-		this.end = {row:0, col:0};
+		this.start = {row:undefined, col:undefined};
+		this.end = {row:undefined, col:undefined};
 
 		if(this.rangeManager.rowHeader){
 			this.left = 1;
@@ -20683,13 +20683,15 @@ class SelectRange extends Module {
 	///////////////////////////////////
 	
 	keyNavigate(dir, e){
-		if(this.navigate(false, false, dir));
-		e.preventDefault();
+		if(this.navigate(false, false, dir)){
+			e.preventDefault();
+		}
 	}
 	
 	keyNavigateRange(e, dir, jump, expand){
-		if(this.navigate(jump, expand, dir));
-		e.preventDefault();
+		if(this.navigate(jump, expand, dir)){
+			e.preventDefault();
+		}
 	}
 	
 	navigate(jump, expand, dir) {
@@ -20807,9 +20809,8 @@ class SelectRange extends Module {
 			}
 
 			this.layoutElement();
-			
-			return true;
 		}
+		return true;
 	}
 	
 	rangeRemoved(removed){
@@ -20823,7 +20824,7 @@ class SelectRange extends Module {
 			}
 		}
 		
-		this.layoutElement();
+		this.layoutElement(true);
 	}
 	
 	findJumpRow(column, rows, reverse, emptyStart, emptySide){
@@ -20965,11 +20966,11 @@ class SelectRange extends Module {
 		}
 		
 		if (event.shiftKey) {
-			this.activeRange.setBounds(false, element);
+			this.activeRange.setBounds(false, element, true);
 		} else if (event.ctrlKey) {
-			this.addRange().setBounds(element);
+			this.addRange().setBounds(element, undefined, true);
 		} else {
-			this.resetRanges().setBounds(element);
+			this.resetRanges().setBounds(element, undefined, true);
 		}
 	}
 	
@@ -26791,10 +26792,14 @@ class RowManager extends CoreFeature{
 			//check if the table has changed size when dealing with variable height tables
 			if(!this.fixedHeight && initialHeight != this.element.clientHeight){
 				resized = true;
-				if(this.subscribed("table-resize")){
-					this.dispatch("table-resize");
-				}else {
-					this.redraw();
+				if(!this.redrawing){ // prevent recursive redraws		
+					this.redrawing = true;
+					if(this.subscribed("table-resize")){
+						this.dispatch("table-resize");
+					}else {
+						this.redraw();
+					}
+					this.redrawing = false;
 				}
 			}
 			
@@ -28865,7 +28870,7 @@ class Tabulator extends ModuleBinder{
 		var style = window.getComputedStyle(this.element);
 		
 		switch(this.options.textDirection){
-			case"auto":
+			case "auto":
 				if(style.direction !== "rtl"){
 					break;
 				}
@@ -29006,6 +29011,7 @@ class Tabulator extends ModuleBinder{
 		//clear DOM
 		while(element.firstChild) element.removeChild(element.firstChild);
 		element.classList.remove("tabulator");
+		element.removeAttribute("tabulator-layout");
 
 		this.externalEvents.dispatch("tableDestroyed");
 	}
@@ -29597,27 +29603,23 @@ class Tabulator extends ModuleBinder{
 	}
 }
 
-var Tabulator$1 = Tabulator;
-
 //tabulator with all modules installed
 
-class TabulatorFull extends Tabulator$1 {
+class TabulatorFull extends Tabulator {
 	static extendModule(){
-		Tabulator$1.initializeModuleBinder(allModules);
-		Tabulator$1._extendModule(...arguments);
+		Tabulator.initializeModuleBinder(allModules);
+		Tabulator._extendModule(...arguments);
 	}
 
 	static registerModule(){
-		Tabulator$1.initializeModuleBinder(allModules);
-		Tabulator$1._registerModule(...arguments);
+		Tabulator.initializeModuleBinder(allModules);
+		Tabulator._registerModule(...arguments);
 	}
 
 	constructor(element, options, modules){
 		super(element, options, allModules);
 	}
 }
-
-var TabulatorFull$1 = TabulatorFull;
 
 class PseudoRow {
 
@@ -29667,5 +29669,5 @@ class PseudoRow {
 	rendered(){}
 }
 
-export { Accessor as AccessorModule, Ajax as AjaxModule, CalcComponent, CellComponent, Clipboard as ClipboardModule, ColumnCalcs as ColumnCalcsModule, ColumnComponent, DataTree as DataTreeModule, Download as DownloadModule, Edit as EditModule, Export as ExportModule, Filter as FilterModule, Format as FormatModule, FrozenColumns as FrozenColumnsModule, FrozenRows as FrozenRowsModule, GroupComponent, GroupRows as GroupRowsModule, History as HistoryModule, HtmlTableImport as HtmlTableImportModule, Import as ImportModule, Interaction as InteractionModule, Keybindings as KeybindingsModule, Menu as MenuModule, Module, MoveColumns as MoveColumnsModule, MoveRows as MoveRowsModule, Mutator as MutatorModule, Page as PageModule, Persistence as PersistenceModule, Popup as PopupModule, Print as PrintModule, PseudoRow, RangeComponent, ReactiveData as ReactiveDataModule, Renderer, ResizeColumns as ResizeColumnsModule, ResizeRows as ResizeRowsModule, ResizeTable as ResizeTableModule, ResponsiveLayout as ResponsiveLayoutModule, RowComponent, SelectRange as SelectRangeModule, SelectRow as SelectRowModule, SheetComponent, Sort as SortModule, Spreadsheet as SpreadsheetModule, Tabulator$1 as Tabulator, TabulatorFull$1 as TabulatorFull, Tooltip as TooltipModule, Validate as ValidateModule };
+export { Accessor as AccessorModule, Ajax as AjaxModule, CalcComponent, CellComponent, Clipboard as ClipboardModule, ColumnCalcs as ColumnCalcsModule, ColumnComponent, DataTree as DataTreeModule, Download as DownloadModule, Edit as EditModule, Export as ExportModule, Filter as FilterModule, Format as FormatModule, FrozenColumns as FrozenColumnsModule, FrozenRows as FrozenRowsModule, GroupComponent, GroupRows as GroupRowsModule, History as HistoryModule, HtmlTableImport as HtmlTableImportModule, Import as ImportModule, Interaction as InteractionModule, Keybindings as KeybindingsModule, Menu as MenuModule, Module, MoveColumns as MoveColumnsModule, MoveRows as MoveRowsModule, Mutator as MutatorModule, Page as PageModule, Persistence as PersistenceModule, Popup as PopupModule, Print as PrintModule, PseudoRow, RangeComponent, ReactiveData as ReactiveDataModule, Renderer, ResizeColumns as ResizeColumnsModule, ResizeRows as ResizeRowsModule, ResizeTable as ResizeTableModule, ResponsiveLayout as ResponsiveLayoutModule, RowComponent, SelectRange as SelectRangeModule, SelectRow as SelectRowModule, SheetComponent, Sort as SortModule, Spreadsheet as SpreadsheetModule, Tabulator, TabulatorFull, Tooltip as TooltipModule, Validate as ValidateModule };
 //# sourceMappingURL=tabulator_esm.js.map

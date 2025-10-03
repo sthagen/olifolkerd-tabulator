@@ -1,5 +1,6 @@
-
-@import "variables_table.scss";
+@use "sass:color";
+@use "variables.scss" as *;
+@use "variables_table.scss" as *;
 
 //Main Theme Variables
 $backgroundColor: $background !default; //background color of tabulator
@@ -19,6 +20,7 @@ $sortArrowInactive: #bbb !default;
 //row theming
 $rowBorderColor:#ddd !default; //table border color
 $rowTextColor:#333 !default; //table text color
+$rowBackgroundColor:#f3f3f3 !default; //table row background color
 
 $rowSelectedBackground: #9ABCEA !default; //row background color when selected
 $rowSelectedBackgroundHover: #769BCC !default;//row background color when selected and hovered
@@ -33,8 +35,6 @@ $footerTextColor:#555 !default; //footer text color
 $footerBorderColor:#aaa !default; //footer border color
 $footerSeparatorColor:#999 !default; //footer bottom separator color
 $footerActiveColor:#d00 !default; //footer bottom active text color
-
-@import "../../tabulator.scss";
 
 .tabulator{
 	width: 100%;
@@ -72,7 +72,7 @@ $footerActiveColor:#d00 !default; //footer bottom active text color
 			background-color:transparent;
 			.tabulator-row{
 				&.tabulator-calcs{
-					background:darken($background, 5%) !important;
+					background:color.adjust($background, $lightness: -5%) !important;
 
 					&.tabulator-calcs-top{
 						border-bottom:2px solid $rowBorderColor;
@@ -104,10 +104,10 @@ $footerActiveColor:#d00 !default; //footer bottom active text color
 		.tabulator-calcs-holder{
 			margin:(-$footerVerticalPadding) (-$footerHorizontalPadding) $footerVerticalPadding (-$footerHorizontalPadding);
 
-			background:lighten($footerBackground, 5%) !important;
+			background:color.adjust($footerBackground, $lightness: 5%) !important;
 
 			.tabulator-row{
-				background:lighten($footerBackground, 5%) !important;
+				background:color.adjust($footerBackground, $lightness: 5%) !important;
 			}
 
 			&:only-child{
