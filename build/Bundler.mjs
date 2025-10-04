@@ -8,7 +8,6 @@ import license from 'rollup-plugin-license';
 import {globbySync} from 'globby';
 import fs from 'fs-extra';
 
-import sass from "rollup-plugin-sass";
 import postcss from "rollup-plugin-postcss";
 
 export default class Bundler{
@@ -128,15 +127,12 @@ export default class Bundler{
 					format: "es",
 				},
 				plugins: [
-					sass({
-						api: "modern",
-						processor: postcss({
-							modules: false,
-							extract: true,
-							minimize: minify,
-							sourceMap: true,
-							plugins: [require('postcss-prettify')]
-						}),
+					postcss({
+						modules: false,
+						extract: true,
+						minimize: minify,
+						sourceMap: true,
+						plugins: [require('postcss-prettify')]
 					}),
 				],
 				onwarn:this._suppressUnnecessaryWarnings.bind(this),

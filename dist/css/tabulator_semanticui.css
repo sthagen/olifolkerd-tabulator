@@ -1,3 +1,876 @@
-const tabulator_semanticui = "/*******************************\n         Site Settings\n*******************************/\n/*-------------------\n       Fonts\n--------------------*/\n/*-------------------\n      Base Sizes\n--------------------*/\n/* This is the single variable that controls them all */\n/* The size of page text  */\n/*-------------------\n  Exact Pixel Values\n--------------------*/\n/*\n  These are used to specify exact pixel values in em\n  for things like borders that remain constantly\n  sized as emSize adjusts\n\n  Since there are many more sizes than names for sizes,\n  these are named by their original pixel values.\n\n*/\n/*-------------------\n    Border Radius\n--------------------*/\n/* See Power-user section below\n   for explanation of $px variables\n*/\n/*-------------------\n      Site Colors\n--------------------*/\n/*---  Colors  ---*/\n/*---  Light Colors  ---*/\n/*---   Neutrals  ---*/\n/*--- Colored Backgrounds ---*/\n/*--- Colored Text ---*/\n/*--- Colored Headers ---*/\n/*--- Colored Border ---*/\n/*-------------------\n     Alpha Colors\n--------------------*/\n/*-------------------\n    Brand Colors\n--------------------*/\n/*--------------\n  Page Heading\n---------------*/\n/*-------------------\n        Page\n--------------------*/\n/*--------------\n   Form Input\n---------------*/\n/* This adjusts the default form input across all elements */\n/* Input Text Color */\n/* Line Height Default For Inputs in Browser (Descendors are 17px at 14px base em) */\n/*-------------------\n    Focused Input\n--------------------*/\n/* Used on inputs, textarea etc */\n/* Used on dropdowns, other larger blocks */\n/*-------------------\n        Sizes\n--------------------*/\n/*\n  Sizes are all expressed in terms of 14px/em (default em)\n  This ensures these \"ratios\" remain constant despite changes in EM\n*/\n/*-------------------\n      Paragraph\n--------------------*/\n/*-------------------\n       Links\n--------------------*/\n/*-------------------\n  Highlighted Text\n--------------------*/\n/*-------------------\n       Em Sizes\n--------------------*/\n/*\n  This rounds $size values to the closest pixel then expresses that value in (r)em.\n  This ensures all size values round to exact pixels\n*/\n/* em */\n/* rem */\n/*-------------------\n       Loader\n--------------------*/\n/*-------------------\n        Grid\n--------------------*/\n/*-------------------\n     Transitions\n--------------------*/\n/*-------------------\n     Breakpoints\n--------------------*/\n/* Columns */\n/*******************************\n           Power-User\n*******************************/\n/*-------------------\n    Emotive Colors\n--------------------*/\n/* Positive */\n/* Negative */\n/* Info */\n/* Warning */\n/*-------------------\n        Paths\n--------------------*/\n/* For source only. Modified in gulp for dist */\n/*-------------------\n       Icons\n--------------------*/\n/* Maximum Glyph Width of Icon */\n/*-------------------\n     Neutral Text\n--------------------*/\n/*-------------------\n     Brand Colors\n--------------------*/\n/*-------------------\n      Borders\n--------------------*/\n/*-------------------\n       Accents\n--------------------*/\n/* Differentiating Neutrals */\n/* Differentiating Layers */\n/*-------------------\n    Derived Values\n--------------------*/\n/* Loaders Position Offset */\n/* Rendered Scrollbar Width */\n/* Maximum Single Character Glyph Width, aka Capital \"W\" */\n/* Used to match floats with text */\n/* Header Spacing */\n/* Minimum Mobile Width */\n/* Positive / Negative Dupes */\n/* Responsive */\n/*******************************\n             States\n*******************************/\n/*-------------------\n      Disabled\n--------------------*/\n/*-------------------\n        Hover\n--------------------*/\n/*---  Shadows  ---*/\n/*---  Colors  ---*/\n/*---  Emotive  ---*/\n/*---  Brand   ---*/\n/*---  Dark Tones  ---*/\n/*---  Light Tones  ---*/\n/*-------------------\n        Focus\n--------------------*/\n/*---  Colors  ---*/\n/*---  Emotive  ---*/\n/*---  Brand   ---*/\n/*---  Dark Tones  ---*/\n/*---  Light Tones  ---*/\n/*-------------------\n    Down (:active)\n--------------------*/\n/*---  Colors  ---*/\n/*---  Emotive  ---*/\n/*---  Brand   ---*/\n/*---  Dark Tones  ---*/\n/*---  Light Tones  ---*/\n/*-------------------\n        Active\n--------------------*/\n/*---  Colors  ---*/\n/*---  Emotive  ---*/\n/*---  Brand   ---*/\n/*---  Dark Tones  ---*/\n/*---  Light Tones  ---*/\n/*******************************\n             Table\n*******************************/\n/*-------------------\n       Element\n--------------------*/\n/*--------------\n     Parts\n---------------*/\n/* Table Row */\n/* Table Cell */\n/* Table Header */\n/* Table Footer */\n/* Responsive Size */\n/*-------------------\n       Types\n--------------------*/\n/* Definition */\n/*--------------\n    Couplings\n---------------*/\n/*--------------\n     States\n---------------*/\n/* Positive */\n/* Negative */\n/* Error */\n/* Warning */\n/* Active */\n/*--------------\n     Types\n---------------*/\n/* Attached */\n/* Striped */\n/* Selectable */\n/* Sortable */\n/* Colors */\n/* Inverted */\n/* Basic */\n/* Padded */\n/* Compact */\n/* Sizes */\n.tabulator {\n  width: 100%;\n  margin: 1em 0em;\n  border: 1px solid rgba(34, 36, 38, 0.15);\n  box-shadow: none;\n  border-radius: 0.2857142857rem;\n  color: rgba(0, 0, 0, 0.87);\n}\n.tabulator .tabulator-header {\n  border-right: none;\n  border-bottom: 1px solid rgba(34, 36, 38, 0.1);\n  background-color: #F9FAFB;\n  box-shadow: none;\n  color: rgba(0, 0, 0, 0.87);\n  font-style: none;\n  font-weight: bold;\n  text-transform: none;\n}\n.tabulator .tabulator-header .tabulator-col {\n  border-right: none;\n  background-color: #F9FAFB;\n}\n.tabulator .tabulator-header .tabulator-col .tabulator-col-content {\n  padding: 0.9285714286em 0.7857142857em;\n}\n.tabulator .tabulator-tableholder .tabulator-table {\n  background-color: transparent;\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs {\n  background: rgb(242.25, 242.25, 242.25) !important;\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs.tabulator-calcs-top {\n  border-bottom: 2px solid #ddd;\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs.tabulator-calcs-bottom {\n  border-top: 2px solid #ddd;\n}\n.tabulator .tabulator-footer {\n  padding: 0.7857142857em 0.7857142857em;\n  border-top: 1px solid rgba(34, 36, 38, 0.15);\n  box-shadow: none;\n  background: #F9FAFB;\n  text-align: right;\n  color: rgba(0, 0, 0, 0.87);\n  font-style: normal;\n  font-weight: normal;\n  text-transform: none;\n}\n.tabulator .tabulator-footer .tabulator-calcs-holder {\n  margin: -0.7857142857em -0.7857142857em 0.7857142857em -0.7857142857em;\n  background: hsl(210, 20%, 103.0392156863%) !important;\n}\n.tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {\n  background: hsl(210, 20%, 103.0392156863%) !important;\n}\n.tabulator .tabulator-footer .tabulator-calcs-holder:only-child {\n  margin-bottom: -0.7857142857em;\n  border-bottom: none;\n}\n.tabulator .tabulator-footer .tabulator-spreadsheet-tabs {\n  margin-top: calc(-0.78571em - 5px);\n}\n.tabulator .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab.tabulator-spreadsheet-tab-active {\n  color: #d00;\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.positive, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.positive {\n  box-shadow: 0px 0px 0px #A3C293 inset;\n  background: #FCFFF5 !important;\n  color: #21BA45 !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.positive:hover, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.positive:hover {\n    background: rgb(247.41, 255, 229.7) !important;\n    color: rgb(19.4825342466, 174.0174657534, 55.8436946011) !important;\n  }\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.negative, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.negative {\n  box-shadow: 0px 0px 0px #E0B4B4 inset;\n  background: #FFF6F6 !important;\n  color: #DB2828 !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.negative:hover, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.negative:hover {\n    background: rgb(255, 230.7, 230.7) !important;\n    color: rgb(211.6849601594, 21.8150398406, 21.8150398406) !important;\n  }\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.error, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.error {\n  box-shadow: 0px 0px 0px #E0B4B4 inset;\n  background: #FFF6F6 !important;\n  color: #DB2828 !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.error:hover, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.error:hover {\n    background: rgb(255, 230.7, 230.7) !important;\n    color: rgb(208.7470119522, 34.9529880478, 34.9529880478) !important;\n  }\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.warning, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.warning {\n  box-shadow: 0px 0px 0px #C9BA9B inset;\n  background: #FFFAF3 !important;\n  color: #F2C037 !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.warning:hover, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.warning:hover {\n    background: rgb(255, 243.625, 227.7) !important;\n    color: rgb(241.0661971831, 187.4746478873, 40.6338028169) !important;\n  }\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active {\n  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.87) inset;\n  background: #E0E0E0 !important;\n  color: rgba(0, 0, 0, 0.87) !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active:hover, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active:hover {\n    background: rgb(247.41, 255, 229.7) !important;\n    color: rgb(19.4825342466, 174.0174657534, 55.8436946011) !important;\n  }\n}\n.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active, .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active {\n  pointer-events: none;\n  color: rgba(0, 0, 0, 0.2);\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.disabled:hover {\n    pointer-events: none;\n    color: rgba(0, 0, 0, 0.2);\n  }\n}\n.tabulator.inverted {\n  background: #333333;\n  color: rgba(255, 255, 255, 0.9);\n  border: none;\n}\n.tabulator.inverted .tabulator-header {\n  background-color: rgba(0, 0, 0, 0.15);\n  border-color: rgba(255, 255, 255, 0.1) !important;\n  color: rgba(255, 255, 255, 0.9);\n}\n.tabulator.inverted .tabulator-header .tabulator-col {\n  border-color: rgba(255, 255, 255, 0.1) !important;\n}\n.tabulator.inverted .tabulator-tableholder .tabulator-table .tabulator-row {\n  color: rgba(255, 255, 255, 0.9);\n  border: none;\n}\n.tabulator.inverted .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  border-color: rgba(255, 255, 255, 0.1) !important;\n}\n.tabulator.inverted .tabulator-footer {\n  background: #FFFFFF;\n}\n.tabulator.striped .tabulator-row:nth-child(even) {\n  background-color: #f2f2f2;\n}\n.tabulator.celled {\n  border: 1px solid rgba(34, 36, 38, 0.15);\n}\n.tabulator.celled .tabulator-header .tabulator-col {\n  border-right: 1px solid rgba(34, 36, 38, 0.1);\n}\n.tabulator.celled .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  border-right: 1px solid rgba(34, 36, 38, 0.1);\n}\n.tabulator[class*=\"single line\"] .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  border-right: none;\n}\n.tabulator {\n  /* Red */\n}\n.tabulator.red {\n  border-top: 0.2em solid #DB2828;\n}\n.tabulator.inverted.red {\n  background-color: #DB2828 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Orange */\n}\n.tabulator.orange {\n  border-top: 0.2em solid #F2711C;\n}\n.tabulator.inverted.orange {\n  background-color: #F2711C !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Yellow */\n}\n.tabulator.yellow {\n  border-top: 0.2em solid #FBBD08;\n}\n.tabulator.inverted.yellow {\n  background-color: #FBBD08 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Olive */\n}\n.tabulator.olive {\n  border-top: 0.2em solid #B5CC18;\n}\n.tabulator.inverted.olive {\n  background-color: #B5CC18 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Green */\n}\n.tabulator.green {\n  border-top: 0.2em solid #21BA45;\n}\n.tabulator.inverted.green {\n  background-color: #21BA45 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Teal */\n}\n.tabulator.teal {\n  border-top: 0.2em solid #00B5AD;\n}\n.tabulator.inverted.teal {\n  background-color: #00B5AD !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Blue */\n}\n.tabulator.blue {\n  border-top: 0.2em solid #2185D0;\n}\n.tabulator.inverted.blue {\n  background-color: #2185D0 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Violet */\n}\n.tabulator.violet {\n  border-top: 0.2em solid #6435C9;\n}\n.tabulator.inverted.violet {\n  background-color: #6435C9 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Purple */\n}\n.tabulator.purple {\n  border-top: 0.2em solid #A333C8;\n}\n.tabulator.inverted.purple {\n  background-color: #A333C8 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Pink */\n}\n.tabulator.pink {\n  border-top: 0.2em solid #E03997;\n}\n.tabulator.inverted.pink {\n  background-color: #E03997 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Brown */\n}\n.tabulator.brown {\n  border-top: 0.2em solid #A5673F;\n}\n.tabulator.inverted.brown {\n  background-color: #A5673F !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Grey */\n}\n.tabulator.grey {\n  border-top: 0.2em solid #767676;\n}\n.tabulator.inverted.grey {\n  background-color: #767676 !important;\n  color: #FFFFFF !important;\n}\n.tabulator {\n  /* Black */\n}\n.tabulator.black {\n  border-top: 0.2em solid #1B1C1D;\n}\n.tabulator.inverted.black {\n  background-color: #1B1C1D !important;\n  color: #FFFFFF !important;\n}\n.tabulator.padded .tabulator-header .tabulator-col .tabulator-col-content {\n  padding: 1em 1em;\n}\n.tabulator.padded .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {\n  top: 20px;\n}\n.tabulator.padded .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  padding: 1em 1em;\n}\n.tabulator.padded.very .tabulator-header .tabulator-col .tabulator-col-content {\n  padding: 1.5em 1.5em;\n}\n.tabulator.padded.very .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {\n  top: 26px;\n}\n.tabulator.padded.very .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  padding: 1.5em 1.5em;\n}\n.tabulator.compact .tabulator-header .tabulator-col .tabulator-col-content {\n  padding: 0.5em 0.7em;\n}\n.tabulator.compact .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {\n  top: 12px;\n}\n.tabulator.compact .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  padding: 0.5em 0.7em;\n}\n.tabulator.compact.very .tabulator-header .tabulator-col .tabulator-col-content {\n  padding: 0.4em 0.6em;\n}\n.tabulator.compact.very .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {\n  top: 10px;\n}\n.tabulator.compact.very .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {\n  padding: 0.4em 0.6em;\n}\n\n.tabulator-row {\n  border-bottom: 1px solid rgba(34, 36, 38, 0.1);\n}\n.tabulator-row.tabulator-row-even {\n  background-color: #f3f3f3;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator-row.tabulator-selectable:hover {\n    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.87) inset;\n    background: #E0E0E0 !important;\n    color: rgba(0, 0, 0, 0.87) !important;\n  }\n}\n.tabulator-row.tabulator-selected {\n  background-color: #9ABCEA !important;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator-row.tabulator-selected:hover {\n    background-color: #769BCC !important;\n    cursor: pointer;\n  }\n}\n.tabulator-row.tabulator-moving {\n  pointer-events: none !important;\n}\n.tabulator-row .tabulator-cell {\n  padding: 0.7857142857em 0.7857142857em;\n  border-right: none;\n  vertical-align: middle;\n}\n.tabulator-row .tabulator-cell:last-of-type {\n  border-right: none;\n}\n.tabulator-row .tabulator-cell.tabulator-row-header {\n  border-bottom: none;\n}\n.tabulator-row .tabulator-cell .tabulator-responsive-collapse-toggle {\n  color: #fff;\n}\n.tabulator-row.tabulator-group {\n  background: #fafafa;\n}\n.tabulator-row.tabulator-group span {\n  color: #666;\n}\n\n.tabulator-menu {\n  background: #FFFFFF;\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator-menu .tabulator-menu-item:not(.tabulator-menu-item-disabled):hover {\n    background: #F9FAFB;\n  }\n}\n\n.tabulator-edit-select-list {\n  background: #FFFFFF;\n}\n.tabulator-edit-select-list .tabulator-edit-select-list-item.active {\n  color: #FFFFFF;\n}\n.tabulator-edit-select-list .tabulator-edit-select-list-item.active.focused {\n  outline: 1px solid rgba(255, 255, 255, 0.5);\n}\n@media (hover: hover) and (pointer: fine) {\n  .tabulator-edit-select-list .tabulator-edit-select-list-item:hover {\n    color: #FFFFFF;\n  }\n}\n.tabulator-edit-select-list .tabulator-edit-select-list-notice {\n  color: inherit;\n}\n\n.tabulator-print-table .tabulator-print-table-group {\n  background: #fafafa;\n}\n.tabulator-print-table .tabulator-print-table-group span {\n  color: #666;\n}";
+/*******************************
+         Site Settings
+*******************************/
 
-export { tabulator_semanticui as default };
+/*-------------------
+       Fonts
+--------------------*/
+
+/*-------------------
+      Base Sizes
+--------------------*/
+
+/* This is the single variable that controls them all */
+
+/* The size of page text  */
+
+/*-------------------
+  Exact Pixel Values
+--------------------*/
+
+/*
+  These are used to specify exact pixel values in em
+  for things like borders that remain constantly
+  sized as emSize adjusts
+
+  Since there are many more sizes than names for sizes,
+  these are named by their original pixel values.
+
+*/
+
+/*-------------------
+    Border Radius
+--------------------*/
+
+/* See Power-user section below
+   for explanation of $px variables
+*/
+
+/*-------------------
+      Site Colors
+--------------------*/
+
+/*---  Colors  ---*/
+
+/*---  Light Colors  ---*/
+
+/*---   Neutrals  ---*/
+
+/*--- Colored Backgrounds ---*/
+
+/*--- Colored Text ---*/
+
+/*--- Colored Headers ---*/
+
+/*--- Colored Border ---*/
+
+/*-------------------
+     Alpha Colors
+--------------------*/
+
+/*-------------------
+    Brand Colors
+--------------------*/
+
+/*--------------
+  Page Heading
+---------------*/
+
+/*-------------------
+        Page
+--------------------*/
+
+/*--------------
+   Form Input
+---------------*/
+
+/* This adjusts the default form input across all elements */
+
+/* Input Text Color */
+
+/* Line Height Default For Inputs in Browser (Descendors are 17px at 14px base em) */
+
+/*-------------------
+    Focused Input
+--------------------*/
+
+/* Used on inputs, textarea etc */
+
+/* Used on dropdowns, other larger blocks */
+
+/*-------------------
+        Sizes
+--------------------*/
+
+/*
+  Sizes are all expressed in terms of 14px/em (default em)
+  This ensures these "ratios" remain constant despite changes in EM
+*/
+
+/*-------------------
+      Paragraph
+--------------------*/
+
+/*-------------------
+       Links
+--------------------*/
+
+/*-------------------
+  Highlighted Text
+--------------------*/
+
+/*-------------------
+       Em Sizes
+--------------------*/
+
+/*
+  This rounds $size values to the closest pixel then expresses that value in (r)em.
+  This ensures all size values round to exact pixels
+*/
+
+/* em */
+
+/* rem */
+
+/*-------------------
+       Loader
+--------------------*/
+
+/*-------------------
+        Grid
+--------------------*/
+
+/*-------------------
+     Transitions
+--------------------*/
+
+/*-------------------
+     Breakpoints
+--------------------*/
+
+/* Columns */
+
+/*******************************
+           Power-User
+*******************************/
+
+/*-------------------
+    Emotive Colors
+--------------------*/
+
+/* Positive */
+
+/* Negative */
+
+/* Info */
+
+/* Warning */
+
+/*-------------------
+        Paths
+--------------------*/
+
+/* For source only. Modified in gulp for dist */
+
+/*-------------------
+       Icons
+--------------------*/
+
+/* Maximum Glyph Width of Icon */
+
+/*-------------------
+     Neutral Text
+--------------------*/
+
+/*-------------------
+     Brand Colors
+--------------------*/
+
+/*-------------------
+      Borders
+--------------------*/
+
+/*-------------------
+       Accents
+--------------------*/
+
+/* Differentiating Neutrals */
+
+/* Differentiating Layers */
+
+/*-------------------
+    Derived Values
+--------------------*/
+
+/* Loaders Position Offset */
+
+/* Rendered Scrollbar Width */
+
+/* Maximum Single Character Glyph Width, aka Capital "W" */
+
+/* Used to match floats with text */
+
+/* Header Spacing */
+
+/* Minimum Mobile Width */
+
+/* Positive / Negative Dupes */
+
+/* Responsive */
+
+/*******************************
+             States
+*******************************/
+
+/*-------------------
+      Disabled
+--------------------*/
+
+/*-------------------
+        Hover
+--------------------*/
+
+/*---  Shadows  ---*/
+
+/*---  Colors  ---*/
+
+/*---  Emotive  ---*/
+
+/*---  Brand   ---*/
+
+/*---  Dark Tones  ---*/
+
+/*---  Light Tones  ---*/
+
+/*-------------------
+        Focus
+--------------------*/
+
+/*---  Colors  ---*/
+
+/*---  Emotive  ---*/
+
+/*---  Brand   ---*/
+
+/*---  Dark Tones  ---*/
+
+/*---  Light Tones  ---*/
+
+/*-------------------
+    Down (:active)
+--------------------*/
+
+/*---  Colors  ---*/
+
+/*---  Emotive  ---*/
+
+/*---  Brand   ---*/
+
+/*---  Dark Tones  ---*/
+
+/*---  Light Tones  ---*/
+
+/*-------------------
+        Active
+--------------------*/
+
+/*---  Colors  ---*/
+
+/*---  Emotive  ---*/
+
+/*---  Brand   ---*/
+
+/*---  Dark Tones  ---*/
+
+/*---  Light Tones  ---*/
+
+/*******************************
+             Table
+*******************************/
+
+/*-------------------
+       Element
+--------------------*/
+
+/*--------------
+     Parts
+---------------*/
+
+/* Table Row */
+
+/* Table Cell */
+
+/* Table Header */
+
+/* Table Footer */
+
+/* Responsive Size */
+
+/*-------------------
+       Types
+--------------------*/
+
+/* Definition */
+
+/*--------------
+    Couplings
+---------------*/
+
+/*--------------
+     States
+---------------*/
+
+/* Positive */
+
+/* Negative */
+
+/* Error */
+
+/* Warning */
+
+/* Active */
+
+/*--------------
+     Types
+---------------*/
+
+/* Attached */
+
+/* Striped */
+
+/* Selectable */
+
+/* Sortable */
+
+/* Colors */
+
+/* Inverted */
+
+/* Basic */
+
+/* Padded */
+
+/* Compact */
+
+/* Sizes */
+
+.tabulator {
+  width: 100%;
+  margin: 1em 0em;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  box-shadow: none;
+  border-radius: 0.2857142857rem;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.tabulator .tabulator-header {
+  border-right: none;
+  border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+  background-color: #F9FAFB;
+  box-shadow: none;
+  color: rgba(0, 0, 0, 0.87);
+  font-style: none;
+  font-weight: bold;
+  text-transform: none;
+}
+
+.tabulator .tabulator-header .tabulator-col {
+  border-right: none;
+  background-color: #F9FAFB;
+}
+
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 0.9285714286em 0.7857142857em;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table {
+  background-color: transparent;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs {
+  background: rgb(242.25, 242.25, 242.25) !important;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs.tabulator-calcs-top {
+  border-bottom: 2px solid #ddd;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-calcs.tabulator-calcs-bottom {
+  border-top: 2px solid #ddd;
+}
+
+.tabulator .tabulator-footer {
+  padding: 0.7857142857em 0.7857142857em;
+  border-top: 1px solid rgba(34, 36, 38, 0.15);
+  box-shadow: none;
+  background: #F9FAFB;
+  text-align: right;
+  color: rgba(0, 0, 0, 0.87);
+  font-style: normal;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder {
+  margin: -0.7857142857em -0.7857142857em 0.7857142857em -0.7857142857em;
+  background: hsl(210, 20%, 103.0392156863%) !important;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {
+  background: hsl(210, 20%, 103.0392156863%) !important;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder:only-child {
+  margin-bottom: -0.7857142857em;
+  border-bottom: none;
+}
+
+.tabulator .tabulator-footer .tabulator-spreadsheet-tabs {
+  margin-top: calc(-0.78571em - 5px);
+}
+
+.tabulator .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab.tabulator-spreadsheet-tab-active {
+  color: #d00;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.positive,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.positive {
+  box-shadow: 0px 0px 0px #A3C293 inset;
+  background: #FCFFF5 !important;
+  color: #21BA45 !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.positive:hover,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.positive:hover {
+    background: rgb(247.41, 255, 229.7) !important;
+    color: rgb(19.4825342466, 174.0174657534, 55.8436946011) !important;
+  }
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.negative,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.negative {
+  box-shadow: 0px 0px 0px #E0B4B4 inset;
+  background: #FFF6F6 !important;
+  color: #DB2828 !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.negative:hover,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.negative:hover {
+    background: rgb(255, 230.7, 230.7) !important;
+    color: rgb(211.6849601594, 21.8150398406, 21.8150398406) !important;
+  }
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.error,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.error {
+  box-shadow: 0px 0px 0px #E0B4B4 inset;
+  background: #FFF6F6 !important;
+  color: #DB2828 !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.error:hover,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.error:hover {
+    background: rgb(255, 230.7, 230.7) !important;
+    color: rgb(208.7470119522, 34.9529880478, 34.9529880478) !important;
+  }
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.warning,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.warning {
+  box-shadow: 0px 0px 0px #C9BA9B inset;
+  background: #FFFAF3 !important;
+  color: #F2C037 !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.warning:hover,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.warning:hover {
+    background: rgb(255, 243.625, 227.7) !important;
+    color: rgb(241.0661971831, 187.4746478873, 40.6338028169) !important;
+  }
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active {
+  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.87) inset;
+  background: #E0E0E0 !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active:hover,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active:hover {
+    background: rgb(247.41, 255, 229.7) !important;
+    color: rgb(19.4825342466, 174.0174657534, 55.8436946011) !important;
+  }
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.active,
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell.active {
+  pointer-events: none;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.disabled:hover {
+    pointer-events: none;
+    color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.tabulator.inverted {
+  background: #333333;
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
+}
+
+.tabulator.inverted .tabulator-header {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tabulator.inverted .tabulator-header .tabulator-col {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.tabulator.inverted .tabulator-tableholder .tabulator-table .tabulator-row {
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
+}
+
+.tabulator.inverted .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.tabulator.inverted .tabulator-footer {
+  background: #FFFFFF;
+}
+
+.tabulator.striped .tabulator-row:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.tabulator.celled {
+  border: 1px solid rgba(34, 36, 38, 0.15);
+}
+
+.tabulator.celled .tabulator-header .tabulator-col {
+  border-right: 1px solid rgba(34, 36, 38, 0.1);
+}
+
+.tabulator.celled .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  border-right: 1px solid rgba(34, 36, 38, 0.1);
+}
+
+.tabulator[class*="single line"] .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  border-right: none;
+}
+
+.tabulator {
+  /* Red */
+}
+
+.tabulator.red {
+  border-top: 0.2em solid #DB2828;
+}
+
+.tabulator.inverted.red {
+  background-color: #DB2828 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Orange */
+}
+
+.tabulator.orange {
+  border-top: 0.2em solid #F2711C;
+}
+
+.tabulator.inverted.orange {
+  background-color: #F2711C !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Yellow */
+}
+
+.tabulator.yellow {
+  border-top: 0.2em solid #FBBD08;
+}
+
+.tabulator.inverted.yellow {
+  background-color: #FBBD08 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Olive */
+}
+
+.tabulator.olive {
+  border-top: 0.2em solid #B5CC18;
+}
+
+.tabulator.inverted.olive {
+  background-color: #B5CC18 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Green */
+}
+
+.tabulator.green {
+  border-top: 0.2em solid #21BA45;
+}
+
+.tabulator.inverted.green {
+  background-color: #21BA45 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Teal */
+}
+
+.tabulator.teal {
+  border-top: 0.2em solid #00B5AD;
+}
+
+.tabulator.inverted.teal {
+  background-color: #00B5AD !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Blue */
+}
+
+.tabulator.blue {
+  border-top: 0.2em solid #2185D0;
+}
+
+.tabulator.inverted.blue {
+  background-color: #2185D0 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Violet */
+}
+
+.tabulator.violet {
+  border-top: 0.2em solid #6435C9;
+}
+
+.tabulator.inverted.violet {
+  background-color: #6435C9 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Purple */
+}
+
+.tabulator.purple {
+  border-top: 0.2em solid #A333C8;
+}
+
+.tabulator.inverted.purple {
+  background-color: #A333C8 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Pink */
+}
+
+.tabulator.pink {
+  border-top: 0.2em solid #E03997;
+}
+
+.tabulator.inverted.pink {
+  background-color: #E03997 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Brown */
+}
+
+.tabulator.brown {
+  border-top: 0.2em solid #A5673F;
+}
+
+.tabulator.inverted.brown {
+  background-color: #A5673F !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Grey */
+}
+
+.tabulator.grey {
+  border-top: 0.2em solid #767676;
+}
+
+.tabulator.inverted.grey {
+  background-color: #767676 !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator {
+  /* Black */
+}
+
+.tabulator.black {
+  border-top: 0.2em solid #1B1C1D;
+}
+
+.tabulator.inverted.black {
+  background-color: #1B1C1D !important;
+  color: #FFFFFF !important;
+}
+
+.tabulator.padded .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 1em 1em;
+}
+
+.tabulator.padded .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {
+  top: 20px;
+}
+
+.tabulator.padded .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  padding: 1em 1em;
+}
+
+.tabulator.padded.very .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 1.5em 1.5em;
+}
+
+.tabulator.padded.very .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {
+  top: 26px;
+}
+
+.tabulator.padded.very .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  padding: 1.5em 1.5em;
+}
+
+.tabulator.compact .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 0.5em 0.7em;
+}
+
+.tabulator.compact .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {
+  top: 12px;
+}
+
+.tabulator.compact .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  padding: 0.5em 0.7em;
+}
+
+.tabulator.compact.very .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 0.4em 0.6em;
+}
+
+.tabulator.compact.very .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {
+  top: 10px;
+}
+
+.tabulator.compact.very .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+  padding: 0.4em 0.6em;
+}
+
+.tabulator-row {
+  border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+}
+
+.tabulator-row.tabulator-row-even {
+  background-color: #f3f3f3;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-row.tabulator-selectable:hover {
+    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.87) inset;
+    background: #E0E0E0 !important;
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+}
+
+.tabulator-row.tabulator-selected {
+  background-color: #9ABCEA !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-row.tabulator-selected:hover {
+    background-color: #769BCC !important;
+    cursor: pointer;
+  }
+}
+
+.tabulator-row.tabulator-moving {
+  pointer-events: none !important;
+}
+
+.tabulator-row .tabulator-cell {
+  padding: 0.7857142857em 0.7857142857em;
+  border-right: none;
+  vertical-align: middle;
+}
+
+.tabulator-row .tabulator-cell:last-of-type {
+  border-right: none;
+}
+
+.tabulator-row .tabulator-cell.tabulator-row-header {
+  border-bottom: none;
+}
+
+.tabulator-row .tabulator-cell .tabulator-responsive-collapse-toggle {
+  color: #fff;
+}
+
+.tabulator-row.tabulator-group {
+  background: #fafafa;
+}
+
+.tabulator-row.tabulator-group span {
+  color: #666;
+}
+
+.tabulator-menu {
+  background: #FFFFFF;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-menu .tabulator-menu-item:not(.tabulator-menu-item-disabled):hover {
+    background: #F9FAFB;
+  }
+}
+
+.tabulator-edit-select-list {
+  background: #FFFFFF;
+}
+
+.tabulator-edit-select-list .tabulator-edit-select-list-item.active {
+  color: #FFFFFF;
+}
+
+.tabulator-edit-select-list .tabulator-edit-select-list-item.active.focused {
+  outline: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-edit-select-list .tabulator-edit-select-list-item:hover {
+    color: #FFFFFF;
+  }
+}
+
+.tabulator-edit-select-list .tabulator-edit-select-list-notice {
+  color: inherit;
+}
+
+.tabulator-print-table .tabulator-print-table-group {
+  background: #fafafa;
+}
+
+.tabulator-print-table .tabulator-print-table-group span {
+  color: #666;
+}
+/*# sourceMappingURL=tabulator_semanticui.css.map */
