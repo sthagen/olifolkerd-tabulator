@@ -855,6 +855,20 @@ class Tabulator extends ModuleBinder{
 		this.rowManager.initializeRenderer();
 		this.rowManager.redraw(true);
 	}
+
+	setMaxHeight(maxHeight){
+		this.options.maxHeight = isNaN(maxHeight) ? maxHeight : maxHeight + "px";
+		this.element.style.maxHeight = this.options.maxHeight;
+		this.rowManager.initializeRenderer();
+		this.rowManager.redraw(true);
+	}
+
+	setMinHeight(minHeight){
+		this.options.minHeight = isNaN(minHeight) ? minHeight : minHeight + "px";
+		this.element.style.minHeight = this.options.minHeight;
+		this.rowManager.initializeRenderer();
+		this.rowManager.redraw(true);
+	}
 	
 	//////////////////// Event Bus ///////////////////
 	
