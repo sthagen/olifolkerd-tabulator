@@ -5803,14 +5803,10 @@
 				//check if the table has changed size when dealing with variable height tables
 				if(!this.fixedHeight && initialHeight != this.element.clientHeight){
 					resized = true;
-					if(!this.redrawing){ // prevent recursive redraws		
-						this.redrawing = true;
-						if(this.subscribed("table-resize")){
-							this.dispatch("table-resize");
-						}else {
-							this.redraw();
-						}
-						this.redrawing = false;
+					if(this.subscribed("table-resize")){
+						this.dispatch("table-resize");
+					}else {
+						this.redraw();
 					}
 				}
 				
@@ -8323,7 +8319,7 @@
 			var style = window.getComputedStyle(this.element);
 			
 			switch(this.options.textDirection){
-				case "auto":
+				case"auto":
 					if(style.direction !== "rtl"){
 						break;
 					}
@@ -8464,7 +8460,6 @@
 			//clear DOM
 			while(element.firstChild) element.removeChild(element.firstChild);
 			element.classList.remove("tabulator");
-			element.removeAttribute("tabulator-layout");
 
 			this.externalEvents.dispatch("tableDestroyed");
 		}
@@ -17790,7 +17785,7 @@
 
 			this.topElement.classList.add("tabulator-frozen-rows-holder");
 			
-			//fragment.appendChild(document.createElement("br"));
+			fragment.appendChild(document.createElement("br"));
 			fragment.appendChild(this.topElement);
 
 			// this.table.columnManager.element.append(this.topElement);
@@ -24158,7 +24153,7 @@
 						enumerable: true,
 						configurable:true,
 						writable:true,
-						value: this.origFuncs[key],
+						value: this.origFuncs.key,
 					});
 				}
 			}
@@ -24946,7 +24941,7 @@
 		
 		initializeVisibilityObserver(){
 			this.visibilityObserver = new IntersectionObserver((entries) => {
-				this.visible = entries[entries.length - 1].isIntersecting;
+				this.visible = entries[0].isIntersecting;
 				
 				if(!this.initialized){
 					this.initialized = true;
@@ -26068,8 +26063,8 @@
 			this.right = 0;
 			
 			this.table = table;
-			this.start = {row:undefined, col:undefined};
-			this.end = {row:undefined, col:undefined};
+			this.start = {row:0, col:0};
+			this.end = {row:0, col:0};
 
 			if(this.rangeManager.rowHeader){
 				this.left = 1;
@@ -27000,15 +26995,13 @@
 		///////////////////////////////////
 		
 		keyNavigate(dir, e){
-			if(this.navigate(false, false, dir)){
-				e.preventDefault();
-			}
+			if(this.navigate(false, false, dir));
+			e.preventDefault();
 		}
 		
 		keyNavigateRange(e, dir, jump, expand){
-			if(this.navigate(jump, expand, dir)){
-				e.preventDefault();
-			}
+			if(this.navigate(jump, expand, dir));
+			e.preventDefault();
 		}
 		
 		navigate(jump, expand, dir) {
@@ -27126,8 +27119,9 @@
 				}
 
 				this.layoutElement();
+				
+				return true;
 			}
-			return true;
 		}
 		
 		rangeRemoved(removed){
@@ -27141,7 +27135,7 @@
 				}
 			}
 			
-			this.layoutElement(true);
+			this.layoutElement();
 		}
 		
 		findJumpRow(column, rows, reverse, emptyStart, emptySide){
@@ -27283,11 +27277,11 @@
 			}
 			
 			if (event.shiftKey) {
-				this.activeRange.setBounds(false, element, true);
+				this.activeRange.setBounds(false, element);
 			} else if (event.ctrlKey) {
-				this.addRange().setBounds(element, undefined, true);
+				this.addRange().setBounds(element);
 			} else {
-				this.resetRanges().setBounds(element, undefined, true);
+				this.resetRanges().setBounds(element);
 			}
 		}
 		
@@ -29627,7 +29621,9 @@
 		}
 	}
 
-	return TabulatorFull;
+	var TabulatorFull$1 = TabulatorFull;
+
+	return TabulatorFull$1;
 
 }));
 //# sourceMappingURL=tabulator.js.map
