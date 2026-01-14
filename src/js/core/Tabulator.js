@@ -232,6 +232,7 @@ class Tabulator extends ModuleBinder{
 		
 		element.classList.add("tabulator");
 		element.setAttribute("role", "grid");
+		element.setAttribute("aria-owns", "tabulator-table-body");
 		
 		//empty element
 		while(element.firstChild) element.removeChild(element.firstChild);
