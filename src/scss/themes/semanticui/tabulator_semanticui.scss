@@ -20,7 +20,6 @@ $sortArrowInactive: #bbb !default;
 //row theming
 $rowBorderColor:#ddd !default; //table border color
 $rowTextColor:#333 !default; //table text color
-$rowBackgroundColor:#f3f3f3 !default; //table row background color
 
 $rowSelectedBackground: #9ABCEA !default; //row background color when selected
 $rowSelectedBackgroundHover: #769BCC !default;//row background color when selected and hovered
@@ -48,7 +47,6 @@ $footerActiveColor:#d00 !default; //footer bottom active text color
 	$sortArrowInactive: $sortArrowInactive,
 	$rowBorderColor: $rowBorderColor,
 	$rowTextColor: $rowTextColor,
-	// $rowBackgroundColor: $rowBackgroundColor,
 	$rowSelectedBackground: $rowSelectedBackground,
 	$rowSelectedBackgroundHover: $rowSelectedBackgroundHover,
 	$editBoxColor: $editBoxColor,
@@ -526,7 +524,7 @@ $footerActiveColor:#d00 !default; //footer bottom active text color
 	border-bottom: $rowBorder;
 
 	&.tabulator-row-even{
-		background-color: $rowBackgroundColor;
+		background-color: tabulator.$rowBackgroundColor;
 	}
 
 	@media (hover:hover) and (pointer:fine){
