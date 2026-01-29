@@ -1,5 +1,5 @@
-@import "functions5.scss";
-@import "variables5.scss";
+@use "variables5.scss" as *;
+@use "sass:map";
 
 // Style conversion file, bootstrap to tabulator
 
@@ -39,7 +39,26 @@ $footerActiveColor:$pagination-active-color !default; //footer bottom active tex
 
 $table-cell-padding-sm: 5px;
 
-@import "../../tabulator.scss";
+@use "../../tabulator.scss" with (
+	$backgroundColor: $backgroundColor,
+	$borderColor: $borderColor,
+	$textSize: $textSize,
+	$headerBackgroundColor: $headerBackgroundColor,
+	$headerSeparatorColor: $headerSeparatorColor,
+	$sortArrowActive: $sortArrowActive,
+	$sortArrowInactive: $sortArrowInactive,
+	$rowBackgroundColor: $rowBackgroundColor,
+	$rowAltBackgroundColor: $rowAltBackgroundColor,
+	$rowBorderColor: $rowBorderColor,
+	$rowHoverBackground: $rowHoverBackground,
+	$rowSelectedBackground: $rowSelectedBackground,
+	$rowSelectedBackgroundHover: $rowSelectedBackgroundHover,
+	$editBoxColor: $editBoxColor,
+	$errorColor: $errorColor,
+	$footerBorderColor: $footerBorderColor,
+	$footerSeparatorColor: $footerSeparatorColor,
+	$footerActiveColor: $footerActiveColor
+);
 
 .tabulator{
 	background-color: $backgroundColor;
@@ -118,7 +137,7 @@ $table-cell-padding-sm: 5px;
 
 		.tabulator-spreadsheet-tabs{
 			.tabulator-spreadsheet-tab{
-				background-color: $spreadsheetActiveTabColor;
+				background-color: tabulator.$spreadsheetActiveTabColor;
 				font-weight: normal;
 
 				&.tabulator-spreadsheet-tab-active{
@@ -461,56 +480,56 @@ $table-cell-padding-sm: 5px;
 		.tabulator-table{
 			.tabulator-row{
 				&.table-primary{
-					background:map-get($table-variants, "primary") !important;
+					background:map.get($table-variants, "primary") !important;
 				}
 				&.table-secondary{
-					background:map-get($table-variants, "secondary") !important;
+					background:map.get($table-variants, "secondary") !important;
 				}
 				&.table-success{
-					background:map-get($table-variants, "success") !important;
+					background:map.get($table-variants, "success") !important;
 				}
 				&.table-info{
-					background:map-get($table-variants, "info") !important;
+					background:map.get($table-variants, "info") !important;
 				}
 				&.table-warning{
-					background:map-get($table-variants, "warning") !important;
+					background:map.get($table-variants, "warning") !important;
 				}
 				&.table-danger{
-					background:map-get($table-variants, "danger") !important;
+					background:map.get($table-variants, "danger") !important;
 				}
 				&.table-light{
-					background:map-get($table-variants, "light") !important;
+					background:map.get($table-variants, "light") !important;
 				}
 				&.table{
-					background:map-get($table-variants, "dark") !important;
+					background:map.get($table-variants, "dark") !important;
 				}
 				&.table-active{
 					background:$table-active-bg !important;
 				}
 
 				&.bg-primary{
-					background:map-get($table-variants, "primary") !important;
+					background:map.get($table-variants, "primary") !important;
 				}
 				&.bg-secondary{
-					background:map-get($table-variants, "secondary") !important;
+					background:map.get($table-variants, "secondary") !important;
 				}
 				&.bg-success{
-					background:map-get($table-variants, "success") !important;
+					background:map.get($table-variants, "success") !important;
 				}
 				&.bg-info{
-					background:map-get($table-variants, "info") !important;
+					background:map.get($table-variants, "info") !important;
 				}
 				&.bg-warning{
-					background:map-get($table-variants, "warning") !important;
+					background:map.get($table-variants, "warning") !important;
 				}
 				&.bg-danger{
-					background:map-get($table-variants, "danger") !important;
+					background:map.get($table-variants, "danger") !important;
 				}
 				&.bg-light{
-					background:map-get($table-variants, "light") !important;
+					background:map.get($table-variants, "light") !important;
 				}
 				&.bg-dark{
-					background:map-get($table-variants, "dark") !important;
+					background:map.get($table-variants, "dark") !important;
 				}
 				&.bg-active{
 					background:$table-active-bg !important;
@@ -518,56 +537,56 @@ $table-cell-padding-sm: 5px;
 
 				.tabulator-cell{
 					&.table-primary{
-						background:map-get($table-variants, "primary") !important;
+						background:map.get($table-variants, "primary") !important;
 					}
 					&.table-secondary{
-						background:map-get($table-variants, "secondary") !important;
+						background:map.get($table-variants, "secondary") !important;
 					}
 					&.table-success{
-						background:map-get($table-variants, "success") !important;
+						background:map.get($table-variants, "success") !important;
 					}
 					&.table-info{
-						background:map-get($table-variants, "info") !important;
+						background:map.get($table-variants, "info") !important;
 					}
 					&.table-warning{
-						background:map-get($table-variants, "warning") !important;
+						background:map.get($table-variants, "warning") !important;
 					}
 					&.table-danger{
-						background:map-get($table-variants, "danger") !important;
+						background:map.get($table-variants, "danger") !important;
 					}
 					&.table-light{
-						background:map-get($table-variants, "light") !important;
+						background:map.get($table-variants, "light") !important;
 					}
 					&.table{
-						background:map-get($table-variants, "dark") !important;
+						background:map.get($table-variants, "dark") !important;
 					}
 					&.table-active{
 						background:$table-active-bg !important;
 					}
 
 					&.bg-primary{
-						background:map-get($table-variants, "primary") !important;
+						background:map.get($table-variants, "primary") !important;
 					}
 					&.bg-secondary{
-						background:map-get($table-variants, "secondary") !important;
+						background:map.get($table-variants, "secondary") !important;
 					}
 					&.bg-success{
-						background:map-get($table-variants, "success") !important;
+						background:map.get($table-variants, "success") !important;
 					}
 					&.bg-info{
-						background:map-get($table-variants, "info") !important;
+						background:map.get($table-variants, "info") !important;
 					}
 					&.bg-warning{
-						background:map-get($table-variants, "warning") !important;
+						background:map.get($table-variants, "warning") !important;
 					}
 					&.bg-danger{
-						background:map-get($table-variants, "danger") !important;
+						background:map.get($table-variants, "danger") !important;
 					}
 					&.bg-light{
-						background:map-get($table-variants, "light") !important;
+						background:map.get($table-variants, "light") !important;
 					}
 					&.bg-dark{
-						background:map-get($table-variants, "dark") !important;
+						background:map.get($table-variants, "dark") !important;
 					}
 					&.bg-active{
 						background:$table-active-bg !important;
