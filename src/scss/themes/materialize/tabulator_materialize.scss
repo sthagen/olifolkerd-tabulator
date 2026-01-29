@@ -42,7 +42,30 @@ $rangeHeaderSelectedBackground: $rangeBorderColor !default; //header background 
 $rangeHeaderSelectedTextColor: #FFFFFF !default; //header text color when selected
 
 
-@use "../../tabulator.scss";
+@use "../../tabulator.scss" with (
+	$backgroundColor: $backgroundColor,
+	$borderColor: $borderColor,
+	$textSize: $textSize,
+	$headerBackgroundColor: $headerBackgroundColor,
+	$headerSeparatorColor: $headerSeparatorColor,
+	$sortArrowActive: $sortArrowActive,
+	$sortArrowInactive: $sortArrowInactive,
+	$rowBackgroundColor: $rowBackgroundColor,
+	$rowAltBackgroundColor: $rowAltBackgroundColor,
+	$rowBorderColor: $rowBorderColor,
+	$rowHoverBackground: $rowHoverBackground,
+	$rowSelectedBackground: $rowSelectedBackground,
+	$rowSelectedBackgroundHover: $rowSelectedBackgroundHover,
+	$editBoxColor: $editBoxColor,
+	$errorColor: $errorColor,
+	$footerBorderColor: $footerBorderColor,
+	$footerSeparatorColor: $footerSeparatorColor,
+	$footerActiveColor: $footerActiveColor,
+	$rangeBorderColor: $rangeBorderColor,
+	$rangeHandleColor: $rangeHandleColor,
+	$rangeHeaderSelectedBackground: $rangeHeaderSelectedBackground,
+	$rangeHeaderSelectedTextColor: $rangeHeaderSelectedTextColor
+);
 
 .tabulator{
 	border:none;

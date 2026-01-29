@@ -36,6 +36,30 @@ $footerBorderColor:#aaa !default; //footer border color
 $footerSeparatorColor:#999 !default; //footer bottom separator color
 $footerActiveColor:#d00 !default; //footer bottom active text color
 
+@use "../../tabulator.scss" with (
+	$backgroundColor: $backgroundColor,
+	$textSize: $textSize,
+	$headerBackgroundColor: $headerBackgroundColor,
+	$headerTextColor: $headerTextColor,
+	$headerBorderColor: $headerBorderColor,
+	$headerSeparatorColor: $headerSeparatorColor,
+	$headerMargin: $headerMargin,
+	$sortArrowActive: $sortArrowActive,
+	$sortArrowInactive: $sortArrowInactive,
+	$rowBorderColor: $rowBorderColor,
+	$rowTextColor: $rowTextColor,
+	// $rowBackgroundColor: $rowBackgroundColor,
+	$rowSelectedBackground: $rowSelectedBackground,
+	$rowSelectedBackgroundHover: $rowSelectedBackgroundHover,
+	$editBoxColor: $editBoxColor,
+	$errorColor: $errorColor,
+	$footerBackgroundColor: $footerBackgroundColor,
+	$footerTextColor: $footerTextColor,
+	$footerBorderColor: $footerBorderColor,
+	$footerSeparatorColor: $footerSeparatorColor,
+	$footerActiveColor: $footerActiveColor
+);
+
 .tabulator{
 	width: 100%;
 
