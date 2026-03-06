@@ -79,7 +79,7 @@ export default class Edit extends Module{
 			this.subscribe("keybinding-nav-down", this.navigateDown.bind(this, undefined));
 		}
     
-    // Add event handlers for other modules to access editing state and functionality
+		// Add event handlers for other modules to access editing state and functionality
 		this.subscribe("edit-check-editing", this.checkEditing.bind(this));
 		this.subscribe("edit-cancel-cell", this.cancelEditEvent.bind(this));
 
