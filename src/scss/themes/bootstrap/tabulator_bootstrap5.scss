@@ -92,24 +92,23 @@ $table-cell-padding-sm: 5px;
 				input{
 					padding: .375rem .75rem;
 
-					background-color: #fff;
+					background-color: $input-bg;
 					background-clip: padding-box;
 
-					border: 1px solid #ced4da;
-					border-radius: .25rem;
+					border: $input-border-width solid $input-border-color;
+					border-radius: $input-border-radius;
 
 					transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 
 					font-size: 1rem;
 					line-height: 1.5;
-					color: #495057;
+					color: $input-color;
 
 					&:focus {
-						color: #495057;
-						background-color: #fff;
-						border:1px solid  $editBoxColor;
+						color: $input-focus-color;
+						background-color: $input-focus-bg;
+						border-color: $input-focus-border-color;
 						outline: 0;
-					    // box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 					}
 				}
 			}
@@ -124,7 +123,7 @@ $table-cell-padding-sm: 5px;
 	.tabulator-tableholder{
 		.tabulator-placeholder{
 			span{
-				color:#000;
+				color:$body-color;
 			}
 		}
 
@@ -142,8 +141,7 @@ $table-cell-padding-sm: 5px;
 				font-weight: normal;
 
 				&.tabulator-spreadsheet-tab-active{
-					background-color:$pagination-active-bg;
-					color:$footerActiveColor;
+					background-color:$table-hover-bg;
 				}
 			}
 		}
@@ -173,22 +171,23 @@ $table-cell-padding-sm: 5px;
 			}
 
 			&.active{
-				border-color:$table-hover-bg;
-				background-color:$table-hover-bg;
+				border-color:var(--bs-emphasis-color);
+				background-color:var(--bs-emphasis-color);
+				color:var(--bs-body-bg);
 			}
 
 			&:disabled{
-				border-color:$pagination-disabled-border-color;
-				background:$pagination-disabled-bg;
-				color:$pagination-disabled-color;
+				border-color:var(--bs-border-color);
+				background:var(--bs-tertiary-bg);
+				color:var(--bs-secondary-color);
 			}
 
 			&:not(.disabled){
 				@media (hover:hover) and (pointer:fine){
 					&:hover{
-						border-color:$pagination-hover-border-color;
-						background:$pagination-hover-bg;
-						color:inherit;
+						border-color:var(--bs-tertiary-bg);
+						background:var(--bs-tertiary-bg);
+						color:var(--bs-body-color);
 					}
 				}
 			}
@@ -429,6 +428,14 @@ $table-cell-padding-sm: 5px;
 				background-color: $bg;
 				color: $color;
 
+				&.tabulator-frozen-left{
+					border-right-color: $border;
+				}
+
+				&.tabulator-frozen-right{
+					border-left-color: $border;
+				}
+
 				@media (hover:hover) and (pointer:fine){
 					&.tabulator-col-sorter-element:hover{
 						background-color: $hover-bg;
@@ -444,6 +451,14 @@ $table-cell-padding-sm: 5px;
 		.tabulator-cell {
 			background-color: $bg;
 			border-color: $border;
+
+			&.tabulator-frozen-left{
+				border-right-color: $border;
+			}
+
+			&.tabulator-frozen-right{
+				border-left-color: $border;
+			}
 		}
 
 		.tabulator-row{
@@ -735,29 +750,29 @@ $table-cell-padding-sm: 5px;
 		}
 
 		.tabulator-data-tree-control{
-			border:1px solid #ccc;
+			border:1px solid $table-border-color;
 
 			.tabulator-data-tree-control-collapse{
 				&:after {
-					background: #ccc;
+					background: $body-color;
 				}
 			}
 
 			.tabulator-data-tree-control-expand{
-				background: #ccc;
+				background: $body-color;
 
 				&:after {
-					background: #ccc;
+					background: $body-color;
 				}
 			}
 		}
 	}
 
 	&.tabulator-group{
-		background:#fafafa;
+		background:$table-hover-bg;
 
 		span{
-			color:#666;
+			color:$text-muted;
 		}
 	}
 }
@@ -801,10 +816,10 @@ $table-cell-padding-sm: 5px;
 
 .tabulator-print-table{
 	.tabulator-print-table-group{
-		background:#fafafa;
+		background:$table-hover-bg;
 
 		span{
-			color:#666;
+			color:$text-muted;
 		}
 	}
 
@@ -813,22 +828,23 @@ $table-cell-padding-sm: 5px;
 
 		.tabulator-data-tree-control-collapse{
 			&:after {
-				background: #ccc;
+				background: $body-color;
 			}
 		}
 
 		.tabulator-data-tree-control-expand{
-			background: #ccc;
+			background: $body-color;
 
 			&:after {
-				background: #ccc;
+				background: $body-color;
 			}
 		}
 	}
 }
 
 .tabulator-popup-container{
-	background:#fff;
+	background:$body-bg;
+	color:$body-color;
 }
 
 html[data-bs-theme="dark"]{
@@ -838,19 +854,63 @@ html[data-bs-theme="dark"]{
 		border-color: var(--bs-border-color);
 	}
 
-	.tabulator-edit-list .tabulator-edit-list-item{
-		&.active{
-			color: var(--bs-body-bg);
+	.tabulator-tooltip{
+		background: var(--bs-body-bg);
+		color: var(--bs-body-color);
+		border-color: var(--bs-border-color);
+	}
 
-			&.focused{
-				outline: 1px solid rgba(var(--bs-body-bg-rgb), .5);
+	.tabulator-menu{
+		.tabulator-menu-item{
+			@media (hover:hover) and (pointer:fine){
+				&:not(.tabulator-menu-item-disabled):hover{
+					background: var(--bs-tertiary-bg);
+				}
+			}
+
+			&.tabulator-menu-item-submenu{
+				&::after{
+					border-color: var(--bs-body-color);
+				}
 			}
 		}
 
-		@media (hover:hover) and (pointer:fine){
-			&:hover{
-				color: var(--bs-body-bg);
+		.tabulator-menu-separator{
+			border-color: var(--bs-border-color);
+		}
+	}
+
+	.tabulator-edit-list{
+		background: var(--bs-body-bg);
+		color: var(--bs-body-color);
+
+		.tabulator-edit-list-item{
+			color: var(--bs-body-color);
+
+			&.active{
+				color: var(--bs-emphasis-color);
+				background: var(--bs-secondary-bg);
+
+				&.focused{
+					outline: 1px solid var(--bs-border-color);
+				}
 			}
+
+			&.focused{
+				outline: 1px solid var(--bs-border-color);
+			}
+
+			@media (hover:hover) and (pointer:fine){
+				&:hover{
+					color: var(--bs-emphasis-color);
+					background: var(--bs-tertiary-bg);
+				}
+			}
+		}
+
+		.tabulator-edit-list-group{
+			border-color: var(--bs-border-color);
+			color: var(--bs-body-color);
 		}
 	}
 
@@ -870,17 +930,27 @@ html[data-bs-theme="dark"]{
 .tabulator-edit-list{
 	.tabulator-edit-list-item{
 		&.active{
-			color:#fff;
+			color:$body-color;
+			background:$table-hover-bg;
 
 			&.focused{
-				outline:1px solid rgba(#fff, .5);
+				outline:1px solid $table-border-color;
 			}
+		}
+
+		&.focused{
+			outline:1px solid $table-border-color;
 		}
 
 		@media (hover:hover) and (pointer:fine){
 			&:hover{
-				color:#fff;
+				color:$body-color;
+				background:$table-striped-bg;
 			}
 		}
+	}
+
+	.tabulator-edit-list-group{
+		border-color:$table-border-color;
 	}
 }
