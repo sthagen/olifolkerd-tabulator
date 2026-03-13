@@ -1656,37 +1656,13 @@ html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulat
   color: #fff;
 }
 
-.tabulator.table-dark:not(.thead-light) .tabulator-header .tabulator-header-filter input,
-.tabulator.table-dark:not(.thead-light) .tabulator-header .tabulator-header-filter select,
-html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulator-header-filter input,
-html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulator-header-filter select {
-  color: #fff;
-  background-color: #212529;
-  border-color: #4d5154;
-}
-
-.tabulator.table-dark:not(.thead-light) .tabulator-header .tabulator-header-filter input:focus,
-.tabulator.table-dark:not(.thead-light) .tabulator-header .tabulator-header-filter select:focus,
-html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulator-header-filter input:focus,
-html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulator-header-filter select:focus {
-  color: #fff;
-  background-color: #212529;
-  border-color: rgb(113.5869565217, 119.4875776398, 123.9130434783);
-}
-
 .tabulator.table-dark .tabulator-tableholder,
 html[data-bs-theme=dark] .tabulator .tabulator-tableholder {
   color: #fff;
 }
 
-.tabulator.table-dark .tabulator-tableholder .tabulator-placeholder span,
-html[data-bs-theme=dark] .tabulator .tabulator-tableholder .tabulator-placeholder span {
-  color: #fff;
-}
-
 .tabulator.table-dark .tabulator-cell,
 html[data-bs-theme=dark] .tabulator .tabulator-cell {
-  color: #fff;
   background-color: #212529;
   border-color: #4d5154;
 }
@@ -1716,7 +1692,7 @@ html[data-bs-theme=dark] .tabulator .tabulator-row.tabulator-selected {
 
 .tabulator.table-dark .tabulator-row.tabulator-group,
 html[data-bs-theme=dark] .tabulator .tabulator-row.tabulator-group {
-  background: rgb(26.177027027, 29.35, 32.522972973);
+  background: #323539;
 }
 
 .tabulator.table-dark .tabulator-row.tabulator-group span,
@@ -1731,17 +1707,17 @@ html[data-bs-theme=dark] .tabulator .tabulator-row .tabulator-data-tree-control 
 
 .tabulator.table-dark .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-collapse:after,
 html[data-bs-theme=dark] .tabulator .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-collapse:after {
-  background: #4d5154;
+  background: #fff;
 }
 
 .tabulator.table-dark .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-expand,
 html[data-bs-theme=dark] .tabulator .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-expand {
-  background: #4d5154;
+  background: #fff;
 }
 
 .tabulator.table-dark .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-expand:after,
 html[data-bs-theme=dark] .tabulator .tabulator-row .tabulator-data-tree-control .tabulator-data-tree-control-expand:after {
-  background: #4d5154;
+  background: #fff;
 }
 
 .tabulator.table-dark .tabulator-footer,
@@ -1764,21 +1740,14 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-calcs-holder .t
   color: #fff !important;
 }
 
-.tabulator.table-dark .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab,
-html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab {
-  color: #fff;
-}
-
 .tabulator.table-dark .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab.tabulator-spreadsheet-tab-active,
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab.tabulator-spreadsheet-tab-active {
   background-color: rgb(55.7432432432, 62.5, 69.2567567568);
-  color: #fff;
 }
 
 .tabulator.table-dark .tabulator-footer .tabulator-page,
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page {
   border-color: #4d5154;
-  color: #fff;
   background-color: #212529;
 }
 
@@ -1786,7 +1755,6 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page {
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page.active {
   background-color: rgb(67.1148648649, 75.25, 83.3851351351);
   border-color: rgb(101.3913043478, 106.6583850932, 110.6086956522);
-  color: #fff;
 }
 
 .tabulator.table-dark .tabulator-footer .tabulator-page:disabled,
@@ -1799,26 +1767,45 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page:disabled {
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page:not(.disabled):hover {
     background-color: #323539;
     border-color: rgb(101.3913043478, 106.6583850932, 110.6086956522);
-    color: #fff;
   }
 }
 
 .tabulator.table-dark .tabulator-footer .tabulator-page-size,
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page-size {
+  background-color: #212529;
+  border-color: #4d5154;
+}
+
+.tabulator.table-dark .tabulator-header-filter input,
+.tabulator.table-dark .tabulator-header-filter select,
+.tabulator.table-dark .tabulator-header-filter textarea,
+.tabulator.table-dark .tabulator-cell.tabulator-editing input,
+.tabulator.table-dark .tabulator-cell.tabulator-editing select,
+.tabulator.table-dark .tabulator-cell.tabulator-editing textarea,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter input,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter select,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter textarea,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing input,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing select,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing textarea {
   color: #fff;
   background-color: #212529;
   border-color: #4d5154;
 }
 
-.tabulator.table-dark input,
-.tabulator.table-dark select,
-.tabulator.table-dark textarea,
-html[data-bs-theme=dark] .tabulator input,
-html[data-bs-theme=dark] .tabulator select,
-html[data-bs-theme=dark] .tabulator textarea {
-  color: #fff !important;
-  background-color: #212529 !important;
-  border-color: #4d5154 !important;
+.tabulator.table-dark .tabulator-header-filter input:focus,
+.tabulator.table-dark .tabulator-header-filter select:focus,
+.tabulator.table-dark .tabulator-header-filter textarea:focus,
+.tabulator.table-dark .tabulator-cell.tabulator-editing input:focus,
+.tabulator.table-dark .tabulator-cell.tabulator-editing select:focus,
+.tabulator.table-dark .tabulator-cell.tabulator-editing textarea:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter input:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter select:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header-filter textarea:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing input:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing select:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing textarea:focus {
+  border-color: rgb(113.5869565217, 119.4875776398, 123.9130434783);
 }
 
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.table-primary {
@@ -2074,25 +2061,6 @@ html[data-bs-theme=dark] .tabulator-popup-container {
   border-color: #4d5154;
 }
 
-html[data-bs-theme=dark] .tabulator-edit-select-list {
-  background: #212529;
-  color: #fff;
-}
-
-html[data-bs-theme=dark] .tabulator-edit-select-list .tabulator-edit-select-list-item.active {
-  color: #212529;
-}
-
-html[data-bs-theme=dark] .tabulator-edit-select-list .tabulator-edit-select-list-item.active.focused {
-  outline: 1px solid rgba(33, 37, 41, 0.5);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  html[data-bs-theme=dark] .tabulator-edit-select-list .tabulator-edit-select-list-item:hover {
-    color: #212529;
-  }
-}
-
 html[data-bs-theme=dark] .tabulator-edit-list .tabulator-edit-list-item.active {
   color: #212529;
 }
@@ -2112,7 +2080,7 @@ html[data-bs-theme=dark] .tabulator-print-table {
 }
 
 html[data-bs-theme=dark] .tabulator-print-table .tabulator-print-table-group {
-  background: rgb(26.177027027, 29.35, 32.522972973);
+  background: #323539;
 }
 
 html[data-bs-theme=dark] .tabulator-print-table .tabulator-print-table-group span {
