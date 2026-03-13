@@ -1760,9 +1760,8 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page {
 
 .tabulator.table-dark .tabulator-footer .tabulator-page.active,
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page.active {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-  color: #fff !important;
+  background-color: rgb(67.1148648649, 75.25, 83.3851351351);
+  border-color: rgb(101.3913043478, 106.6583850932, 110.6086956522);
 }
 
 .tabulator.table-dark .tabulator-footer .tabulator-page:disabled,

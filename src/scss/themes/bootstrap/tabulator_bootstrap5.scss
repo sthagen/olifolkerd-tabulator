@@ -513,9 +513,8 @@ $table-cell-padding-sm: 5px;
 				background-color: $table-dark-bg;
 
 				&.active{
-					background-color: $pagination-active-bg;
-					border-color: $pagination-active-border-color;
-					color: $pagination-active-color !important;
+					background-color: lighten($table-dark-bg, 15%);
+					border-color: lighten($table-dark-border-color, 10%);
 				}
 
 				&:disabled{
