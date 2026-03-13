@@ -1,5 +1,6 @@
 @use "variables5.scss" as *;
 @use "sass:map";
+@use "sass:color";
 
 // Style conversion file, bootstrap to tabulator
 
@@ -568,11 +569,11 @@ $table-cell-padding-sm: 5px;
 			$hover-bg: $table-dark-hover-bg,
 			$active-bg: $table-dark-active-bg,
 			$emphasis: $table-dark-color,
-			$disabled-color: darken($table-dark-color, 40%),
+			$disabled-color: color.adjust($table-dark-color, $lightness: -40%),
 			$focus-border: $input-focus-border-color,
-			$active-tab-bg: lighten($table-dark-bg, 10%),
-			$active-page-bg: lighten($table-dark-bg, 15%),
-			$active-page-border: lighten($table-dark-border-color, 10%)
+			$active-tab-bg: color.adjust($table-dark-bg, $lightness: 10%),
+			$active-page-bg: color.adjust($table-dark-bg, $lightness: 15%),
+			$active-page-border: color.adjust($table-dark-border-color, $lightness: 10%)
 		);
 	}
 
