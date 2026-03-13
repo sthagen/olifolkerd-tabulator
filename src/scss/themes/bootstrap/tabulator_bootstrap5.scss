@@ -538,6 +538,7 @@ $table-cell-padding-sm: 5px;
 				&.active{
 					background-color: $active-page-bg;
 					border-color: $active-page-border;
+					color: $bg;
 				}
 
 				&:disabled{
@@ -604,8 +605,8 @@ $table-cell-padding-sm: 5px;
 			$disabled-color: var(--bs-tertiary-color),
 			$focus-border: var(--bs-primary-border-subtle),
 			$active-tab-bg: var(--bs-secondary-bg),
-			$active-page-bg: var(--bs-secondary-bg),
-			$active-page-border: var(--bs-secondary-bg)
+			$active-page-bg: var(--bs-emphasis-color),
+			$active-page-border: var(--bs-emphasis-color)
 		);
 	}
 
