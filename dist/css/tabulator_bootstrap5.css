@@ -1656,6 +1656,13 @@ html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulat
   color: #fff;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .tabulator.table-dark:not(.thead-light) .tabulator-header .tabulator-col.tabulator-col-sorter-element:hover,
+html[data-bs-theme=dark] .tabulator:not(.thead-light) .tabulator-header .tabulator-col.tabulator-col-sorter-element:hover {
+    background-color: #323539;
+  }
+}
+
 .tabulator.table-dark .tabulator-tableholder,
 html[data-bs-theme=dark] .tabulator .tabulator-tableholder {
   color: #fff;
@@ -1753,8 +1760,9 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page {
 
 .tabulator.table-dark .tabulator-footer .tabulator-page.active,
 html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page.active {
-  background-color: rgb(67.1148648649, 75.25, 83.3851351351);
-  border-color: rgb(101.3913043478, 106.6583850932, 110.6086956522);
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: #fff !important;
 }
 
 .tabulator.table-dark .tabulator-footer .tabulator-page:disabled,
@@ -1776,15 +1784,15 @@ html[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page-size {
   border-color: #4d5154;
 }
 
-.tabulator.table-dark .tabulator-header-filter input,
-.tabulator.table-dark .tabulator-header-filter select,
-.tabulator.table-dark .tabulator-header-filter textarea,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter input,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter select,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter textarea,
 .tabulator.table-dark .tabulator-cell.tabulator-editing input,
 .tabulator.table-dark .tabulator-cell.tabulator-editing select,
 .tabulator.table-dark .tabulator-cell.tabulator-editing textarea,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter input,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter select,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter textarea,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter textarea,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing input,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing select,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing textarea {
@@ -1793,19 +1801,19 @@ html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing textarea {
   border-color: #4d5154;
 }
 
-.tabulator.table-dark .tabulator-header-filter input:focus,
-.tabulator.table-dark .tabulator-header-filter select:focus,
-.tabulator.table-dark .tabulator-header-filter textarea:focus,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter input:focus,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter select:focus,
+.tabulator.table-dark .tabulator-header .tabulator-col .tabulator-header-filter textarea:focus,
 .tabulator.table-dark .tabulator-cell.tabulator-editing input:focus,
 .tabulator.table-dark .tabulator-cell.tabulator-editing select:focus,
 .tabulator.table-dark .tabulator-cell.tabulator-editing textarea:focus,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter input:focus,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter select:focus,
-html[data-bs-theme=dark] .tabulator .tabulator-header-filter textarea:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select:focus,
+html[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter textarea:focus,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing input:focus,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing select:focus,
 html[data-bs-theme=dark] .tabulator .tabulator-cell.tabulator-editing textarea:focus {
-  border-color: rgb(113.5869565217, 119.4875776398, 123.9130434783);
+  border-color: rgb(134, 182.5, 254);
 }
 
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row.table-primary {

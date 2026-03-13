@@ -419,6 +419,12 @@ $table-cell-padding-sm: 5px;
 				border-color: $table-dark-border-color;
 				background-color: $table-dark-bg;
 				color: $table-dark-color;
+
+				@media (hover:hover) and (pointer:fine){
+					&.tabulator-col-sorter-element:hover{
+						background-color: $table-dark-hover-bg;
+					}
+				}
 			}
 
 		}
@@ -507,8 +513,9 @@ $table-cell-padding-sm: 5px;
 				background-color: $table-dark-bg;
 
 				&.active{
-					background-color: lighten($table-dark-bg, 15%);
-					border-color: lighten($table-dark-border-color, 10%);
+					background-color: $pagination-active-bg;
+					border-color: $pagination-active-border-color;
+					color: $pagination-active-color !important;
 				}
 
 				&:disabled{
@@ -531,7 +538,7 @@ $table-cell-padding-sm: 5px;
 			}
 		}
 
-		.tabulator-header-filter,
+		.tabulator-header .tabulator-col .tabulator-header-filter,
 		.tabulator-cell.tabulator-editing {
 			input, select, textarea {
 				color: $table-dark-color;
@@ -539,7 +546,7 @@ $table-cell-padding-sm: 5px;
 				border-color: $table-dark-border-color;
 
 				&:focus{
-					border-color: lighten($table-dark-border-color, 15%);
+					border-color: $input-focus-border-color;
 				}
 			}
 		}
