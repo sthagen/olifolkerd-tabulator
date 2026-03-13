@@ -188,7 +188,7 @@ $table-cell-padding-sm: 5px;
 					&:hover{
 						border-color:$pagination-hover-border-color;
 						background:$pagination-hover-bg;
-						color:$pagination-hover-color;
+						color:inherit;
 					}
 				}
 			}
