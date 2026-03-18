@@ -399,6 +399,16 @@ $table-cell-padding-sm: 5px;
 					.tabulator-cell{
 						background-color: inherit;
 					}
+
+					@media (hover:hover) and (pointer:fine){
+						&:hover{
+							background-color: $table-dark-hover-bg !important;
+
+							.tabulator-cell{
+								background-color: inherit;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -410,12 +420,22 @@ $table-cell-padding-sm: 5px;
 					.tabulator-cell{
 						background-color: inherit;
 					}
+
+					@media (hover:hover) and (pointer:fine){
+						&:hover{
+							background-color: var(--bs-secondary-bg) !important;
+
+							.tabulator-cell{
+								background-color: inherit;
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 
-	@mixin dark-mode($bg, $color, $border, $hover-bg, $active-bg, $emphasis, $disabled-color, $focus-border, $active-tab-bg, $active-page-bg, $active-page-border){
+	@mixin dark-mode($bg, $color, $border, $hover-bg, $active-bg, $emphasis, $disabled-color, $focus-border, $active-tab-bg, $active-page-bg, $active-page-border, $footer-bg){
 		background-color: $bg;
 
 		&:not(.thead-light) .tabulator-header{
@@ -510,7 +530,7 @@ $table-cell-padding-sm: 5px;
 		.tabulator-footer{
 			border-color: $border !important;
 			color: $color !important;
-			background-color: $bg;
+			background-color: $footer-bg;
 
 			.tabulator-calcs-holder{
 				border-color: $border !important;
@@ -589,7 +609,8 @@ $table-cell-padding-sm: 5px;
 			$focus-border: $input-focus-border-color,
 			$active-tab-bg: color.adjust($table-dark-bg, $lightness: 10%),
 			$active-page-bg: color.adjust($table-dark-bg, $lightness: 15%),
-			$active-page-border: color.adjust($table-dark-border-color, $lightness: 10%)
+			$active-page-border: color.adjust($table-dark-border-color, $lightness: 10%),
+			$footer-bg: color.adjust($table-dark-bg, $lightness: 5%)
 		);
 	}
 
@@ -599,14 +620,15 @@ $table-cell-padding-sm: 5px;
 			$bg: var(--bs-body-bg),
 			$color: var(--bs-body-color),
 			$border: var(--bs-border-color),
-			$hover-bg: var(--bs-tertiary-bg),
+			$hover-bg: var(--bs-secondary-bg),
 			$active-bg: var(--bs-secondary-bg),
 			$emphasis: var(--bs-emphasis-color),
 			$disabled-color: var(--bs-tertiary-color),
 			$focus-border: var(--bs-primary-border-subtle),
 			$active-tab-bg: var(--bs-secondary-bg),
 			$active-page-bg: var(--bs-emphasis-color),
-			$active-page-border: var(--bs-emphasis-color)
+			$active-page-border: var(--bs-emphasis-color),
+			$footer-bg: var(--bs-secondary-bg)
 		);
 	}
 
