@@ -222,8 +222,14 @@ export default class ResizeColumns extends Module{
 	}
 	
 	resize(e, column){
-		var x = this.getResizingClientX(e),
-		startDiff = x - this.startX,
+		var x = this.getResizingClientX(e);
+
+		if (typeof x !== "number" || !isFinite(x)) {
+			console.warn("ResizeColumns: could not resolve pointer X from event", e);
+			return;
+		}
+
+		var startDiff = x - this.startX,
 		moveDiff = x - this.latestX,
 		blockedBefore, blockedAfter;
 
