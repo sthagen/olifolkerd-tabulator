@@ -72,18 +72,19 @@ test.describe("Grouped table virtual scrolling (#4219, #4525)", () => {
 		expect(result.after).toBeGreaterThan(result.before * 0.8);
 	});
 
-	test("should not shrink group headers (#4877)", async ({ page }) => {
-		await page.evaluate(() => {
-			window.testTable.getGroups()[0].toggle();
-			return new Promise((resolve) => setTimeout(resolve, 500));
-		});
-		await page.mouse.wheel(0, 400);
-		const [tableWidth, groupWidth] = await page.evaluate(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-			const group = window.testTable.getGroups()[18].getElement();
-			return [ window.testTable.element.offsetWidth, group.offsetWidth ];
-		});
+	test("should not shrink group rows and their content horizontally when scrolling down (#4877)", async ({ page }) => {
 		const borderOffset = 2;
+
+		await page.evaluate(() => window.testTable.getGroups()[0].toggle());
+		await page.waitForTimeout(200);
+
+		await page.mouse.wheel(0, 400);
+		await page.waitForTimeout(200);
+
+		const [tableWidth, groupWidth] = await page.evaluate(() => [
+			window.testTable.element.offsetWidth,
+			window.testTable.getGroups()[18].getElement().offsetWidth,
+		]);
 		expect(groupWidth).toBe(tableWidth - borderOffset);
 	});
 });
