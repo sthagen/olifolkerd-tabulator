@@ -145,6 +145,7 @@ export default class Interaction extends Module{
 
 		types.forEach((type) => {
 			for(let key in type){
+				clearTimeout(type[key]);
 				type[key] = null;
 			}
 		});
