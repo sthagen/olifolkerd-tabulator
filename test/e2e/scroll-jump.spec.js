@@ -5,12 +5,15 @@ const holderSel = ".tabulator-tableholder";
 
 // Regression coverage for issue #3654 "Tabulator vertical scroll skipping / jumping".
 //
-// Root cause (per the maintainer on the issue thread): the vertical virtual
-// DOM pads the table above/below the rendered window using an *estimated*
-// average row height (vDomRowHeight). A fast scroll skips part of the table,
-// so when the skipped rows are rendered back in ABOVE the viewport during a
-// scroll-up the padding estimate no longer matches their real height and every
-// element below them shifts position - the visible "jump".
+// Root cause: _virtualRenderFill summed each row's getHeight() straight into
+// the top/bottom padding totals. A row that was first measured while detached
+// caches an undefined outerHeight but is still flagged heightInitialized, so it
+// was skipped by the height re-init and its getHeight() returned undefined.
+// "rowsHeight += undefined" produced NaN padding, the CSS padding collapsed to
+// 0, the table's scroll height collapsed with it and the view lurched on every
+// scroll-up step. The fix re-initialises rows whose cached height is invalid
+// and falls back to the estimated vDomRowHeight, matching the guard the
+// _addTopRow/_addBottomRow/_remove* helpers already use.
 //
 // Reproduction (from the issue):
 //   1. scroll to the bottom of a table with variable height rows,
@@ -118,18 +121,9 @@ test.describe("Vertical scroll jumping with variable height rows (#3654)", () =>
 		await page.locator(holderSel).hover();
 	});
 
-	// KNOWN BUG: this reproduces #3654 and is expected to fail until the
-	// virtual-DOM scroll jumping is fixed. When the fix lands this test will
-	// start passing and Playwright will flag the `test.fail()` annotation as
-	// no longer needed - remove it at that point.
 	test("scrolling up after a fast scroll does not make content jump", async ({
 		page,
 	}) => {
-		test.fail(
-			true,
-			"Known bug #3654 - virtual DOM scroll position jumps on scroll-up; remove this annotation once fixed",
-		);
-
 		// 1. Fast-scroll to the bottom (large wheel deltas skip rows).
 		await scrollToBottom(page, 900);
 
