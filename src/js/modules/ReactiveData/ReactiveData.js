@@ -38,7 +38,14 @@ export default class ReactiveData extends Module{
 		this.unwatchData();
 		
 		this.data = data;
-		
+
+		//hold a reference to the instance methods so they can be restored in unwatchData.
+		//note: the actual array mutation below is performed via the native Array.prototype
+		//methods rather than these captured references. On framework reactive arrays (e.g.
+		//Vue 3) reading data.push returns an instrumented method that re-dispatches through
+		//this overridden property, which - while reactivity is blocked - would silently drop
+		//the underlying mutation and leave the array out of sync with the table (issue #4212).
+
 		//override array push function
 		this.origFuncs.push = data.push;
 		
@@ -56,8 +63,8 @@ export default class ReactiveData extends Module{
 						self.table.rowManager.addRowActual(arg, false);
 					});
 					
-					result = self.origFuncs.push.apply(data, arguments);
-					
+					result = Array.prototype.push.apply(data, arguments);
+
 					self.unblock("data-push");
 				}
 				
@@ -82,8 +89,8 @@ export default class ReactiveData extends Module{
 						self.table.rowManager.addRowActual(arg, true);
 					});
 					
-					result = self.origFuncs.unshift.apply(data, arguments);
-					
+					result = Array.prototype.unshift.apply(data, arguments);
+
 					self.unblock("data-unshift");
 				}
 				
@@ -112,7 +119,7 @@ export default class ReactiveData extends Module{
 						}
 					}
 
-					result = self.origFuncs.shift.call(data);
+					result = Array.prototype.shift.call(data);
 
 					self.unblock("data-shift");
 				}
@@ -141,8 +148,8 @@ export default class ReactiveData extends Module{
 						}
 					}
 
-					result = self.origFuncs.pop.call(data);
-					
+					result = Array.prototype.pop.call(data);
+
 					self.unblock("data-pop");
 				}
 
@@ -200,8 +207,8 @@ export default class ReactiveData extends Module{
 						self.table.rowManager.reRenderInPosition();
 					}
 
-					result = self.origFuncs.splice.apply(data, arguments);
-					
+					result = Array.prototype.splice.apply(data, arguments);
+
 					self.unblock("data-splice");
 				}
 				

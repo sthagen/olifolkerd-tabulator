@@ -23,11 +23,13 @@
  *      That re-enters Tabulator's override, but reactivity is now `blocked`,
  *      so the `if` branch is skipped and the *native* push is never executed.
  *
- * The net effect: the row is added to the table, but the reactive array is
- * never actually mutated.
+ * The net effect was: the row is added to the table, but the reactive array
+ * is never actually mutated.
  *
- * These tests assert the CORRECT (in-sync) behaviour, so they currently FAIL,
- * demonstrating the bug.
+ * The fix performs the underlying mutation with the native Array.prototype
+ * methods instead of the (potentially instrumented) instance methods, so no
+ * re-dispatch/recursion can occur. These tests assert the in-sync behaviour
+ * and act as a regression guard.
  */
 
 import { reactive } from "vue";
