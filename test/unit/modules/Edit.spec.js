@@ -115,16 +115,58 @@ describe("Edit module", () => {
 		// Create a spy for the cellEdited event
 		const cellEditedSpy = jest.fn();
 		table.on("cellEdited", cellEditedSpy);
-		
+
 		// Change a cell value
 		const cell = table.getRows()[0].getCell("name");
 		cell.setValue("New Value");
-		
+
 		// Wait a bit for event processing
 		await new Promise(resolve => setTimeout(resolve, 100));
-		
+
 		// Should have received the cellEdited event
 		expect(cellEditedSpy).toHaveBeenCalled();
+	});
+
+	// Regression test for https://github.com/tabulator-tables/tabulator/issues/4421
+	//
+	// Tabulator wires the `cellClick` callback through a single click listener
+	// bound to the table element; clicks on cells bubble up to it. Since 5.6 the
+	// edit click handler calls `e.stopPropagation()` *before* checking whether
+	// the cell is actually editable. When a column defines an editor but the
+	// cell is not editable, the click is swallowed and never reaches the
+	// table-level listener, so the `cellClick` callback never fires.
+	//
+	// jsdom does not lay the table out, so rows are never attached to the live
+	// DOM and the real table-level listener can't receive bubbling clicks. To
+	// reproduce the defect we attach the cell element under an ancestor that
+	// stands in for that table-level listener and assert the click reaches it.
+	it("should not stop click propagation when editor is defined but cell is not editable (#4421)", async () => {
+		table = await setupTable({
+			columns: [
+				{ title: "ID", field: "id" },
+				// Editor defined, but the cell cannot be edited.
+				{ title: "Name", field: "name", editor: "input", editable: false },
+				{ title: "Age", field: "age", editor: "number" },
+			],
+		});
+
+		const cellElement = table.getRows()[0].getCell("name").getElement();
+
+		// Stand-in for Tabulator's table-level interaction listener that powers
+		// the cellClick callback.
+		const ancestorClickHandler = jest.fn();
+		const ancestor = document.createElement("div");
+		document.body.appendChild(ancestor);
+		ancestor.appendChild(cellElement);
+		ancestor.addEventListener("click", ancestorClickHandler);
+
+		cellElement.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		// Before the fix this is never called because the edit handler stopped
+		// propagation even though the cell was not editable.
+		expect(ancestorClickHandler).toHaveBeenCalledTimes(1);
 	});
 });
 
