@@ -167,3 +167,127 @@ describe("ReactiveData module with Vue 3 reactive arrays (issue #4212)", () => {
         expect(data.map((r) => r.id)).toEqual([1, 4, 3]);
     });
 });
+
+/**
+ * The same recursion problem also affected data-tree child arrays
+ * (sub-objects) via watchTreeChildren(). On a Vue 3 reactive child array, the
+ * mutating methods desynced exactly like the top-level data array. The
+ * overrides were additionally arrow functions, so `arguments` resolved to
+ * watchTreeChildren's own arguments rather than the call's, pushing the wrong
+ * value. These tests exercise a real Vue 3 reactive child array.
+ */
+describe("ReactiveData tree children with Vue 3 reactive arrays (issue #4212)", () => {
+    /** @type {ReactiveData} */
+    let reactiveData;
+    let mockTable;
+
+    const makeRow = (children) => ({
+        getData: () => ({ id: 1, name: "Parent", children }),
+    });
+
+    beforeEach(() => {
+        mockTable = {
+            rowManager: { refreshActiveData: jest.fn() },
+            modules: { dataTree: { initializeRow: jest.fn(), layoutRow: jest.fn() } },
+            options: {
+                reactiveData: true,
+                dataTree: true,
+                dataTreeChildField: "children",
+            },
+            eventBus: { subscribe: jest.fn() },
+        };
+
+        jest.spyOn(ReactiveData.prototype, "registerTableOption").mockImplementation(
+            function (key, value) {
+                this.table.options[key] = this.table.options[key] || value;
+            }
+        );
+        jest.spyOn(ReactiveData.prototype, "subscribe").mockImplementation(() => {});
+
+        reactiveData = new ReactiveData(mockTable);
+        // rebuildTree pulls in the dataTree module; stub it and assert it fires.
+        jest.spyOn(reactiveData, "rebuildTree").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("keeps a Vue 3 reactive child array in sync when push() is called", () => {
+        const children = reactive([{ id: 2, name: "Child A" }]);
+        const row = makeRow(children);
+
+        reactiveData.watchTreeChildren(row);
+
+        const newChild = { id: 3, name: "Child B" };
+        children.push(newChild);
+
+        expect(reactiveData.rebuildTree).toHaveBeenCalledWith(row);
+        expect(children).toHaveLength(2);
+        expect(children[1]).toEqual(newChild);
+    });
+
+    it("keeps a Vue 3 reactive child array in sync when unshift() is called", () => {
+        const children = reactive([{ id: 2, name: "Child A" }]);
+        const row = makeRow(children);
+
+        reactiveData.watchTreeChildren(row);
+
+        const newChild = { id: 1, name: "Child Z" };
+        children.unshift(newChild);
+
+        expect(reactiveData.rebuildTree).toHaveBeenCalledWith(row);
+        expect(children).toHaveLength(2);
+        expect(children[0]).toEqual(newChild);
+    });
+
+    it("keeps a Vue 3 reactive child array in sync when pop() is called", () => {
+        const last = { id: 3, name: "Child B" };
+        const children = reactive([{ id: 2, name: "Child A" }, last]);
+        const row = makeRow(children);
+
+        reactiveData.watchTreeChildren(row);
+
+        const result = children.pop();
+
+        expect(reactiveData.rebuildTree).toHaveBeenCalledWith(row);
+        expect(result).toEqual(last);
+        expect(children).toHaveLength(1);
+        expect(children[0]).toEqual({ id: 2, name: "Child A" });
+    });
+
+    it("keeps a Vue 3 reactive child array in sync when shift() is called", () => {
+        const first = { id: 2, name: "Child A" };
+        const children = reactive([first, { id: 3, name: "Child B" }]);
+        const row = makeRow(children);
+
+        reactiveData.watchTreeChildren(row);
+
+        const result = children.shift();
+
+        expect(reactiveData.rebuildTree).toHaveBeenCalledWith(row);
+        expect(result).toEqual(first);
+        expect(children).toHaveLength(1);
+        expect(children[0]).toEqual({ id: 3, name: "Child B" });
+    });
+
+    it("keeps a Vue 3 reactive child array in sync when splice() is called", () => {
+        const children = reactive([
+            { id: 2, name: "Child A" },
+            { id: 3, name: "Child B" },
+            { id: 4, name: "Child C" },
+        ]);
+        const row = makeRow(children);
+
+        reactiveData.watchTreeChildren(row);
+
+        const newChild = { id: 5, name: "Child D" };
+        const removed = children.splice(1, 1, newChild);
+
+        expect(reactiveData.rebuildTree).toHaveBeenCalledWith(row);
+        expect(removed).toEqual([{ id: 3, name: "Child B" }]);
+        expect(children).toHaveLength(3);
+        expect(children.map((c) => c.id)).toEqual([2, 5, 4]);
+    });
+});
