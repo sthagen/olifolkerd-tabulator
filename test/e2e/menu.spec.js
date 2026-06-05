@@ -1,9 +1,9 @@
-// @ts-check
 import { test, expect } from "@playwright/test";
+import { join } from "path";
 
 test.describe("Context menu viewport bounds", () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto("/test/e2e/menu.html");
+		await page.goto(`file://${join(__dirname, "menu.html")}`);
 		await page.waitForSelector(".tabulator-row");
 	});
 
