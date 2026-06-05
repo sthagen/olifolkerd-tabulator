@@ -106,4 +106,64 @@ describe("ReactiveData module with Vue 3 reactive arrays (issue #4212)", () => {
         expect(data).toHaveLength(2);
         expect(data[0]).toEqual(newRow);
     });
+
+    it("keeps a Vue 3 reactive array in sync with the table when pop() is called", () => {
+        const last = { id: 2, name: "Bob" };
+        const data = reactive([{ id: 1, name: "John" }, last]);
+
+        // The deletion is dispatched to the table via the row returned here.
+        mockRowManager.getRowFromDataObject.mockReturnValue({ deleteActual: jest.fn() });
+
+        reactiveData.watchData(data);
+
+        const result = data.pop();
+
+        // The table IS updated: the row for the removed item is looked up.
+        expect(mockRowManager.getRowFromDataObject).toHaveBeenCalledWith(last);
+
+        // The reactive array must actually shrink and return the popped value.
+        expect(result).toEqual(last);
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual({ id: 1, name: "John" });
+    });
+
+    it("keeps a Vue 3 reactive array in sync with the table when shift() is called", () => {
+        const first = { id: 1, name: "John" };
+        const data = reactive([first, { id: 2, name: "Bob" }]);
+
+        mockRowManager.getRowFromDataObject.mockReturnValue({ deleteActual: jest.fn() });
+
+        reactiveData.watchData(data);
+
+        const result = data.shift();
+
+        expect(mockRowManager.getRowFromDataObject).toHaveBeenCalledWith(first);
+
+        expect(result).toEqual(first);
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual({ id: 2, name: "Bob" });
+    });
+
+    it("keeps a Vue 3 reactive array in sync with the table when splice() is called", () => {
+        const data = reactive([
+            { id: 1, name: "John" },
+            { id: 2, name: "Bob" },
+            { id: 3, name: "Carol" },
+        ]);
+
+        mockRowManager.getRowFromDataObject.mockReturnValue({ deleteActual: jest.fn() });
+
+        reactiveData.watchData(data);
+
+        const newRow = { id: 4, name: "Dave" };
+        // Replace the middle element with a new one.
+        const removed = data.splice(1, 1, newRow);
+
+        // The reactive array must reflect the splice: removed item returned,
+        // new item present at the spliced position, length unchanged here.
+        expect(removed).toEqual([{ id: 2, name: "Bob" }]);
+        expect(data).toHaveLength(3);
+        expect(data[1]).toEqual(newRow);
+        expect(data.map((r) => r.id)).toEqual([1, 4, 3]);
+    });
 });
