@@ -19,6 +19,12 @@
     "**/*.css",
     "**/*.scss"
   ],
+  "files": [
+    "dist/",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "lint": "eslint src --fix",
     "prebuild": "eslint src --fix",
