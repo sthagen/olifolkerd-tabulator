@@ -1,5 +1,6 @@
 import TabulatorFull from "../../../src/js/core/TabulatorFull";
 import Sort from "../../../src/js/modules/Sort/Sort";
+import { DateTime } from "luxon";
 
 describe("Sort module", () => {
     /** @type {TabulatorFull} */
@@ -153,5 +154,55 @@ describe("Sort module", () => {
         expect(sorted[0].data.name).toBe("John");
         expect(sorted[1].data.name).toBe("Jane");
         expect(sorted[2].data.name).toBe("Bob");
+    });
+});
+
+describe("Sort module - datetime sorter with 'x' (epoch milliseconds) format", () => {
+    // 2021-05-10T00:00:00.000Z and the two following days, supplied out of order.
+    const DAY = 24 * 60 * 60 * 1000;
+    const EPOCH_MS = 1620604800000;
+
+    /** @type {TabulatorFull} */
+    let tabulator;
+    /** @type {Sort} */
+    let sortMod;
+
+    beforeEach(async () => {
+        const el = document.createElement("div");
+        el.id = "tabulator";
+        document.body.appendChild(el);
+        tabulator = new TabulatorFull("#tabulator", {
+            dependencies: { luxon: { DateTime } },
+            data: [
+                { id: 1, ts: EPOCH_MS + DAY },
+                { id: 2, ts: EPOCH_MS },
+                { id: 3, ts: EPOCH_MS + 2 * DAY },
+            ],
+            columns: [
+                { title: "ID", field: "id", sorter: "number" },
+                { title: "TS", field: "ts", sorter: "datetime", sorterParams: { format: "x" } },
+            ],
+        });
+        sortMod = tabulator.module("sort");
+        return new Promise((resolve) => {
+            tabulator.on("tableBuilt", () => resolve());
+        });
+    });
+
+    afterEach(() => {
+        tabulator.destroy();
+        document.getElementById("tabulator")?.remove();
+    });
+
+    it("orders epoch-ms timestamps chronologically when ascending", () => {
+        sortMod.setSort(tabulator.columnManager.findColumn("ts"), "asc");
+        const sorted = sortMod.sort(tabulator.rowManager.activeRows);
+        expect(sorted.map((row) => row.data.id)).toEqual([2, 1, 3]);
+    });
+
+    it("orders epoch-ms timestamps in reverse when descending", () => {
+        sortMod.setSort(tabulator.columnManager.findColumn("ts"), "desc");
+        const sorted = sortMod.sort(tabulator.rowManager.activeRows);
+        expect(sorted.map((row) => row.data.id)).toEqual([3, 1, 2]);
     });
 });

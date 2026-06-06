@@ -1,5 +1,6 @@
 import TabulatorFull from '../../../src/js/core/TabulatorFull.js';
 import Edit from '../../../src/js/modules/Edit/Edit.js';
+import { DateTime } from "luxon";
 
 describe("Edit module", () => {
 	let table;
@@ -124,5 +125,105 @@ describe("Edit module", () => {
 		
 		// Should have received the cellEdited event
 		expect(cellEditedSpy).toHaveBeenCalled();
+	});
+});
+
+describe("Edit module - date editors with 'x' (epoch milliseconds) format", () => {
+	// 2021-05-10T00:00:00.000Z
+	const EPOCH_MS = 1620604800000;
+
+	let table;
+
+	const buildTable = async (column) => {
+		document.body.innerHTML = '<div id="test-table"></div>';
+		table = new TabulatorFull("#test-table", {
+			data: [{ id: 1, ts: EPOCH_MS }],
+			columns: [{ title: "ID", field: "id" }, column],
+		});
+		await new Promise((resolve) => table.on("tableBuilt", resolve));
+		return table;
+	};
+
+	// Opens the cell editor and returns its <input> element.
+	const openEditor = () => {
+		const cell = table.getRows()[0].getCell("ts");
+		cell.edit();
+		return { cell, input: cell.getElement().querySelector("input") };
+	};
+
+	// Sets the input value and submits the edit via the Enter key.
+	const submit = (input, value) => {
+		input.value = value;
+		input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+	};
+
+	beforeEach(() => {
+		// The date/time editors resolve luxon from window.DateTime, while the
+		// datetime editor resolves it via the dependency registry (window.luxon).
+		window.DateTime = DateTime;
+		window.luxon = { DateTime };
+	});
+
+	afterEach(() => {
+		if (table) {
+			table.destroy();
+		}
+		delete window.DateTime;
+		delete window.luxon;
+	});
+
+	it("datetime editor parses an epoch-ms value into the input on open", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "datetime", editorParams: { format: "x" } });
+
+		const { input } = openEditor();
+		const expected = DateTime.fromMillis(EPOCH_MS).toFormat("yyyy-MM-dd'T'HH:mm");
+		expect(input.value).toBe(expected);
+	});
+
+	it("datetime editor saves the edited value back as epoch milliseconds", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "datetime", editorParams: { format: "x" } });
+
+		const { cell, input } = openEditor();
+		submit(input, "2021-05-11T06:30");
+
+		const expected = DateTime.fromISO("2021-05-11T06:30").toMillis();
+		expect(cell.getValue()).toBe(expected);
+		expect(typeof cell.getValue()).toBe("number");
+	});
+
+	it("date editor parses an epoch-ms value into the input on open", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "date", editorParams: { format: "x" } });
+
+		const { input } = openEditor();
+		const expected = DateTime.fromMillis(EPOCH_MS).toFormat("yyyy-MM-dd");
+		expect(input.value).toBe(expected);
+	});
+
+	it("date editor saves the edited value back as epoch milliseconds", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "date", editorParams: { format: "x" } });
+
+		const { cell, input } = openEditor();
+		submit(input, "2021-05-11");
+
+		const expected = DateTime.fromFormat("2021-05-11", "yyyy-MM-dd").toMillis();
+		expect(cell.getValue()).toBe(expected);
+		expect(typeof cell.getValue()).toBe("number");
+	});
+
+	it("time editor parses an epoch-ms value into the input on open", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "time", editorParams: { format: "x" } });
+
+		const { input } = openEditor();
+		const expected = DateTime.fromMillis(EPOCH_MS).toFormat("HH:mm");
+		expect(input.value).toBe(expected);
+	});
+
+	it("time editor saves the edited value back as epoch milliseconds", async () => {
+		await buildTable({ title: "TS", field: "ts", editor: "time", editorParams: { format: "x" } });
+
+		const { cell, input } = openEditor();
+		submit(input, "10:30");
+
+		expect(typeof cell.getValue()).toBe("number");
 	});
 });
