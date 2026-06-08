@@ -129,44 +129,44 @@ describe("Edit module", () => {
 
 	// Regression test for https://github.com/tabulator-tables/tabulator/issues/4421
 	//
-	// Tabulator wires the `cellClick` callback through a single click listener
+	// Tabulator dispatches the `cellClick` callback from a single click listener
 	// bound to the table element; clicks on cells bubble up to it. Since 5.6 the
 	// edit click handler calls `e.stopPropagation()` *before* checking whether
 	// the cell is actually editable. When a column defines an editor but the
 	// cell is not editable, the click is swallowed and never reaches the
 	// table-level listener, so the `cellClick` callback never fires.
-	//
-	// jsdom does not lay the table out, so rows are never attached to the live
-	// DOM and the real table-level listener can't receive bubbling clicks. To
-	// reproduce the defect we attach the cell element under an ancestor that
-	// stands in for that table-level listener and assert the click reaches it.
-	it("should not stop click propagation when editor is defined but cell is not editable (#4421)", async () => {
+	it("should fire cellClick when an editor is defined but the cell is not editable (#4421)", async () => {
+		const cellClick = jest.fn();
+
+		// A fixed height + basic vertical rendering forces the rows to be laid
+		// out into the live DOM under jsdom, so a real click bubbles up to the
+		// table-level listener that powers the cellClick callback.
 		table = await setupTable({
+			height: 300,
+			renderVertical: "basic",
 			columns: [
 				{ title: "ID", field: "id" },
 				// Editor defined, but the cell cannot be edited.
-				{ title: "Name", field: "name", editor: "input", editable: false },
+				{ title: "Name", field: "name", editor: "input", editable: false, cellClick },
 				{ title: "Age", field: "age", editor: "number" },
 			],
 		});
 
+		const externalCellClick = jest.fn();
+		table.on("cellClick", externalCellClick);
+
+		table.redraw(true);
+		await new Promise(resolve => setTimeout(resolve, 20));
+
 		const cellElement = table.getRows()[0].getCell("name").getElement();
-
-		// Stand-in for Tabulator's table-level interaction listener that powers
-		// the cellClick callback.
-		const ancestorClickHandler = jest.fn();
-		const ancestor = document.createElement("div");
-		document.body.appendChild(ancestor);
-		ancestor.appendChild(cellElement);
-		ancestor.addEventListener("click", ancestorClickHandler);
-
 		cellElement.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 
 		await new Promise(resolve => setTimeout(resolve, 50));
 
-		// Before the fix this is never called because the edit handler stopped
+		// Before the fix neither fired because the edit handler stopped click
 		// propagation even though the cell was not editable.
-		expect(ancestorClickHandler).toHaveBeenCalledTimes(1);
+		expect(cellClick).toHaveBeenCalledTimes(1);
+		expect(externalCellClick).toHaveBeenCalledTimes(1);
 	});
 });
 
