@@ -2,8 +2,7 @@ export default function maskInput(el, options){
 	var mask = options.mask,
 	maskLetter = typeof options.maskLetterChar !== "undefined" ? options.maskLetterChar : "A",
 	maskNumber = typeof options.maskNumberChar !== "undefined" ? options.maskNumberChar : "9",
-	maskWildcard = typeof options.maskWildcardChar !== "undefined" ? options.maskWildcardChar : "*",
-	success = false;
+	maskWildcard = typeof options.maskWildcardChar !== "undefined" ? options.maskWildcardChar : "*";
 
 	function fillSymbols(index){
 		var symbol = mask[index];
@@ -17,53 +16,47 @@ export default function maskInput(el, options){
 		var index = el.value.length,
 		char = e.key;
 
-		if(e.keyCode > 46){
+		if(e.key.length === 1 && !e.ctrlKey && !e.metaKey){
 			if(index >= mask.length){
 				e.preventDefault();
 				e.stopPropagation();
-				success = false;
 				return false;
 			}else{
 				switch(mask[index]){
 					case maskLetter:
-					if(char.toUpperCase() == char.toLowerCase()){
-						e.preventDefault();
-						e.stopPropagation();
-						success = false;
-						return false;
-					}
-					break;
+						if(char.toUpperCase() == char.toLowerCase()){
+							e.preventDefault();
+							e.stopPropagation();
+							return false;
+						}
+						break;
 
 					case maskNumber:
-					if(isNaN(char)){
-						e.preventDefault();
-						e.stopPropagation();
-						success = false;
-						return false;
-					}
-					break;
+						if(isNaN(char)){
+							e.preventDefault();
+							e.stopPropagation();
+							return false;
+						}
+						break;
 
 					case maskWildcard:
-					break;
+						break;
 
 					default:
-					if(char !== mask[index]){
-						e.preventDefault();
-						e.stopPropagation();
-						success = false;
-						return false;
-					}
+						if(char !== mask[index]){
+							e.preventDefault();
+							e.stopPropagation();
+							return false;
+						}
 				}
 			}
-
-			success = true;
 		}
 
 		return;
 	});
 
 	el.addEventListener("keyup", (e) => {
-		if(e.keyCode > 46){
+		if(e.key.length === 1){
 			if(options.maskAutoFill){
 				fillSymbols(el.value.length);
 			}

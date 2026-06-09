@@ -43,17 +43,19 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	};
 
 	onRendered(function () {
-		//submit new value on blur
-		input.removeEventListener("blur", blurFunc);
+		if(cell.getType() === "cell"){
+			//submit new value on blur
+			input.removeEventListener("blur", blurFunc);
 
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
 
-		//submit new value on blur
-		input.addEventListener("blur", blurFunc);
+			//submit new value on blur
+			input.addEventListener("blur", blurFunc);
 
-		if(editorParams.selectContents){
-			input.select();
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 
@@ -75,28 +77,28 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
-		switch(e.keyCode){
-			case 13:
-			// case 9:
-			onChange();
-			break;
+		switch(e.key){
+			case "Enter":
+			// case "Tab":
+				onChange();
+				break;
 
-			case 27:
-			cancel();
-			break;
+			case "Escape":
+				cancel();
+				break;
 
-			case 38: //up arrow
-			case 40: //down arrow
-			if(vertNav == "editor"){
-				e.stopImmediatePropagation();
+			case "ArrowUp":
+			case "ArrowDown":
+				if(vertNav == "editor"){
+					e.stopImmediatePropagation();
+					e.stopPropagation();
+				}
+				break;
+
+			case "End":
+			case "Home":
 				e.stopPropagation();
-			}
-			break;
-
-			case 35:
-			case 36:
-			e.stopPropagation();
-			break;
+				break;
 		}
 	});
 
@@ -105,4 +107,4 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	}
 
 	return input;
-};
+}

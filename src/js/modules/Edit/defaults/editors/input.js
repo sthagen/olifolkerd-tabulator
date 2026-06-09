@@ -26,11 +26,13 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	input.value = typeof cellValue !== "undefined" ? cellValue : "";
 
 	onRendered(function(){
-		input.focus({preventScroll: true});
-		input.style.height = "100%";
+		if(cell.getType() === "cell"){
+			input.focus({preventScroll: true});
+			input.style.height = "100%";
 
-		if(editorParams.selectContents){
-			input.select();
+			if(editorParams.selectContents){
+				input.select();
+			}
 		}
 	});
 
@@ -50,20 +52,20 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
-		switch(e.keyCode){
-			// case 9:
-			case 13:
-			onChange(e);
-			break;
+		switch(e.key){
+			// case "Tab":
+			case "Enter":
+				onChange(e);
+				break;
 
-			case 27:
-			cancel();
-			break;
+			case "Escape":
+				cancel();
+				break;
 
-			case 35:
-			case 36:
-			e.stopPropagation();
-			break;
+			case "End":
+			case "Home":
+				e.stopPropagation();
+				break;
 		}
 	});
 
@@ -72,4 +74,4 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	}
 
 	return input;
-};
+}

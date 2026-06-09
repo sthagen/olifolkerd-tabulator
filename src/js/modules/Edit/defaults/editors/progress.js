@@ -96,25 +96,25 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 	//allow key based navigation
 	element.addEventListener("keydown", function(e){
-		switch(e.keyCode){
-			case 39: //right arrow
-			e.preventDefault();
-			bar.style.width = (bar.clientWidth + element.clientWidth/100) + "px";
-			break;
+		switch(e.key){
+			case "ArrowRight":
+				e.preventDefault();
+				bar.style.width = (bar.clientWidth + element.clientWidth/100) + "px";
+				break;
 
-			case 37: //left arrow
-			e.preventDefault();
-			bar.style.width = (bar.clientWidth - element.clientWidth/100) + "px";
-			break;
+			case "ArrowLeft":
+				e.preventDefault();
+				bar.style.width = (bar.clientWidth - element.clientWidth/100) + "px";
+				break;
 
-			case 9: //tab
-			case 13: //enter
-			updateValue();
-			break;
+			case "Tab":
+			case "Enter":
+				updateValue();
+				break;
 
-			case 27: //escape
-			cancel();
-			break;
+			case "Escape":
+				cancel();
+				break;
 
 		}
 	});
@@ -124,4 +124,4 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	});
 
 	return bar;
-};
+}
