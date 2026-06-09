@@ -206,3 +206,54 @@ describe("Sort module - datetime sorter with 'x' (epoch milliseconds) format", (
         expect(sorted.map((row) => row.data.id)).toEqual([3, 1, 2]);
     });
 });
+
+describe("Sort module - BigInt values with auto-detected sorter", () => {
+    // Fix https://github.com/tabulator-tables/tabulator/pull/4894
+    // isNaN(value) threw "Cannot convert a BigInt value to a number" when
+    // guessing a sorter for a column holding BigInt values.
+
+    /** @type {TabulatorFull} */
+    let tabulator;
+    /** @type {Sort} */
+    let sortMod;
+
+    beforeEach(async () => {
+        const el = document.createElement("div");
+        el.id = "tabulator";
+        document.body.appendChild(el);
+        tabulator = new TabulatorFull("#tabulator", {
+            data: [
+                { id: 1, big: 30n },
+                { id: 2, big: 10n },
+                { id: 3, big: 20n },
+            ],
+            // no sorter defined, so it must be auto-detected via findSorter
+            columns: [
+                { title: "ID", field: "id", sorter: "number" },
+                { title: "Big", field: "big" },
+            ],
+        });
+        sortMod = tabulator.module("sort");
+        return new Promise((resolve) => {
+            tabulator.on("tableBuilt", () => resolve());
+        });
+    });
+
+    afterEach(() => {
+        tabulator.destroy();
+        document.getElementById("tabulator")?.remove();
+    });
+
+    it("auto-detects a number sorter for a BigInt column without throwing", () => {
+        const column = tabulator.columnManager.findColumn("big");
+        expect(() => sortMod.findSorter(column)).not.toThrow();
+        expect(sortMod.findSorter(column)).toBe(Sort.sorters.number);
+    });
+
+    it("sorts BigInt values numerically when the sorter is auto-detected", () => {
+        const column = tabulator.columnManager.findColumn("big");
+        sortMod.setSort(column, "asc");
+        const sorted = sortMod.sort(tabulator.rowManager.activeRows);
+        expect(sorted.map((row) => row.data.id)).toEqual([2, 3, 1]);
+    });
+});
