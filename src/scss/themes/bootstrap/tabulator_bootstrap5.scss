@@ -38,7 +38,7 @@ $footerBorderColor:$pagination-border-color !default; //footer border color
 $footerSeparatorColor:$table-border-color !default; //footer bottom separator color
 $footerActiveColor:$pagination-active-color !default; //footer bottom active text color
 
-$table-cell-padding-sm: 5px;
+$table-cell-padding-sm: 5px !default; // cell padding in table-sm
 
 @use "../../tabulator.scss" with (
 	$backgroundColor: $backgroundColor,
