@@ -49,14 +49,16 @@ async function scrollToBottom(page, step) {
 }
 
 // Scroll up `steps` times by `delta` px, returning the per-step jump samples.
-async function scrollUpAndMeasure(page, delta, steps) {
+// `rowSelector` chooses which rows to track (grouped tables exclude the group
+// header rows so we follow a data row).
+async function scrollUpAndMeasure(page, delta, steps, rowSelector = ".tabulator-row") {
 	const jumps = [];
 	for (let i = 0; i < steps; i++) {
-		const before = await page.evaluate((sel) => {
+		const before = await page.evaluate(({ sel, rowSel }) => {
 			const holder = document.querySelector(sel);
 			const mid =
 				holder.getBoundingClientRect().top + holder.clientHeight / 2;
-			const rows = [...holder.querySelectorAll(".tabulator-row")];
+			const rows = [...holder.querySelectorAll(rowSel)];
 			let best = null,
 				bestDist = Infinity;
 			for (const r of rows) {
@@ -73,15 +75,15 @@ async function scrollUpAndMeasure(page, delta, steps) {
 				top: best.getBoundingClientRect().top,
 				scrollTop: holder.scrollTop,
 			};
-		}, holderSel);
+		}, { sel: holderSel, rowSel: rowSelector });
 
 		await page.mouse.wheel(0, -delta);
 		await page.waitForTimeout(20);
 
 		const after = await page.evaluate(
-			({ sel, id }) => {
+			({ sel, rowSel, id }) => {
 				const holder = document.querySelector(sel);
-				const rows = [...holder.querySelectorAll(".tabulator-row")];
+				const rows = [...holder.querySelectorAll(rowSel)];
 				for (const r of rows) {
 					const cell = r.querySelector(".tabulator-cell");
 					if (cell && cell.textContent === id) {
@@ -94,7 +96,7 @@ async function scrollUpAndMeasure(page, delta, steps) {
 				}
 				return { found: false, scrollTop: holder.scrollTop };
 			},
-			{ sel: holderSel, id: before ? before.id : null },
+			{ sel: holderSel, rowSel: rowSelector, id: before ? before.id : null },
 		);
 
 		if (!before) break;
@@ -177,5 +179,47 @@ test.describe("Vertical scroll jumping with variable height rows (#3654)", () =>
 
 		expect(jumps.length).toBeGreaterThan(5);
 		expect(worstJump).toBeLessThanOrEqual(5);
+	});
+});
+
+// Several reporters on the issue noted the jump only appeared with the groupBy
+// feature enabled and disappeared when it was removed. It is the same bug - a
+// grouped table also renders variable height data rows through the virtual DOM
+// - so the same fix covers it. This guards the grouped path explicitly.
+// (Before the fix this jumped ~276px per step; after the fix it is 0px.)
+test.describe("Vertical scroll jumping with grouped variable height rows (#3654)", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(`file://${join(__dirname, "scroll-jump-group.html")}`);
+		await page.waitForSelector(".tabulator-row");
+		await page.locator(holderSel).hover();
+	});
+
+	test("scrolling up after a fast scroll does not make content jump", async ({
+		page,
+	}) => {
+		await scrollToBottom(page, 900);
+
+		await page.evaluate((sel) => {
+			document.querySelector(sel).scrollLeft = 300;
+		}, holderSel);
+		await page.waitForTimeout(50);
+
+		// Track data rows only, never the group header rows.
+		const jumps = await scrollUpAndMeasure(
+			page,
+			DELTA,
+			40,
+			".tabulator-row:not(.tabulator-group)",
+		);
+		const worstJump = jumps.reduce(
+			(max, j) => Math.max(max, Math.abs(j.jump)),
+			0,
+		);
+
+		console.log("grouped scroll-up steps:", JSON.stringify(jumps));
+		console.log("grouped worst jump (px):", worstJump);
+
+		expect(jumps.length).toBeGreaterThan(0);
+		expect(worstJump).toBeLessThanOrEqual(20);
 	});
 });
