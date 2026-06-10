@@ -34,7 +34,8 @@ export default class SelectRange extends Module {
 		this.registerTableOption("selectableRangeClearCellsValue", undefined); //value for cleared active range
 		this.registerTableOption("selectableRangeAutoFocus", true); //focus on a cell after resetRanges
 		this.registerTableOption("selectableRangeInitializeDefault", true); //initializes default range on cell [0,0]
-
+		this.registerTableOption("selectableRangeBlurEditOnNavigate", undefined); //prevent editing on navigation
+		
 		this.registerTableFunction("getRangesData", this.getRangesData.bind(this));
 		this.registerTableFunction("getRanges", this.getRanges.bind(this));
 		this.registerTableFunction("addRange", this.addRangeFromComponent.bind(this));
@@ -67,6 +68,10 @@ export default class SelectRange extends Module {
 				console.warn("Having multiple frozen columns with selectRange option may result in unpredictable behavior.");
 			}
 		}
+		
+		this.subscribe("edit-nav-disabled", () => {
+			return true; // Disable navigation in edit module
+		});
 	}
 	
 	
@@ -129,8 +134,8 @@ export default class SelectRange extends Module {
 		this.subscribe("edit-editor-clear", this.finishEditingCell.bind(this));
 		this.subscribe("edit-blur", this.restoreFocus.bind(this));
 		
-		this.subscribe("keybinding-nav-prev", this.keyNavigate.bind(this, "left"));
-		this.subscribe("keybinding-nav-next", this.keyNavigate.bind(this, "right"));
+		this.subscribe("keybinding-nav-prev", this.keyNavigate.bind(this, "prev"));
+		this.subscribe("keybinding-nav-next", this.keyNavigate.bind(this, "next"));
 		this.subscribe("keybinding-nav-left", this.keyNavigate.bind(this, "left"));
 		this.subscribe("keybinding-nav-right", this.keyNavigate.bind(this, "right"));
 		this.subscribe("keybinding-nav-up", this.keyNavigate.bind(this, "up"));
@@ -142,12 +147,6 @@ export default class SelectRange extends Module {
 	initializeColumn(column) {
 		if(this.columnSelection && column.definition.headerSort && this.options("headerSortClickElement") !== "icon"){
 			console.warn("Using column headerSort with selectableRangeColumns option may result in unpredictable behavior. Consider using headerSortClickElement: 'icon'.");
-		}
-		
-		if (column.modules.edit) {
-			// Block editor from taking action so we can trigger edit by
-			// double clicking.
-			// column.modules.edit.blocked = true;
 		}
 	}
 	
@@ -410,17 +409,34 @@ export default class SelectRange extends Module {
 	///////////////////////////////////
 	
 	keyNavigate(dir, e){
-		if(this.navigate(false, false, dir)){
-			// e.preventDefault();
+		if(this.options("selectableRangeBlurEditOnNavigate")){
+			const isEditing = this.chain("edit-check-editing");
+			
+			if(isEditing){
+				if(dir === 'next' || dir === 'prev'){
+					this.dispatch("edit-cancel-cell");
+				}else{
+					// Prevent navigating while editing except for next/prev
+					return false;
+				}
+			}
 		}
-		e.preventDefault();
+
+		if (dir === 'prev') {
+			dir = 'left';
+		} else if (dir === 'next') {
+			dir = 'right';
+		}
+
+		if(this.navigate(false, false, dir)){
+			e.preventDefault();
+		}
 	}
 	
 	keyNavigateRange(e, dir, jump, expand){
 		if(this.navigate(jump, expand, dir)){
-			// e.preventDefault();
+			e.preventDefault();
 		}
-		e.preventDefault();
 	}
 	
 	navigate(jump, expand, dir) {
@@ -538,9 +554,8 @@ export default class SelectRange extends Module {
 			}
 
 			this.layoutElement();
-			
-			return true;
 		}
+		return true;
 	}
 	
 	rangeRemoved(removed){
@@ -554,7 +569,7 @@ export default class SelectRange extends Module {
 			}
 		}
 		
-		this.layoutElement();
+		this.layoutElement(true);
 	}
 	
 	findJumpRow(column, rows, reverse, emptyStart, emptySide){
@@ -696,11 +711,11 @@ export default class SelectRange extends Module {
 		}
 		
 		if (event.shiftKey) {
-			this.activeRange.setBounds(false, element);
+			this.activeRange.setBounds(false, element, true);
 		} else if (event.ctrlKey) {
-			this.addRange().setBounds(element);
+			this.addRange().setBounds(element, undefined, true);
 		} else {
-			this.resetRanges().setBounds(element);
+			this.resetRanges().setBounds(element, undefined, true);
 		}
 	}
 	
