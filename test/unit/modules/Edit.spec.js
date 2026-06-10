@@ -115,16 +115,58 @@ describe("Edit module", () => {
 		// Create a spy for the cellEdited event
 		const cellEditedSpy = jest.fn();
 		table.on("cellEdited", cellEditedSpy);
-		
+
 		// Change a cell value
 		const cell = table.getRows()[0].getCell("name");
 		cell.setValue("New Value");
-		
+
 		// Wait a bit for event processing
 		await new Promise(resolve => setTimeout(resolve, 100));
-		
+
 		// Should have received the cellEdited event
 		expect(cellEditedSpy).toHaveBeenCalled();
+	});
+
+	// Regression test for https://github.com/tabulator-tables/tabulator/issues/4421
+	//
+	// Tabulator dispatches the `cellClick` callback from a single click listener
+	// bound to the table element; clicks on cells bubble up to it. Since 5.6 the
+	// edit click handler calls `e.stopPropagation()` *before* checking whether
+	// the cell is actually editable. When a column defines an editor but the
+	// cell is not editable, the click is swallowed and never reaches the
+	// table-level listener, so the `cellClick` callback never fires.
+	it("should fire cellClick when an editor is defined but the cell is not editable (#4421)", async () => {
+		const cellClick = jest.fn();
+
+		// A fixed height + basic vertical rendering forces the rows to be laid
+		// out into the live DOM under jsdom, so a real click bubbles up to the
+		// table-level listener that powers the cellClick callback.
+		table = await setupTable({
+			height: 300,
+			renderVertical: "basic",
+			columns: [
+				{ title: "ID", field: "id" },
+				// Editor defined, but the cell cannot be edited.
+				{ title: "Name", field: "name", editor: "input", editable: false, cellClick },
+				{ title: "Age", field: "age", editor: "number" },
+			],
+		});
+
+		const externalCellClick = jest.fn();
+		table.on("cellClick", externalCellClick);
+
+		table.redraw(true);
+		await new Promise(resolve => setTimeout(resolve, 20));
+
+		const cellElement = table.getRows()[0].getCell("name").getElement();
+		cellElement.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		// Before the fix neither fired because the edit handler stopped click
+		// propagation even though the cell was not editable.
+		expect(cellClick).toHaveBeenCalledTimes(1);
+		expect(externalCellClick).toHaveBeenCalledTimes(1);
 	});
 });
 
