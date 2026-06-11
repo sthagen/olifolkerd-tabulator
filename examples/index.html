@@ -1,28 +1,26 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tabulator Examples</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
 </head>
 <body>
-  <main>
-    <hgroup>
-      <h1>Tabulator Examples</h1>
-      <p>A curated, self-contained gallery of escalating complexity — also used to smoke-test a build before release.</p>
-    </hgroup>
+  <main class="container py-4">
+    <h1 class="mb-1">Tabulator Examples</h1>
+    <p class="text-secondary">A curated, self-contained gallery of escalating complexity — also used to smoke-test a build before release.</p>
 
-    <article>
+    <div class="alert alert-info">
       <strong>Before you start:</strong> these pages load the locally-built library from
       <code>../dist/</code>, not the npm package. From the repo root run
       <code>npm run build</code> first, then open this file (works straight off
       <code>file://</code>, or serve the folder with any static server).
-    </article>
+    </div>
 
     <p>Each example builds on the last:</p>
 
-    <ol>
+    <ol class="lh-lg">
       <li><a href="01-basic-table.html"><strong>Basic Table</strong></a> — array data, columns, fit-to-width layout, click-to-sort.</li>
       <li><a href="02-formatters.html"><strong>Cell Formatters</strong></a> — progress bars, stars, ticks, money, colours and links.</li>
       <li><a href="03-sorting-filtering.html"><strong>Sorting &amp; Filtering</strong></a> — multi-sort, header filters, and programmatic filtering.</li>
@@ -35,8 +33,8 @@
       <li><a href="10-full-demo.html"><strong>Full Demo</strong></a> — the kitchen-sink: editing, grouping, calcs, selection, add/delete, download &amp; persistence.</li>
     </ol>
 
-    <footer>
-      <small>The only third-party asset on these pages is <a href="https://picocss.com">Pico.css</a> (a classless stylesheet, loaded from a CDN) used purely for page styling. Tabulator itself stays dependency-free.</small>
+    <footer class="mt-4 pt-3 border-top">
+      <small class="text-secondary">These pages use <a href="https://getbootstrap.com">Bootstrap 5</a> (from a CDN) for page styling, paired with Tabulator's matching <code>tabulator_bootstrap5</code> theme. Tabulator itself stays dependency-free.</small>
     </footer>
   </main>
 </body>

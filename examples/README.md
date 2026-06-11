@@ -53,8 +53,10 @@ data is inline (no AJAX).
 The examples are intentionally close to a real, dependency-free Tabulator deployment:
 
 - **Tabulator** — loaded from your local `../dist/` build. Zero runtime dependencies.
-- **[Pico.css](https://picocss.com)** — a *classless* stylesheet loaded from a CDN, used
-  **only** to make the example pages themselves look tidy. It has no bearing on Tabulator.
+- **[Bootstrap 5](https://getbootstrap.com)** — loaded from a CDN for page styling, paired
+  with Tabulator's matching `tabulator_bootstrap5` theme (`../dist/css/tabulator_bootstrap5.css`)
+  so the table and the page chrome share a consistent look. The Bootstrap CDN is the only
+  external asset; Tabulator itself stays dependency-free.
 
 Features that would require heavy third-party libraries (XLSX/PDF export, luxon-based date
 handling) are deliberately omitted so the demos stay lightweight. The download example uses
