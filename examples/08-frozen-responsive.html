@@ -10,15 +10,32 @@
 </head>
 <body>
   <main class="container py-4">
-    <h1>08 · Frozen, Movable &amp; Responsive Columns</h1>
+    <h1>08 · Frozen &amp; Responsive Columns</h1>
     <p>
-      A wide table. The <strong>Name</strong> column is frozen to the left while you scroll
-      horizontally; columns are movable (drag a header) and resizable. Narrow the browser
-      window and lower-priority columns collapse into an expandable row.
+      Two complementary ways to handle tables with more columns than will fit. They don't mix
+      in one table (responsive collapse removes the overflow columns, so there's nothing left
+      to scroll to), so each is shown on its own below.
       <a href="index.html">← back to index</a>
     </p>
 
-    <div id="example-table"></div>
+    <h2 class="h5 mt-4">Frozen, movable &amp; resizable</h2>
+    <p class="text-secondary">
+      This table is wider than the page, so it scrolls horizontally
+      (<strong>scroll the table sideways →</strong>). The <strong>Name</strong> column is
+      frozen to the left and the actions column is frozen to the right, so both stay visible
+      while the middle scrolls. Drag a header to reorder columns, or drag a column border to
+      resize.
+    </p>
+    <div id="frozen-table"></div>
+
+    <h2 class="h5 mt-5">Responsive collapse</h2>
+    <p class="text-secondary">
+      Same data, but here the columns fit the width and the lowest-priority ones
+      (<code>responsive</code> value highest) collapse into an expandable row as space runs out
+      (<strong>narrow your browser window →</strong>). Click the <strong>+</strong> on a row to
+      reveal the hidden fields.
+    </p>
+    <div id="responsive-table"></div>
   </main>
 
   <script>
@@ -31,24 +48,50 @@
       { id: 6, name: "Van Ng",     email: "van@example.com",    phone: "555-0106", country: "Vietnam",        city: "Hanoi",    dept: "Engineering", title: "Architect",      salary: 67000, started: "2016-09-12" },
     ];
 
-    var table = new Tabulator("#example-table", {
+    var money = { symbol: "$", precision: 0, thousand: "," };
+
+    // 1) Frozen columns + horizontal scroll. Using fixed widths with `fitData`
+    //    keeps the table wider than the page so it scrolls sideways; the frozen
+    //    columns stay pinned while the rest moves.
+    new Tabulator("#frozen-table", {
       data: tabledata,
-      layout: "fitDataFill",
-      movableColumns: true,                       // drag headers to reorder
-      responsiveLayout: "collapse",               // hide overflow cols into a sub-row
-      columnDefaults: { resizable: true },
+      layout: "fitData",
+      movableColumns: true,                  // drag headers to reorder
+      columnDefaults: { resizable: true },   // drag borders to resize
       columns: [
-        // Frozen so it stays visible during horizontal scroll. responsive:0 = never hide.
-        { title: "Name", field: "name", frozen: true, width: 150, responsive: 0 },
-        { title: "Email", field: "email", width: 200, responsive: 4 },
-        { title: "Phone", field: "phone", width: 130, responsive: 5 },
-        { title: "Country", field: "country", width: 150, responsive: 2 },
-        { title: "City", field: "city", width: 130, responsive: 3 },
-        { title: "Department", field: "dept", width: 150, responsive: 1 },
-        { title: "Title", field: "title", width: 170, responsive: 3 },
-        { title: "Salary", field: "salary", width: 120, hozAlign: "right", responsive: 1,
-          formatter: "money", formatterParams: { symbol: "$", precision: 0, thousand: "," } },
-        { title: "Started", field: "started", width: 130, sorter: "date", responsive: 5 },
+        { title: "Name", field: "name", width: 150, frozen: true },   // pinned left
+        { title: "Email", field: "email", width: 200 },
+        { title: "Phone", field: "phone", width: 130 },
+        { title: "Country", field: "country", width: 160 },
+        { title: "City", field: "city", width: 130 },
+        { title: "Department", field: "dept", width: 150 },
+        { title: "Title", field: "title", width: 180 },
+        { title: "Salary", field: "salary", width: 120, hozAlign: "right",
+          formatter: "money", formatterParams: money },
+        { title: "Started", field: "started", width: 130, sorter: "date" },
+        { title: "", width: 70, hozAlign: "center", headerSort: false, frozen: true, // pinned right
+          formatter: function () { return "✎"; } },
+      ],
+    });
+
+    // 2) Responsive collapse. Columns fit the width; as the window narrows the
+    //    highest `responsive` values are hidden first into a collapsed sub-row.
+    new Tabulator("#responsive-table", {
+      data: tabledata,
+      layout: "fitColumns",
+      responsiveLayout: "collapse",
+      columns: [
+        { formatter: "responsiveCollapse", width: 40, hozAlign: "center", resizable: false, headerSort: false },
+        { title: "Name", field: "name", responsive: 0 },          // 0 = never hide
+        { title: "Department", field: "dept", responsive: 1 },
+        { title: "Salary", field: "salary", hozAlign: "right", responsive: 1,
+          formatter: "money", formatterParams: money },
+        { title: "Title", field: "title", responsive: 3 },
+        { title: "City", field: "city", responsive: 3 },
+        { title: "Country", field: "country", responsive: 2 },
+        { title: "Email", field: "email", responsive: 4 },
+        { title: "Phone", field: "phone", responsive: 5 },        // hidden first
+        { title: "Started", field: "started", sorter: "date", responsive: 5 },
       ],
     });
   </script>
