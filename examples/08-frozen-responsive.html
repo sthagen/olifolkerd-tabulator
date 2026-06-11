@@ -74,24 +74,26 @@
       ],
     });
 
-    // 2) Responsive collapse. Columns fit the width; as the window narrows the
-    //    highest `responsive` values are hidden first into a collapsed sub-row.
+    // 2) Responsive collapse. Columns have real widths and use `fitDataFill`, so
+    //    when they don't all fit, the highest `responsive` values are hidden first
+    //    into a collapsed sub-row (revealed via the row-header toggle).
     new Tabulator("#responsive-table", {
       data: tabledata,
-      layout: "fitColumns",
+      layout: "fitDataFill",
       responsiveLayout: "collapse",
+      // row header holds the expand/collapse toggle for the hidden fields
+      rowHeader: { formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center", resizable: false, headerSort: false },
       columns: [
-        { formatter: "responsiveCollapse", width: 40, hozAlign: "center", resizable: false, headerSort: false },
-        { title: "Name", field: "name", responsive: 0 },          // 0 = never hide
-        { title: "Department", field: "dept", responsive: 1 },
-        { title: "Salary", field: "salary", hozAlign: "right", responsive: 1,
+        { title: "Name", field: "name", width: 160, responsive: 0 },          // 0 = never hide
+        { title: "Department", field: "dept", width: 140, responsive: 1 },
+        { title: "Salary", field: "salary", width: 110, hozAlign: "right", responsive: 1,
           formatter: "money", formatterParams: money },
-        { title: "Title", field: "title", responsive: 3 },
-        { title: "City", field: "city", responsive: 3 },
-        { title: "Country", field: "country", responsive: 2 },
-        { title: "Email", field: "email", responsive: 4 },
-        { title: "Phone", field: "phone", responsive: 5 },        // hidden first
-        { title: "Started", field: "started", sorter: "date", responsive: 5 },
+        { title: "Title", field: "title", width: 150, responsive: 3 },
+        { title: "City", field: "city", width: 120, responsive: 3 },
+        { title: "Country", field: "country", width: 150, responsive: 2 },
+        { title: "Email", field: "email", width: 200, responsive: 4 },
+        { title: "Phone", field: "phone", width: 130, responsive: 5 },        // hidden first
+        { title: "Started", field: "started", width: 130, sorter: "date", responsive: 5 },
       ],
     });
   </script>
