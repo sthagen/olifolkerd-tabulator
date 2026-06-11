@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tabulator Example — 08 Frozen & Responsive Columns</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css" />
+  <link rel="stylesheet" href="../dist/css/tabulator.css" />
+  <script src="../dist/js/tabulator.js"></script>
+</head>
+<body>
+  <main>
+    <h1>08 · Frozen, Movable &amp; Responsive Columns</h1>
+    <p>
+      A wide table. The <strong>Name</strong> column is frozen to the left while you scroll
+      horizontally; columns are movable (drag a header) and resizable. Narrow the browser
+      window and lower-priority columns collapse into an expandable row.
+      <a href="index.html">← back to index</a>
+    </p>
+
+    <div id="example-table"></div>
+  </main>
+
+  <script>
+    var tabledata = [
+      { id: 1, name: "Oli Bob",    email: "oli@example.com",    phone: "555-0101", country: "United Kingdom", city: "London",   dept: "Engineering", title: "Lead Developer", salary: 62000, started: "2018-03-01" },
+      { id: 2, name: "Mary May",   email: "mary@example.com",   phone: "555-0102", country: "Germany",        city: "Berlin",   dept: "Sales",       title: "Account Manager",salary: 54000, started: "2020-07-15" },
+      { id: 3, name: "Chris L.",   email: "chris@example.com",  phone: "555-0103", country: "France",         city: "Paris",    dept: "Engineering", title: "Developer",      salary: 48000, started: "2021-01-20" },
+      { id: 4, name: "Brendon P.", email: "bren@example.com",   phone: "555-0104", country: "USA",            city: "Austin",   dept: "Marketing",   title: "Strategist",     salary: 51000, started: "2019-11-05" },
+      { id: 5, name: "Margret M.", email: "mar@example.com",    phone: "555-0105", country: "Sweden",         city: "Malmö",    dept: "Sales",       title: "Sales Rep",      salary: 39500, started: "2022-05-30" },
+      { id: 6, name: "Van Ng",     email: "van@example.com",    phone: "555-0106", country: "Vietnam",        city: "Hanoi",    dept: "Engineering", title: "Architect",      salary: 67000, started: "2016-09-12" },
+    ];
+
+    var table = new Tabulator("#example-table", {
+      data: tabledata,
+      layout: "fitDataFill",
+      movableColumns: true,                       // drag headers to reorder
+      responsiveLayout: "collapse",               // hide overflow cols into a sub-row
+      columnDefaults: { resizable: true },
+      columns: [
+        // Frozen so it stays visible during horizontal scroll. responsive:0 = never hide.
+        { title: "Name", field: "name", frozen: true, width: 150, responsive: 0 },
+        { title: "Email", field: "email", width: 200, responsive: 4 },
+        { title: "Phone", field: "phone", width: 130, responsive: 5 },
+        { title: "Country", field: "country", width: 150, responsive: 2 },
+        { title: "City", field: "city", width: 130, responsive: 3 },
+        { title: "Department", field: "dept", width: 150, responsive: 1 },
+        { title: "Title", field: "title", width: 170, responsive: 3 },
+        { title: "Salary", field: "salary", width: 120, hozAlign: "right", responsive: 1,
+          formatter: "money", formatterParams: { symbol: "$", precision: 0, thousand: "," } },
+        { title: "Started", field: "started", width: 130, sorter: "date", responsive: 5 },
+      ],
+    });
+  </script>
+</body>
+</html>

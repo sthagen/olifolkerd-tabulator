@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tabulator Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css" />
+</head>
+<body>
+  <main>
+    <hgroup>
+      <h1>Tabulator Examples</h1>
+      <p>A curated, self-contained gallery of escalating complexity — also used to smoke-test a build before release.</p>
+    </hgroup>
+
+    <article>
+      <strong>Before you start:</strong> these pages load the locally-built library from
+      <code>../dist/</code>, not the npm package. From the repo root run
+      <code>npm run build</code> first, then open this file (works straight off
+      <code>file://</code>, or serve the folder with any static server).
+    </article>
+
+    <p>Each example builds on the last:</p>
+
+    <ol>
+      <li><a href="01-basic-table.html"><strong>Basic Table</strong></a> — array data, columns, fit-to-width layout, click-to-sort.</li>
+      <li><a href="02-formatters.html"><strong>Cell Formatters</strong></a> — progress bars, stars, ticks, money, colours and links.</li>
+      <li><a href="03-sorting-filtering.html"><strong>Sorting &amp; Filtering</strong></a> — multi-sort, header filters, and programmatic filtering.</li>
+      <li><a href="04-editing.html"><strong>Editing &amp; Validation</strong></a> — input/number/list/star/date editors with validators and an edit log.</li>
+      <li><a href="05-pagination.html"><strong>Pagination</strong></a> — client-side paging, page-size selector and row counter over 200 rows.</li>
+      <li><a href="06-grouping-calculations.html"><strong>Grouping &amp; Calculations</strong></a> — group by field with per-group &amp; total calc rows.</li>
+      <li><a href="07-selection.html"><strong>Row Selection</strong></a> — checkbox column, select-all, and live selection readout.</li>
+      <li><a href="08-frozen-responsive.html"><strong>Frozen &amp; Responsive</strong></a> — frozen, movable, resizable and collapsing columns.</li>
+      <li><a href="09-tree-data.html"><strong>Tree Data</strong></a> — nested <code>_children</code>, expand/collapse, tree-wide totals.</li>
+      <li><a href="10-full-demo.html"><strong>Full Demo</strong></a> — the kitchen-sink: editing, grouping, calcs, selection, add/delete, download &amp; persistence.</li>
+    </ol>
+
+    <footer>
+      <small>The only third-party asset on these pages is <a href="https://picocss.com">Pico.css</a> (a classless stylesheet, loaded from a CDN) used purely for page styling. Tabulator itself stays dependency-free.</small>
+    </footer>
+  </main>
+</body>
+</html>
